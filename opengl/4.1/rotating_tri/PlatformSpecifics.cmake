@@ -74,10 +74,14 @@ find_path(GLFW_INCLUDE_DIR GL/glfw.h ${HEADER_SEARCH_PATH})
 # Find glfw library
 find_library(GLFW_LIBRARIES glfw ${LIBRARY_SEARCH_PATH})
 
+# Find glm header. This is a header only library
+find_path(GLM_INCLUDE_DIR glm/glm.h ${HEADER_SEARCH_PATH})
+
 # Include directories for this project
 set(INCUDE_PATH
   ${OPENGL_INCLUDE_DIR}
   ${GLFW_INCLUDE_DIR}
+  ${GLM_INCLUDE_DIR}
 )
 
 # Libraries needed on all platforms for this project

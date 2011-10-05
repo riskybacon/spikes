@@ -4,4 +4,6 @@ Simple OpenGL demonstrations:
 |
 +- glfw-2.7.2 - A spike using glfw-2.7.2. Loads shaders, draws a triangle
 |
++- rotating_tri - builds on the glfw-2.7.2 demo by adding a uniform variable
+|
 +- qt - demonstrates getting an OpenGL 3.2 context using qt 4.7 under OS X Lion.
