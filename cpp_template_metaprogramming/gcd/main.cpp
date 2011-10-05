@@ -1,15 +1,68 @@
 #include <iostream>
 
+template <bool B, class T = void>
+struct enable_if_c {
+   typedef T type;
+};
+
+template <class T>
+struct enable_if_c<false, T> {};
+
+
+/**
+ *
+ */
+template<bool CONDITION, class T = void>
+struct EnableIf
+{
+   typedef T type;
+};
+
+template<class T>
+struct EnableIf<false, T> {};
+
+
+template <long x, typename enabled=void>
+struct Abs 
+{
+   const static long value_static = x;
+   enum { result = x } ;
+};
+
+template <long x>
+struct Abs<x,typename EnableIf<(x < 0)>::type>
+{
+   const static long value_static = -x;
+   enum { result = -x } ;
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Calculate the absolute value of an integer
 /////////////////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+template<int N, typename enabled = void>
+class Abs_new
+{
+public:
+   enum { result = N } ;
+};
+
 template<int N>
+class Abs_new
+{
+};
+#endif
+
+#if 0
+template<long N>
 class Abs
 {
 public:
    // Compile time state
    static int const result = (N >= 0) ? N : -N;
 };
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Calculate the greatest common divisor of two integers
@@ -19,12 +72,12 @@ class Gcd
 {
 private:
    // Compile time state
-   static int const m = Abs<M>::result;
-   static int const n = Abs<N>::result;
+   enum { m = Abs<M>::result };
+   enum { n = Abs<N>::result };
    
 public:
    // Compile time state
-   static int const result = Gcd<n, m % n>::result;
+   enum { result = Gcd<n, m % n>::result } ;
 };
 
 template<int M>
@@ -32,22 +85,33 @@ class Gcd<M, 0>
 {
 public:
    // Compile time state
-   static int const result = (M == 0) ? 1 : Abs<M>::result;
+#if 0
+   enum { result = (M == 0) ? 1 : Abs<M>::result } ;
+#else
+   static const long result = (M == 0) ? 1 : Abs<M>::result;
+#endif
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Represent two integers as a ratio. They are divided by their greatest common divisor
 /// so that the smallest possible integers are stored
 /////////////////////////////////////////////////////////////////////////////////////////////
-template<int M, int N>
+template<long M, long N>
 class Ratio
 {
 public:
    // Compile time state
+#if 1
    static int const gcd = Gcd<M,N>::result;
    static int const m = M / gcd;
    static int const n = N / gcd;
-
+#else
+   enum { gcd = Gcd<M,N>::result };
+   static int const m = M / gcd;
+   static int const n = N / gcd;
+#endif
+   typedef Ratio<M,N> type;
+   
    // Display a ratio
    template<int M1, int N1> friend std::ostream& operator<<(std::ostream&, const Ratio<M1,N1>&);
 };
@@ -128,6 +192,13 @@ operator<<(std::ostream &os, const Ratio<M,N>& ratio)
    return os;
 }
 
+template<int N_RET, int V_RET, int M1, int N1, int M2, int N2>
+typename Ratio<N_RET, V_RET>::result
+multiply(const Ratio<M1, N1>& r1, const Ratio<M2, N2>& r2)
+{
+   return MultRatio< Ratio<M1,N1>, Ratio<M2,N2> >::result;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Entry point
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +211,7 @@ int main(int, char**)
    Ratio<30,15000> r3;
    Ratio<1500,3>   r4; 
 
-   // The next two types are the same. Under XCode 3.2.5 and gcc 4.5, this
+      // The next two types are the same. Under XCode 3.2.5 and gcc 4.5, this
    // compiles, but the Boost folks seem to believe that this will fail and
    // instead this syntax should be used:
    //
@@ -153,7 +224,9 @@ int main(int, char**)
    std::cout << r2 << std::endl;
    std::cout << r3 << std::endl;
    
-   MultRatio< Ratio<15000,30>, Ratio<326,3> >::result mr1;
+   MultRatio< Ratio<1500,30>, Ratio<3,2> >::result mr1;
+//   Ratio<> mr2 = multiply<r1::type, r2::type>(r1, r2);
+
    AddRatio<  Ratio<15000,30>, Ratio<326,3> >::result mr2;
    SubRatio<  Ratio<2,3>,      Ratio<1,3> >::result   sr1;
    SubRatio<  Ratio<9,10>,     Ratio<1,100> >::result sr2;

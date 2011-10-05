@@ -405,12 +405,11 @@ int update(double time)
  */
 int main(int argc, char* argv[])
 {
-   std::cout << argv[0] << std::endl;
-   
-   int width = 1024;
-   int height = 768;
+   int width = 1024; // Initial window width
+   int height = 768; // Initial window height
    _running = true;
 
+   // Initialize GLFW
    glfwInit();
 
    // Request an OpenGL core profile context, without backwards compatibility
