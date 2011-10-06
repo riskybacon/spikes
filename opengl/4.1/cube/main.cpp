@@ -27,8 +27,13 @@ using namespace glm;
 // Global variables have an underscore prefix.
 GLuint _program;        //< Shader program handle
 GLuint _vao;            //< Vertex array object for the vertices
+GLuint _cao;            //< Vertex array object for the colors
+GLuint _iao;            //< Array object for the indices
 GLuint _vertices;       //< Vertex buffer object for the vertices
+GLuint _colors;         //< Vertex buffer object for the colors
+GLuint _indices;        //< Buffer object for the vertex indices
 GLint  _vertexLocation; //< Location of the vertex attribute in the shader program
+GLint  _colorLocation;  //< Location of the color attribute in the shader program
 bool   _running;        //< true if the program is running, false if it is time to terminate
 GLuint _mvp;            //< Location of the model, view, projection matrix in vertex shader
 
@@ -264,7 +269,40 @@ GLuint createGLSLProgram(const std::string& vShaderFile, const std::string& fSha
  */
 void init(void)
 {
-   // GLEW is not needed under OS X
+   // Vertices of a unit cube centered at origin, sides aligned with axes
+   vec4 points[8] = {
+      vec4( -0.5, -0.5,  0.5, 1.0 ),
+      vec4( -0.5,  0.5,  0.5, 1.0 ),
+      vec4(  0.5,  0.5,  0.5, 1.0 ),
+      vec4(  0.5, -0.5,  0.5, 1.0 ),
+      vec4( -0.5, -0.5, -0.5, 1.0 ),
+      vec4( -0.5,  0.5, -0.5, 1.0 ),
+      vec4(  0.5,  0.5, -0.5, 1.0 ),
+      vec4(  0.5, -0.5, -0.5, 1.0 )
+   };
+   
+   // RGBA olors
+   vec4 colors[8] = {
+      vec4( 0.0, 0.0, 0.0, 1.0 ),  // black
+      vec4( 1.0, 0.0, 0.0, 1.0 ),  // red
+      vec4( 1.0, 1.0, 0.0, 1.0 ),  // yellow
+      vec4( 0.0, 1.0, 0.0, 1.0 ),  // green
+      vec4( 0.0, 0.0, 1.0, 1.0 ),  // blue
+      vec4( 1.0, 0.0, 1.0, 1.0 ),  // magenta
+      vec4( 1.0, 1.0, 1.0, 1.0 ),  // white
+      vec4( 0.0, 1.0, 1.0, 1.0 )   // cyan
+   };
+
+   // Vertex index order
+   GLuint indices[] = {
+      1, 0, 3, 1, 3, 2, // Face 1, two triangles
+      2, 3, 7, 2, 7, 6,
+      3, 0, 4, 3, 4, 7,
+      6, 5, 1, 6, 1, 2,
+      4, 5, 6, 4, 6, 7,
+      5, 4, 0, 5, 0, 1  // Face 6, two triangles
+   };
+   
 #ifndef __APPLE__
    // GLEW has trouble supporting the core profile
    glewExperimental = GL_TRUE;
@@ -276,27 +314,21 @@ void init(void)
    }
 #endif
    
-   // Points of a triangle.
-   GLfloat points[] = {-1.0f, -0.75f, 0.0f, 1.0f,
-                        0.0f,  0.75f, 0.0f, 1.0f,
-                        1.0f, -0.75f, 0.0f, 1.0f };
-
    std::string vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
    std::string fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
    _program = createGLSLProgram(vertexFile, fragFile);
 
-   // Generate a single handle for a vertex array
+   // Get vertex and color attribute locations
+   _vertexLocation = glGetAttribLocation(_program, "vertex");
+   _colorLocation  = glGetAttribLocation(_program, "color");
+      
+   // Generate a single handle for a vertex array. Only one vertex
+   // array is needed
    glGenVertexArrays(1, &_vao);
-
+   
    // Bind that vertex array
    glBindVertexArray(_vao);
-
-   // Get the location of the "vertex" attribute in the shader program
-   _vertexLocation = glGetAttribLocation(_program, "vertex");
-
-   // Get location of the MVP uniform in the shader program
-   _mvp = glGetUniformLocation(_program, "mvp");
-
+   
    // Generate one handle for the vertex buffer object
    glGenBuffers(1, &_vertices);
    
@@ -310,30 +342,46 @@ void init(void)
    
    // Set the data for the vbo. This will load it onto the GPU
    glBufferData(GL_ARRAY_BUFFER,          // Target buffer object
-                3 * 4 * sizeof(GLfloat),  // Size in bytes of the buffer 
+                8 * 4 * sizeof(GLfloat),  // Size in bytes of the buffer 
                 (GLfloat*) points,        // Pointer to the data
                 GL_STATIC_DRAW);          // Expected data usage pattern
-   
-   // Use the shader program that was loaded, compiled and linked
-   glUseProgram(_program);
    
    // Specify the location and data format of the array of generic vertex attributes
    glVertexAttribPointer(_vertexLocation, // Attribute location in the shader program
                          4,               // Number of components per attribute
                          GL_FLOAT,        // Data type of attribute
                          GL_FALSE,        // GL_TRUE: values are normalized or
-                                          // GL_FALSE: values are converted to fixed point
+                         // GL_FALSE: values are converted to fixed point
                          0,               // Stride
                          0);              // Offset into VBO for this data
    
    // Enable the generic vertex attribute array
    glEnableVertexAttribArray(_vertexLocation);
    
+   // Set up color attributes
+   glGenBuffers(1, &_colors);
+   glBindBuffer(GL_ARRAY_BUFFER, _colors);
+   glBufferData(GL_ARRAY_BUFFER,
+                8 * 4 * sizeof(GLfloat),
+                (GLfloat*) colors,
+                GL_STATIC_DRAW);
+   _colorLocation = glGetAttribLocation(_program, "color");
+   glVertexAttribPointer(_colorLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_colorLocation);
+
+   // Create the index buffer
+   glGenBuffers(1, &_indices);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indices);
+   glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+
    // Set the clear color
    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
    
    // Set the depth clearing value
    glClearDepth(1.0f);
+   
+   // Enable depth test
+   glEnable(GL_DEPTH_TEST);
 }
 
 /**
@@ -404,7 +452,7 @@ int update(double time)
    
    // Rotation matrix - rotate once per second
    
-   float angle = float(time) * 360;
+   float angle = float(time) * 90;
    
    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
    
@@ -414,12 +462,17 @@ int update(double time)
    // Create  model, view, projection matrix
    glm::mat4 mvp        = projection * view * model; // Remember, matrix multiplication is the other way around
    
-   // Set the 
+   // Use the shader program that was loaded, compiled and linked
+   glUseProgram(_program);
+   
+   // Set the MVP uniform
    glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);
-   
-   // Draw the triangle. 
-   glDrawArrays(GL_TRIANGLES, 0, 3);
-   
+
+   glDrawElements(GL_TRIANGLES,     // Primitive to draw
+                  6 * 6,            // Number of indices
+                  GL_UNSIGNED_INT,  // Data type of index values
+                  NULL);            // Pointer to the data (NULL if data onGPUr already)
+
    return GL_TRUE;
 }
 
