@@ -1,0 +1,573 @@
+// !$*UTF8*$!
+{
+       archiveVersion = 1;
+       classes = {
+       };
+       objectVersion = 46;
+       objects = {
+
+/* Begin PBXAggregateTarget section */
+              7FD21BD44D407FD21BD44D40 /* ALL_BUILD */ = {
+                     isa = PBXAggregateTarget;
+                     buildConfigurationList = 7FD21BD468507FD21BD46850 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+                     buildPhases = (
+                            7FD21BD451207FD21BD45120 /* CMake ReRun */,
+                            7FD21BD45D207FD21BD45D20 /* CMake Rules */,
+                     );
+                     dependencies = (
+                            7FD21BD6B1507FD21BD6B150 /* PBXTargetDependency */,
+                     );
+                     name = ALL_BUILD;
+                     productName = ALL_BUILD;
+              };
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+7FD21BD53A707FD21BD53A70 /* /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp */ = {isa = PBXBuildFile; fileRef = 7FD21BD52F807FD21BD52F80 /* /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+7FD21BD54B807FD21BD54B80 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp */ = {isa = PBXBuildFile; fileRef = 7FD21BD53FC07FD21BD53FC0 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+7FD21BD55D707FD21BD55D70 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp */ = {isa = PBXBuildFile; fileRef = 7FD21BD551507FD21BD55150 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+7FD21BD56EF07FD21BD56EF0 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.h */ = {isa = PBXBuildFile; fileRef = 7FD21BD563007FD21BD56300 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.h */; settings = { COMPILER_FLAGS = ""; }; };
+7FD21BD581007FD21BD58100 /* /Users/jbowles/spikes/opengl/4.1/objreader/platform_specific.h */ = {isa = PBXBuildFile; fileRef = 7FD21BD574A07FD21BD574A0 /* /Users/jbowles/spikes/opengl/4.1/objreader/platform_specific.h */; settings = { COMPILER_FLAGS = ""; }; };
+7FD21BD592707FD21BD59270 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.h */ = {isa = PBXBuildFile; fileRef = 7FD21BD585E07FD21BD585E0 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.h */; settings = { COMPILER_FLAGS = ""; }; };
+7FD21BD5A0D07FD21BD5A0D0 /* /Users/jbowles/spikes/opengl/4.1/objreader/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 7FD21BD523207FD21BD52320 /* /Users/jbowles/spikes/opengl/4.1/objreader/CMakeLists.txt */; settings = { COMPILER_FLAGS = ""; }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+              7FD21BD3CD707FD21BD3CD70 /*  */ = {
+                     isa = PBXBuildStyle;
+              };
+              7FD21BD384807FD21BD38480 /* Debug */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = Debug;
+              };
+              7FD21BD389E07FD21BD389E0 /* Release */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = Release;
+              };
+              7FD21BD390A07FD21BD390A0 /* MinSizeRel */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = MinSizeRel;
+              };
+              7FD21BD2D1A07FD21BD2D1A0 /* RelWithDebInfo */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = RelWithDebInfo;
+              };
+/* End PBXBuildStyle section */
+
+/* Begin PBXContainerItemProxy section */
+              7FD21BD6A9907FD21BD6A990 /* PBXContainerItemProxy */ = {
+                     isa = PBXContainerItemProxy;
+                     containerPortal = 7FD21BD412307FD21BD41230 /* Project object */;
+                     proxyType = 1;
+                     remoteGlobalIDString = 7FD21BD5C4707FD21BD5C470;
+                     remoteInfo = objreader;
+              };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+7FD21BD523207FD21BD52320 /* /Users/jbowles/spikes/opengl/4.1/objreader/CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.text"; name = "CMakeLists.txt"; path = "CMakeLists.txt"; sourceTree = SOURCE_ROOT; };
+7FD21BD52F807FD21BD52F80 /* /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.cpp.cpp"; name = "main.cpp"; path = "main.cpp"; sourceTree = SOURCE_ROOT; };
+7FD21BD53FC07FD21BD53FC0 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.cpp.cpp"; name = "glm.cpp"; path = "glm.cpp"; sourceTree = SOURCE_ROOT; };
+7FD21BD551507FD21BD55150 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.cpp.cpp"; name = "trackball.cpp"; path = "trackball.cpp"; sourceTree = SOURCE_ROOT; };
+7FD21BD563007FD21BD56300 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.c.h"; name = "glm.h"; path = "glm.h"; sourceTree = SOURCE_ROOT; };
+7FD21BD574A07FD21BD574A0 /* /Users/jbowles/spikes/opengl/4.1/objreader/platform_specific.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.c.h"; name = "platform_specific.h"; path = "platform_specific.h"; sourceTree = SOURCE_ROOT; };
+7FD21BD585E07FD21BD585E0 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.c.h"; name = "trackball.h"; path = "trackball.h"; sourceTree = SOURCE_ROOT; };
+7FD21BD69D107FD21BD69D10 /* objreader */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = objreader; refType = 0; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+              7FD21BD2D8C07FD21BD2D8C0  = {
+                     isa = PBXGroup;
+                     children = (
+                            7FD21BD2DD807FD21BD2DD80 /* Sources */,
+                            7FD21BD3DAD07FD21BD3DAD0 /* Resources */,
+                            7FD21BD3E1407FD21BD3E140 /* Products */,
+                     );
+                     sourceTree = "<group>";
+              };
+              7FD21BD2DD807FD21BD2DD80 /* Sources */ = {
+                     isa = PBXGroup;
+                     children = (
+                            7FD21BD3E4A07FD21BD3E4A0 /* ALL_BUILD */,
+                            7FD21BD3F5E07FD21BD3F5E0 /* objreader */,
+                     );
+                     name = Sources;
+                     sourceTree = "<group>";
+              };
+              7FD21BD3DAD07FD21BD3DAD0 /* Resources */ = {
+                     isa = PBXGroup;
+                     children = (
+                     );
+                     name = Resources;
+                     sourceTree = "<group>";
+              };
+              7FD21BD3E4A07FD21BD3E4A0 /* ALL_BUILD */ = {
+                     isa = PBXGroup;
+                     children = (
+                            7FD21BD3EDD07FD21BD3EDD0 /* CMake Rules */,
+                            7FD21BD523207FD21BD52320 /* /Users/jbowles/spikes/opengl/4.1/objreader/CMakeLists.txt */,
+                     );
+                     name = ALL_BUILD;
+                     sourceTree = "<group>";
+              };
+              7FD21BD3EDD07FD21BD3EDD0 /* CMake Rules */ = {
+                     isa = PBXGroup;
+                     children = (
+                     );
+                     name = "CMake Rules";
+                     sourceTree = "<group>";
+              };
+              7FD21BD3F5E07FD21BD3F5E0 /* objreader */ = {
+                     isa = PBXGroup;
+                     children = (
+                            7FD21BD3FC707FD21BD3FC70 /* Source Files */,
+                            7FD21BD404F07FD21BD404F0 /* Header Files */,
+                            7FD21BD523207FD21BD52320 /* /Users/jbowles/spikes/opengl/4.1/objreader/CMakeLists.txt */,
+                     );
+                     name = objreader;
+                     sourceTree = "<group>";
+              };
+              7FD21BD3FC707FD21BD3FC70 /* Source Files */ = {
+                     isa = PBXGroup;
+                     children = (
+                            7FD21BD52F807FD21BD52F80 /* /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp */,
+                            7FD21BD53FC07FD21BD53FC0 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp */,
+                            7FD21BD551507FD21BD55150 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp */,
+                     );
+                     name = "Source Files";
+                     sourceTree = "<group>";
+              };
+              7FD21BD404F07FD21BD404F0 /* Header Files */ = {
+                     isa = PBXGroup;
+                     children = (
+                            7FD21BD563007FD21BD56300 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.h */,
+                            7FD21BD574A07FD21BD574A0 /* /Users/jbowles/spikes/opengl/4.1/objreader/platform_specific.h */,
+                            7FD21BD585E07FD21BD585E0 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.h */,
+                     );
+                     name = "Header Files";
+                     sourceTree = "<group>";
+              };
+              7FD21BD3E1407FD21BD3E140 /* Products */ = {
+                     isa = PBXGroup;
+                     children = (
+                            7FD21BD69D107FD21BD69D10 /* objreader */,
+                     );
+                     name = Products;
+                     sourceTree = "<group>";
+              };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+              7FD21BD5C4707FD21BD5C470 /* objreader */ = {
+                     isa = PBXNativeTarget;
+                     buildConfigurationList = 7FD21BD5CAA07FD21BD5CAA0 /* Build configuration list for PBXNativeTarget "objreader" */;
+                     buildPhases = (
+                            7FD21BD5AE507FD21BD5AE50 /* CMake ReRun */,
+                            7FD21BD5A5907FD21BD5A590 /* Sources */,
+                            7FD21BD5B9807FD21BD5B980 /* CMake PostBuild Rules */,
+                     );
+                     buildRules = (
+                     );
+                     dependencies = (
+                     );
+                     name = objreader;
+                     productName = objreader;
+                     productReference = 7FD21BD69D107FD21BD69D10 /* objreader */;
+                     productType = "com.apple.product-type.tool";
+              };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+              7FD21BD412307FD21BD41230 /* Project object */ = {
+                     isa = PBXProject;
+                     attributes = {
+                            BuildIndependentTargetsInParallel = YES;
+                     };
+                     buildConfigurationList = 7FD21BD421907FD21BD42190 /* Build configuration list for PBXProject  "objreader" */;
+                     buildSettings = {
+                     };
+                     buildStyles = (
+                            7FD21BD384807FD21BD38480 /* Debug */,
+                            7FD21BD389E07FD21BD389E0 /* Release */,
+                            7FD21BD390A07FD21BD390A0 /* MinSizeRel */,
+                            7FD21BD2D1A07FD21BD2D1A0 /* RelWithDebInfo */,
+                     );
+                     compatibilityVersion = "Xcode 3.2";
+                     hasScannedForEncodings = 0;
+                     mainGroup = 7FD21BD2D8C07FD21BD2D8C0;
+                     projectDirPath = "..";
+                     projectRoot = "";
+                     targets = (
+                            7FD21BD44D407FD21BD44D40 /* ALL_BUILD */,
+                            7FD21BD5C4707FD21BD5C470 /* objreader */,
+                     );
+              };
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+              7FD21BD440407FD21BD44040 /*  */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     inputPaths = (
+                     );
+                     outputPaths = (
+                     );
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "# shell script goes here
+exit 0";
+              };
+              7FD21BD451207FD21BD45120 /* CMake ReRun */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     name = "CMake ReRun";
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "make -C /Users/jbowles/spikes/opengl/4.1/objreader/build -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeScripts/ReRunCMake.make";
+              };
+              7FD21BD45D207FD21BD45D20 /* CMake Rules */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     name = "CMake Rules";
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "make -C /Users/jbowles/spikes/opengl/4.1/objreader/build -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
+              };
+              7FD21BD5AE507FD21BD5AE50 /* CMake ReRun */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     name = "CMake ReRun";
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "make -C /Users/jbowles/spikes/opengl/4.1/objreader/build -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeScripts/ReRunCMake.make";
+              };
+              7FD21BD5B9807FD21BD5B980 /* CMake PostBuild Rules */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     name = "CMake PostBuild Rules";
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "make -C /Users/jbowles/spikes/opengl/4.1/objreader/build -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeScripts/objreader_postBuildPhase.make$CONFIGURATION all";
+              };
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+              7FD21BD5A5907FD21BD5A590 /* Sources */ = {
+                     isa = PBXSourcesBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                            7FD21BD53A707FD21BD53A70 /* /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp */,
+                            7FD21BD54B807FD21BD54B80 /* /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp */,
+                            7FD21BD55D707FD21BD55D70 /* /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp */,
+                     );
+                     runOnlyForDeploymentPostprocessing = 0;
+              };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+              7FD21BD6B1507FD21BD6B150 /* PBXTargetDependency */ = {
+                     isa = PBXTargetDependency;
+                     target = 7FD21BD5C4707FD21BD5C470 /* objreader */;
+                     targetProxy = 7FD21BD6A9907FD21BD6A990 /* PBXContainerItemProxy */;
+              };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+              7FD21BD422F07FD21BD422F0 /* Debug */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Developer/SDKs/MacOSX10.7.sdk";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build/build";
+                     };
+                     name = Debug;
+              };
+              7FD21BD425407FD21BD42540 /* Release */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Developer/SDKs/MacOSX10.7.sdk";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build/build";
+                     };
+                     name = Release;
+              };
+              7FD21BD428607FD21BD42860 /* MinSizeRel */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Developer/SDKs/MacOSX10.7.sdk";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build/build";
+                     };
+                     name = MinSizeRel;
+              };
+              7FD21BD42BB07FD21BD42BB0 /* RelWithDebInfo */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Developer/SDKs/MacOSX10.7.sdk";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build/build";
+                     };
+                     name = RelWithDebInfo;
+              };
+              7FD21BD46FD07FD21BD46FD0 /* Debug */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = "";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Debug;
+              };
+              7FD21BD49C207FD21BD49C20 /* Release */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = "";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Release;
+              };
+              7FD21BD4C6607FD21BD4C660 /* MinSizeRel */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = "";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = MinSizeRel;
+              };
+              7FD21BD4F1607FD21BD4F160 /* RelWithDebInfo */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = "";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = RelWithDebInfo;
+              };
+              7FD21BD5D0607FD21BD5D060 /* Debug */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            CONFIGURATION_BUILD_DIR = "/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug";
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "    ";
+                            OTHER_CPLUSPLUSFLAGS = "    ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names -framework AGL -framework OpenGL /usr/local/lib/libglfw.a -framework Cocoa";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = objreader;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Debug;
+              };
+              7FD21BD602807FD21BD60280 /* Release */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            CONFIGURATION_BUILD_DIR = "/Users/jbowles/spikes/opengl/4.1/objreader/build/Release";
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 3;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "    -DNDEBUG  ";
+                            OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG  ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names -framework AGL -framework OpenGL /usr/local/lib/libglfw.a -framework Cocoa";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = objreader;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Release;
+              };
+              7FD21BD633307FD21BD63330 /* MinSizeRel */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            CONFIGURATION_BUILD_DIR = "/Users/jbowles/spikes/opengl/4.1/objreader/build/MinSizeRel";
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = s;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "    -DNDEBUG  ";
+                            OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG  ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names -framework AGL -framework OpenGL /usr/local/lib/libglfw.a -framework Cocoa";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = objreader;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = MinSizeRel;
+              };
+              7FD21BD664E07FD21BD664E0 /* RelWithDebInfo */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            CONFIGURATION_BUILD_DIR = "/Users/jbowles/spikes/opengl/4.1/objreader/build/RelWithDebInfo";
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 2;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)\"'", "'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, );
+                            INSTALL_PATH = "";
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "        ";
+                            OTHER_CPLUSPLUSFLAGS = "        ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names -framework AGL -framework OpenGL /usr/local/lib/libglfw.a -framework Cocoa";
+                            OTHER_REZFLAGS = "";
+                            PREBINDING = NO;
+                            PRODUCT_NAME = objreader;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = "/Users/jbowles/spikes/opengl/4.1/objreader/build";
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = RelWithDebInfo;
+              };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+              7FD21BD421907FD21BD42190 /* Build configuration list for PBXProject  "objreader" */ = {
+                     isa = XCConfigurationList;
+                     buildConfigurations = (
+                            7FD21BD422F07FD21BD422F0 /* Debug */,
+                            7FD21BD425407FD21BD42540 /* Release */,
+                            7FD21BD428607FD21BD42860 /* MinSizeRel */,
+                            7FD21BD42BB07FD21BD42BB0 /* RelWithDebInfo */,
+                     );
+                     defaultConfigurationIsVisible = 0;
+                     defaultConfigurationName = Debug;
+              };
+              7FD21BD468507FD21BD46850 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+                     isa = XCConfigurationList;
+                     buildConfigurations = (
+                            7FD21BD46FD07FD21BD46FD0 /* Debug */,
+                            7FD21BD49C207FD21BD49C20 /* Release */,
+                            7FD21BD4C6607FD21BD4C660 /* MinSizeRel */,
+                            7FD21BD4F1607FD21BD4F160 /* RelWithDebInfo */,
+                     );
+                     defaultConfigurationIsVisible = 0;
+                     defaultConfigurationName = Debug;
+              };
+              7FD21BD5CAA07FD21BD5CAA0 /* Build configuration list for PBXNativeTarget "objreader" */ = {
+                     isa = XCConfigurationList;
+                     buildConfigurations = (
+                            7FD21BD5D0607FD21BD5D060 /* Debug */,
+                            7FD21BD602807FD21BD60280 /* Release */,
+                            7FD21BD633307FD21BD63330 /* MinSizeRel */,
+                            7FD21BD664E07FD21BD664E0 /* RelWithDebInfo */,
+                     );
+                     defaultConfigurationIsVisible = 0;
+                     defaultConfigurationName = Debug;
+              };
+/* End XCConfigurationList section */
+       };
+       rootObject = 7FD21BD412307FD21BD41230;
+}

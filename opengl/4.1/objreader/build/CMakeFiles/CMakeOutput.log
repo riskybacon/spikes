@@ -1,0 +1,159 @@
+The system is: Darwin - 11.1.0 - i386
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /usr/bin/gcc 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CompilerIdC/a.out"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /usr/bin/g++ 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is GNU, found in "/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CompilerIdCXX/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/opt/local/bin/cmakexbuild -project CMAKE_TRY_COMPILE.xcodeproj build -target cmTryCompileExec -configuration Debug
+=== BUILD NATIVE TARGET cmTryCompileExec OF PROJECT CMAKE_TRY_COMPILE WITH CONFIGURATION Debug ===
+Check dependencies
+
+PhaseScriptExecution "CMake ReRun" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD064307FD21BD06430.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD064307FD21BD06430.sh
+make: `CMakeFiles/cmake.check_cache' is up to date.
+
+CompileC CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/testCCompiler.o testCCompiler.c normal x86_64 c com.apple.compilers.llvmgcc42
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-gcc-4.2 -x c -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -O0 "-DCMAKE_INTDIR=\"Debug\"" -isysroot /Developer/SDKs/MacOSX10.7.sdk -fasm-blocks -mmacosx-version-min=10.7 -gdwarf-2 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/include -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources/x86_64 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/testCCompiler.c -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/testCCompiler.o
+
+Ld Debug/cmTryCompileExec normal x86_64
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-gcc-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.7.sdk -L/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -filelist /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/cmTryCompileExec.LinkFileList -mmacosx-version-min=10.7 -Wl,-search_paths_first -Wl,-headerpad_max_install_names -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec
+
+PhaseScriptExecution "CMake PostBuild Rules" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD06F307FD21BD06F30.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD06F307FD21BD06F30.sh
+echo "Depend check for xcode"
+Depend check for xcode
+cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp && make -C /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMakeScripts/XCODE_DEPEND_HELPER.make PostBuild.cmTryCompileExec.Debug
+make[1]: Nothing to be done for `PostBuild.cmTryCompileExec.Debug'.
+
+
+** BUILD SUCCEEDED **
+
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/opt/local/bin/cmakexbuild -project CMAKE_TRY_COMPILE.xcodeproj build -target cmTryCompileExec -configuration Debug
+=== BUILD NATIVE TARGET cmTryCompileExec OF PROJECT CMAKE_TRY_COMPILE WITH CONFIGURATION Debug ===
+Check dependencies
+
+PhaseScriptExecution "CMake ReRun" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD18D507FD21BD18D50.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD18D507FD21BD18D50.sh
+make: `CMakeFiles/cmake.check_cache' is up to date.
+
+CompileC CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/CMakeCCompilerABI.o ../../../../../../../../../opt/local/share/cmake-2.8/Modules/CMakeCCompilerABI.c normal x86_64 c com.apple.compilers.llvmgcc42
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-gcc-4.2 -x c -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -O0 "-DCMAKE_INTDIR=\"Debug\"" -isysroot /Developer/SDKs/MacOSX10.7.sdk -fasm-blocks -mmacosx-version-min=10.7 -gdwarf-2 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/include -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources/x86_64 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/../../../../../../../../../opt/local/share/cmake-2.8/Modules/CMakeCCompilerABI.c -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/CMakeCCompilerABI.o
+
+Ld Debug/cmTryCompileExec normal x86_64
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-gcc-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.7.sdk -L/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -filelist /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/cmTryCompileExec.LinkFileList -mmacosx-version-min=10.7 -v -Wl,-search_paths_first -Wl,-headerpad_max_install_names -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec
+
+PhaseScriptExecution "CMake PostBuild Rules" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD19B107FD21BD19B10.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD19B107FD21BD19B10.sh
+echo "Depend check for xcode"
+Depend check for xcode
+cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp && make -C /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMakeScripts/XCODE_DEPEND_HELPER.make PostBuild.cmTryCompileExec.Debug
+make[1]: Nothing to be done for `PostBuild.cmTryCompileExec.Debug'.
+
+
+** BUILD SUCCEEDED **
+
+
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/opt/local/bin/cmakexbuild -project CMAKE_TRY_COMPILE.xcodeproj build -target cmTryCompileExec -configuration Debug
+=== BUILD NATIVE TARGET cmTryCompileExec OF PROJECT CMAKE_TRY_COMPILE WITH CONFIGURATION Debug ===
+Check dependencies
+
+PhaseScriptExecution "CMake ReRun" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD175E07FD21BD175E0.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD175E07FD21BD175E0.sh
+make: `CMakeFiles/cmake.check_cache' is up to date.
+
+CompileC CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/testCXXCompiler.o testCXXCompiler.cxx normal x86_64 c++ com.apple.compilers.llvmgcc42
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-gcc-4.2 -x c++ -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -O0 "-DCMAKE_INTDIR=\"Debug\"" -isysroot /Developer/SDKs/MacOSX10.7.sdk -fasm-blocks -mmacosx-version-min=10.7 -gdwarf-2 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/include -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources/x86_64 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/testCXXCompiler.o
+
+Ld Debug/cmTryCompileExec normal x86_64
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-g++-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.7.sdk -L/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -filelist /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/cmTryCompileExec.LinkFileList -mmacosx-version-min=10.7 -Wl,-search_paths_first -Wl,-headerpad_max_install_names -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec
+
+PhaseScriptExecution "CMake PostBuild Rules" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD181207FD21BD18120.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD181207FD21BD18120.sh
+echo "Depend check for xcode"
+Depend check for xcode
+cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp && make -C /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMakeScripts/XCODE_DEPEND_HELPER.make PostBuild.cmTryCompileExec.Debug
+make[1]: Nothing to be done for `PostBuild.cmTryCompileExec.Debug'.
+
+
+** BUILD SUCCEEDED **
+
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/opt/local/bin/cmakexbuild -project CMAKE_TRY_COMPILE.xcodeproj build -target cmTryCompileExec -configuration Debug
+=== BUILD NATIVE TARGET cmTryCompileExec OF PROJECT CMAKE_TRY_COMPILE WITH CONFIGURATION Debug ===
+Check dependencies
+
+PhaseScriptExecution "CMake ReRun" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD2AAB07FD21BD2AAB0.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD2AAB07FD21BD2AAB0.sh
+make: `CMakeFiles/cmake.check_cache' is up to date.
+
+CompileC CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/CMakeCXXCompilerABI.o ../../../../../../../../../opt/local/share/cmake-2.8/Modules/CMakeCXXCompilerABI.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-gcc-4.2 -x c++ -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -O0 "-DCMAKE_INTDIR=\"Debug\"" -isysroot /Developer/SDKs/MacOSX10.7.sdk -fasm-blocks -mmacosx-version-min=10.7 -gdwarf-2 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/include -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources/x86_64 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/../../../../../../../../../opt/local/share/cmake-2.8/Modules/CMakeCXXCompilerABI.cpp -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/CMakeCXXCompilerABI.o
+
+Ld Debug/cmTryCompileExec normal x86_64
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /Developer/usr/bin/llvm-g++-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.7.sdk -L/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -F/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug -filelist /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Objects-normal/x86_64/cmTryCompileExec.LinkFileList -mmacosx-version-min=10.7 -v -Wl,-search_paths_first -Wl,-headerpad_max_install_names -o /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec
+
+PhaseScriptExecution "CMake PostBuild Rules" CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD2B5F07FD21BD2B5F0.sh
+    cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp
+    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMAKE_TRY_COMPILE.build/Debug/cmTryCompileExec.build/Script-7FD21BD2B5F07FD21BD2B5F0.sh
+echo "Depend check for xcode"
+Depend check for xcode
+cd /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp && make -C /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/CMakeTmp/CMakeScripts/XCODE_DEPEND_HELPER.make PostBuild.cmTryCompileExec.Debug
+make[1]: Nothing to be done for `PostBuild.cmTryCompileExec.Debug'.
+
+
+** BUILD SUCCEEDED **
+
+
+
