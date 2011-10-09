@@ -1,243 +1,0 @@
-Tobjreader
-v3
-r1
-cCheck dependencies
-cPhaseScriptExecution "CMake ReRun" /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5AE507FD21BD5AE50.sh
-cCompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/main.o /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42
-cCompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/glm.o /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42
-cCompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/trackball.o /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42
-cLd /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader normal x86_64
-cPhaseScriptExecution "CMake PostBuild Rules" /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5B9807FD21BD5B980.sh
-
-N/Developer/SDKs/MacOSX10.7.sdk
-c000000004E1106D400000000000000EE
-t1309738708
-s238
-
-N/Developer/SDKs/MacOSX10.7.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h
-c000000004E02764F000000000001C9F5
-t1308784207
-s117237
-
-N/Developer/SDKs/MacOSX10.7.sdk/usr/include/assert.h
-c000000004E05497A0000000000000F6E
-t1308969338
-s3950
-
-N/Developer/SDKs/MacOSX10.7.sdk/usr/include/errno.h
-c000000004E05497A00000000000003EB
-t1308969338
-s1003
-
-N/Developer/SDKs/MacOSX10.7.sdk/usr/include/math.h
-c000000004DF6418700000000000004F1
-t1307984263
-s1265
-
-N/Developer/SDKs/MacOSX10.7.sdk/usr/include/stdio.h
-c000000004E05497C0000000000004763
-t1308969340
-s18275
-
-N/Developer/SDKs/MacOSX10.7.sdk/usr/include/stdlib.h
-c000000004E05497C00000000000030A7
-t1308969340
-s12455
-
-N/Developer/SDKs/MacOSX10.7.sdk/usr/include/string.h
-c000000004E05497C0000000000001A3A
-t1308969340
-s6714
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader
-t1318202834
-s248496
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/glm.o
-t1318202834
-s193520
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/main.o
-t1318202124
-s203468
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/objreader.LinkFileList
-c000000004E91C8B80000000000000160
-t1318176952
-s352
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/trackball.o
-t1318176952
-s79316
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5AE507FD21BD5AE50.sh
-c000000004E91C8B80000000000000094
-t1318176952
-s148
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5B9807FD21BD5B980.sh
-c000000004E91C8B800000000000000B4
-t1318176952
-s180
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp
-c000000004E922DD20000000000010C0B
-t1318202834
-s68619
-i<math.h>
-i<stdio.h>
-i<stdlib.h>
-i<string.h>
-i<assert.h>
-i<errno.h>
-i"glm.h"
-i<vector>
-i<glm/glm.hpp>
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/glm.h
-c000000004E921F7A00000000000028CC
-t1318199162
-s10444
-i<OpenGL/gl3.h>
-i<gl/gl.h>
-i<vector>
-i<glm/glm.hpp>
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/main.cpp
-c000000004E922E260000000000003DC6
-t1318202918
-s15814
-i<stdio.h>
-i<stdlib.h>
-i<iostream>
-i<fstream>
-i<vector>
-i<glm/glm.hpp>
-i<glm/gtc/matrix_transform.hpp>
-i"glm.h"
-i"platform_specific.h"
-i<GL/glfw.h>
-i"trackball.h"
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/platform_specific.h
-c000000004E8F8B9C00000000000004C2
-t1318030236
-s1218
-i<string>
-i<GL/glew.h>
-i<GL/glext.h>
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp
-c000000004E8F8B9C00000000000013B1
-t1318030236
-s5041
-i"Trackball.h"
-i<glm/gtc/matrix_transform.hpp>
-i<iostream>
-
-N/Users/jbowles/spikes/opengl/4.1/objreader/trackball.h
-c000000004E8F8B9C0000000000000AFA
-t1318030236
-s2810
-i<glm/glm.hpp>
-
-N/usr/local/include/GL/glfw.h
-c000000004E84BC5C0000000000004D6F
-t1317321820
-s19823
-
-N/usr/local/include/glm/glm.hpp
-c000000004E87479C0000000000000E9C
-t1317488540
-s3740
-
-N/usr/local/include/glm/gtc/matrix_transform.hpp
-c000000004E87479C0000000000001480
-t1317488540
-s5248
-
-CBuild AST from /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp
-r0
-
-CBuild AST from /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp
-r0
-
-CBuild AST from /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp
-r0
-
-CCheck dependencies
-r0
-lSLF03#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection18"Check dependencies315c95a76542b441^b28495a76542b441^---0#1#0#--18"Check dependencies
-
-CCompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/glm.o /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42
-s339895634.439144
-e339895634.797960
-r1
-xCompileC
-xbuild/objreader.build/Debug/objreader.build/Objects-normal/x86_64/glm.o
-x/Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvmgcc42
-lSLF03#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection58"Compile /Users/jbowles/spikes/opengl/4.1/objreader/glm.cppf67d70526542b441^7446cc526542b441^---0#0#0#-19%DVTDocumentLocation2@66"file://localhost/Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp0000000000000000^1097"CompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/glm.o glm.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42    cd /Users/jbowles/spikes/opengl/4.1/objreader    setenv LANG en_US.US-ASCII    /Developer/usr/bin/llvm-gcc-4.2 -x c++ -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -O0 "-DCMAKE_INTDIR=\"Debug\"" "-DSOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"" -isysroot /Developer/SDKs/MacOSX10.7.sdk -fasm-blocks -mmacosx-version-min=10.7 -gdwarf-2 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/include -I/usr/local/include -I/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources/x86_64 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug -c /Users/jbowles/spikes/opengl/4.1/objreader/glm.cpp -o /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/glm.o
-
-CCompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/main.o /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42
-s339895719.617655
-e339895720.098952
-r1
-xCompileC
-xbuild/objreader.build/Debug/objreader.build/Objects-normal/x86_64/main.o
-x/Users/jbowles/spikes/opengl/4.1/objreader/main.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvmgcc42
-lSLF03#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection59"Compile /Users/jbowles/spikes/opengl/4.1/objreader/main.cppf8359ea76542b441^435419a86542b441^---0#0#0#-19%DVTDocumentLocation2@67"file://localhost/Users/jbowles/spikes/opengl/4.1/objreader/main.cpp0000000000000000^1101"CompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/main.o main.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42    cd /Users/jbowles/spikes/opengl/4.1/objreader    setenv LANG en_US.US-ASCII    /Developer/usr/bin/llvm-gcc-4.2 -x c++ -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -O0 "-DCMAKE_INTDIR=\"Debug\"" "-DSOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"" -isysroot /Developer/SDKs/MacOSX10.7.sdk -fasm-blocks -mmacosx-version-min=10.7 -gdwarf-2 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/include -I/usr/local/include -I/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources/x86_64 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug -c /Users/jbowles/spikes/opengl/4.1/objreader/main.cpp -o /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/main.o
-
-CCompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/trackball.o /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42
-s339869752.339044
-e339869752.859136
-r1
-xCompileC
-xbuild/objreader.build/Debug/objreader.build/Objects-normal/x86_64/trackball.o
-x/Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvmgcc42
-lSLF03#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection64"Compile /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cppfcde56380042b441^7cefdb380042b441^---0#0#0#-19%DVTDocumentLocation2@72"file://localhost/Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp0000000000000000^1121"CompileC build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/trackball.o trackball.cpp normal x86_64 c++ com.apple.compilers.llvmgcc42    cd /Users/jbowles/spikes/opengl/4.1/objreader    setenv LANG en_US.US-ASCII    /Developer/usr/bin/llvm-gcc-4.2 -x c++ -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -O0 "-DCMAKE_INTDIR=\"Debug\"" "-DSOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"" -isysroot /Developer/SDKs/MacOSX10.7.sdk -fasm-blocks -mmacosx-version-min=10.7 -gdwarf-2 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/include -I/usr/local/include -I/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources/x86_64 -I/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug -c /Users/jbowles/spikes/opengl/4.1/objreader/trackball.cpp -o /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/trackball.o
-
-CLd /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader normal x86_64
-s339895720.105381
-e339895720.146665
-r1
-xLd
-x/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader
-xnormal
-xx86_64
-lSLF03#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection69"Link /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader1c0a1ba86542b441^a48b25a86542b441^---0#0#0#--702"Ld build/Debug/objreader normal x86_64    cd /Users/jbowles/spikes/opengl/4.1/objreader    setenv MACOSX_DEPLOYMENT_TARGET 10.7    /Developer/usr/bin/llvm-g++-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.7.sdk -L/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug -F/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug -filelist /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/objreader.LinkFileList -mmacosx-version-min=10.7 -Wl,-search_paths_first -Wl,-headerpad_max_install_names -framework AGL -framework OpenGL /usr/local/lib/libglfw.a -framework Cocoa -o /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader
-
-CPhaseScriptExecution "CMake PostBuild Rules" /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5B9807FD21BD5B980.sh
-s339895720.155507
-e339895720.175075
-r1
-xPhaseScriptExecution
-xCMake PostBuild Rules
-x/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5B9807FD21BD5B980.sh
-oecho "Depend check for xcode"
-oDepend check for xcode
-ocd /Users/jbowles/spikes/opengl/4.1/objreader/build && make -C /Users/jbowles/spikes/opengl/4.1/objreader/build -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeScripts/XCODE_DEPEND_HELPER.make PostBuild.objreader.Debug
-omake[1]: Nothing to be done for `PostBuild.objreader.Debug'.
-lSLF03#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection47"Run custom shell script 'CMake PostBuild Rules'bd5428a86542b441^20d12ca86542b441^-342"echo "Depend check for xcode"Depend check for xcodecd /Users/jbowles/spikes/opengl/4.1/objreader/build && make -C /Users/jbowles/spikes/opengl/4.1/objreader/build -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeScripts/XCODE_DEPEND_HELPER.make PostBuild.objreader.Debugmake[1]: Nothing to be done for `PostBuild.objreader.Debug'.4(21%IDEActivityLogMessage2@30"echo "Depend check for xcode"-339895720#0#30#-0#-----2@23"Depend check for xcode-339895720#30#23#-0#-----2@228"cd /Users/jbowles/spikes/opengl/4.1/objreader/build && make -C /Users/jbowles/spikes/opengl/4.1/objreader/build -f /Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeScripts/XCODE_DEPEND_HELPER.make PostBuild.objreader.Debug-339895720#53#228#-0#-----2@61"make[1]: Nothing to be done for `PostBuild.objreader.Debug'.-339895720#281#61#-0#-----0#0#0#--15398"PhaseScriptExecution "CMake PostBuild Rules" build/objreader.build/Debug/objreader.build/Script-7FD21BD5B9807FD21BD5B980.sh    cd /Users/jbowles/spikes/opengl/4.1/objreader    setenv ACTION build    setenv ALTERNATE_GROUP staff    setenv ALTERNATE_MODE u+w,go-w,a+rX    setenv ALTERNATE_OWNER jbowles    setenv ALWAYS_SEARCH_USER_PATHS YES    setenv APPLE_INTERNAL_DEVELOPER_DIR /AppleInternal/Developer    setenv APPLE_INTERNAL_DIR /AppleInternal    setenv APPLE_INTERNAL_DOCUMENTATION_DIR /AppleInternal/Documentation    setenv APPLE_INTERNAL_LIBRARY_DIR /AppleInternal/Library    setenv APPLE_INTERNAL_TOOLS /AppleInternal/Developer/Tools    setenv APPLY_RULES_IN_COPY_FILES NO    setenv ARCHS x86_64    setenv ARCHS_STANDARD_32_64_BIT "x86_64 i386"    setenv ARCHS_STANDARD_32_BIT i386    setenv ARCHS_STANDARD_64_BIT x86_64    setenv AVAILABLE_PLATFORMS "iphonesimulator macosx iphoneos"    setenv BUILD_COMPONENTS "headers build"    setenv BUILD_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv BUILD_ROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv BUILD_STYLE     setenv BUILD_VARIANTS normal    setenv BUILT_PRODUCTS_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv CACHE_ROOT /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501    setenv CCHROOT /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501    setenv CHMOD /bin/chmod    setenv CHOWN /usr/sbin/chown    setenv CLASS_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/JavaClasses    setenv CLEAN_PRECOMPS YES    setenv CLONE_HEADERS NO    setenv CODESIGNING_FOLDER_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader    setenv CODE_SIGNING_ALLOWED YES    setenv COMBINE_HIDPI_IMAGES NO    setenv COMMAND_MODE legacy    setenv COMPOSITE_SDK_DIRS /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501/CompositeSDKs    setenv CONFIGURATION Debug    setenv CONFIGURATION_BUILD_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv CONFIGURATION_TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug    setenv COPYING_PRESERVES_HFS_DATA NO    setenv COPY_PHASE_STRIP YES    setenv COPY_RESOURCES_FROM_STATIC_FRAMEWORKS YES    setenv CP /bin/cp    setenv CURRENT_ARCH x86_64    setenv CURRENT_VARIANT normal    setenv DEAD_CODE_STRIPPING NO    setenv DEBUGGING_SYMBOLS YES    setenv DEBUG_INFORMATION_FORMAT dwarf    setenv DEPLOYMENT_LOCATION NO    setenv DEPLOYMENT_POSTPROCESSING NO    setenv DERIVED_FILES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources    setenv DERIVED_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources    setenv DERIVED_SOURCES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources    setenv DEVELOPER_APPLICATIONS_DIR /Developer/Applications    setenv DEVELOPER_BIN_DIR /Developer/usr/bin    setenv DEVELOPER_DIR /Developer    setenv DEVELOPER_FRAMEWORKS_DIR /Developer/Library/Frameworks    setenv DEVELOPER_FRAMEWORKS_DIR_QUOTED "\"/Developer/Library/Frameworks\""    setenv DEVELOPER_LIBRARY_DIR /Developer/Library    setenv DEVELOPER_SDK_DIR /Developer/SDKs    setenv DEVELOPER_TOOLS_DIR /Developer/Tools    setenv DEVELOPER_USR_DIR /Developer/usr    setenv DEVELOPMENT_LANGUAGE English    setenv DO_HEADER_SCANNING_IN_JAM NO    setenv DSTROOT /tmp/objreader.dst    setenv DWARF_DSYM_FILE_NAME objreader.dSYM    setenv DWARF_DSYM_FILE_SHOULD_ACCOMPANY_PRODUCT NO    setenv DWARF_DSYM_FOLDER_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv EMBEDDED_PROFILE_NAME embedded.provisionprofile    setenv ENABLE_HEADER_DEPENDENCIES YES    setenv ENABLE_OPENMP_SUPPORT NO    setenv EXCLUDED_INSTALLSRC_SUBDIRECTORY_PATTERNS ".svn CVS"    setenv EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES "*.nib *.lproj *.framework *.gch (*) CVS .svn .git *.xcodeproj *.xcode *.pbproj *.pbxproj"    setenv EXECUTABLE_NAME objreader    setenv EXECUTABLE_PATH objreader    setenv FILE_LIST /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects/LinkFileList    setenv FIXED_FILES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/FixedFiles    setenv FRAMEWORK_FLAG_PREFIX -framework    setenv FRAMEWORK_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug\" "    setenv FRAMEWORK_VERSION A    setenv FULL_PRODUCT_NAME objreader    setenv GCC3_VERSION 3.3    setenv GCC_DYNAMIC_NO_PIC NO    setenv GCC_GENERATE_DEBUGGING_SYMBOLS YES    setenv GCC_INLINES_ARE_PRIVATE_EXTERN NO    setenv GCC_OPTIMIZATION_LEVEL 0    setenv GCC_PFE_FILE_C_DIALECTS "c objective-c c++ objective-c++"    setenv GCC_PREPROCESSOR_DEFINITIONS "'CMAKE_INTDIR=\"Debug\"' 'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'"    setenv GCC_SYMBOLS_PRIVATE_EXTERN NO    setenv GCC_TREAT_WARNINGS_AS_ERRORS NO    setenv GCC_VERSION com.apple.compilers.llvmgcc42    setenv GENERATE_MASTER_OBJECT_FILE NO    setenv GENERATE_PKGINFO_FILE NO    setenv GENERATE_PROFILING_CODE NO    setenv GID 20    setenv GROUP staff    setenv HEADERMAP_INCLUDES_FLAT_ENTRIES_FOR_TARGET_BEING_BUILT YES    setenv HEADERMAP_INCLUDES_FRAMEWORK_ENTRIES_FOR_ALL_PRODUCT_TYPES YES    setenv HEADERMAP_INCLUDES_NONPUBLIC_NONPRIVATE_HEADERS YES    setenv HEADERMAP_INCLUDES_PROJECT_HEADERS YES    setenv HEADER_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/include\" /usr/local/include"    setenv ICONV /usr/bin/iconv    setenv INFOPLIST_EXPAND_BUILD_SETTINGS YES    setenv INFOPLIST_OUTPUT_FORMAT same-as-input    setenv INFOPLIST_PREPROCESS NO    setenv INSTALL_DIR /tmp/objreader.dst    setenv INSTALL_GROUP staff    setenv INSTALL_MODE_FLAG u+w,go-w,a+rX    setenv INSTALL_OWNER jbowles    setenv INSTALL_ROOT /tmp/objreader.dst    setenv JAVAC_DEFAULT_FLAGS "-J-Xms64m -J-XX:NewSize=4M -J-Dfile.encoding=UTF8"    setenv JAVA_APP_STUB /System/Library/Frameworks/JavaVM.framework/Resources/MacOS/JavaApplicationStub    setenv JAVA_ARCHIVE_CLASSES YES    setenv JAVA_ARCHIVE_TYPE JAR    setenv JAVA_COMPILER /usr/bin/javac    setenv JAVA_FRAMEWORK_RESOURCES_DIRS Resources    setenv JAVA_JAR_FLAGS cv    setenv JAVA_SOURCE_SUBDIR .    setenv JAVA_USE_DEPENDENCIES YES    setenv JAVA_ZIP_FLAGS -urg    setenv JIKES_DEFAULT_FLAGS "+E +OLDCSO"    setenv KEEP_PRIVATE_EXTERNS NO    setenv LD_GENERATE_MAP_FILE NO    setenv LD_MAP_FILE_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/objreader-LinkMap-normal-x86_64.txt    setenv LD_NO_PIE NO    setenv LD_OPENMP_FLAGS -fopenmp    setenv LEGACY_DEVELOPER_DIR /Developer/Library/Xcode/PrivatePlugIns/Xcode3Core.ideplugin/Contents/SharedSupport/Developer    setenv LEX /Developer/usr/bin/lex    setenv LIBRARY_FLAG_NOSPACE YES    setenv LIBRARY_FLAG_PREFIX -l    setenv LIBRARY_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug\" "    setenv LINKER_DISPLAYS_MANGLED_NAMES NO    setenv LINK_FILE_LIST_normal_x86_64 /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/objreader.LinkFileList    setenv LINK_WITH_STANDARD_LIBRARIES YES    setenv LOCAL_ADMIN_APPS_DIR /Applications/Utilities    setenv LOCAL_APPS_DIR /Applications    setenv LOCAL_DEVELOPER_DIR /Library/Developer    setenv LOCAL_LIBRARY_DIR /Library    setenv MACOSX_DEPLOYMENT_TARGET 10.7    setenv MAC_OS_X_PRODUCT_BUILD_VERSION 11B26    setenv MAC_OS_X_VERSION_ACTUAL 1071    setenv MAC_OS_X_VERSION_MAJOR 1070    setenv MAC_OS_X_VERSION_MINOR 0701    setenv NATIVE_ARCH i386    setenv NATIVE_ARCH_32_BIT i386    setenv NATIVE_ARCH_64_BIT x86_64    setenv NATIVE_ARCH_ACTUAL x86_64    setenv NO_COMMON YES    setenv OBJECT_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects    setenv OBJECT_FILE_DIR_normal /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal    setenv OBJROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv ONLY_ACTIVE_ARCH YES    setenv OPTIMIZATION_LEVEL 0    setenv OS MACOS    setenv OSAC /usr/bin/osacompile    setenv OTHER_CFLAGS "    "    setenv OTHER_CPLUSPLUSFLAGS "    "    setenv OTHER_LDFLAGS "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names -framework AGL -framework OpenGL /usr/local/lib/libglfw.a -framework Cocoa"    setenv PACKAGE_TYPE com.apple.package-type.mach-o-executable    setenv PASCAL_STRINGS YES    setenv PATH_PREFIXES_EXCLUDED_FROM_HEADER_DEPENDENCIES "/usr/include /usr/local/include /System/Library/Frameworks /System/Library/PrivateFrameworks /Developer/Headers /Developer/SDKs /Developer/Platforms"    setenv PFE_FILE_C_DIALECTS c++    setenv PKGINFO_FILE_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/PkgInfo    setenv PLATFORM_DEVELOPER_APPLICATIONS_DIR /Developer/Applications    setenv PLATFORM_DEVELOPER_BIN_DIR /Developer/usr/bin    setenv PLATFORM_DEVELOPER_LIBRARY_DIR /Developer/Library    setenv PLATFORM_DEVELOPER_SDK_DIR /Developer/SDKs    setenv PLATFORM_DEVELOPER_TOOLS_DIR /Developer/Tools    setenv PLATFORM_DEVELOPER_USR_DIR /Developer/usr    setenv PLATFORM_DIR /Developer/Platforms/MacOSX.platform    setenv PLATFORM_NAME macosx    setenv PLATFORM_PREFERRED_ARCH x86_64    setenv PLATFORM_PRODUCT_BUILD_VERSION 4B110    setenv PLIST_FILE_OUTPUT_FORMAT same-as-input    setenv PREBINDING NO    setenv PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR YES    setenv PRECOMP_DESTINATION_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/PrefixHeaders    setenv PRESERVE_DEAD_CODE_INITS_AND_TERMS NO    setenv PRODUCT_NAME objreader    setenv PRODUCT_SETTINGS_PATH     setenv PRODUCT_TYPE com.apple.product-type.tool    setenv PROFILING_CODE NO    setenv PROJECT objreader    setenv PROJECT_DERIVED_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/DerivedSources    setenv PROJECT_DIR /Users/jbowles/spikes/opengl/4.1/objreader    setenv PROJECT_FILE_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.xcodeproj    setenv PROJECT_NAME objreader    setenv PROJECT_TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build    setenv RECURSIVE_SEARCH_PATHS_FOLLOW_SYMLINKS YES    setenv REMOVE_CVS_FROM_RESOURCES YES    setenv REMOVE_GIT_FROM_RESOURCES YES    setenv REMOVE_SVN_FROM_RESOURCES YES    setenv REZ_COLLECTOR_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/ResourceManagerResources    setenv REZ_EXECUTABLE YES    setenv REZ_OBJECTS_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/ResourceManagerResources/Objects    setenv REZ_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug\" "    setenv RUN_CLANG_STATIC_ANALYZER NO    setenv SCAN_ALL_SOURCE_FILES_FOR_INCLUDES NO    setenv SCRIPT_INPUT_FILE_COUNT 0    setenv SCRIPT_OUTPUT_FILE_COUNT 0    setenv SDKROOT /Developer/SDKs/MacOSX10.7.sdk    setenv SDK_DIR /Developer/SDKs/MacOSX10.7.sdk    setenv SDK_NAME macosx10.7    setenv SDK_PRODUCT_BUILD_VERSION 11A511a    setenv SED /usr/bin/sed    setenv SEPARATE_STRIP NO    setenv SEPARATE_SYMBOL_EDIT NO    setenv SET_DIR_MODE_OWNER_GROUP YES    setenv SET_FILE_MODE_OWNER_GROUP NO    setenv SHARED_DERIVED_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/DerivedSources    setenv SHARED_PRECOMPS_DIR /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501/SharedPrecompiledHeaders    setenv SKIP_INSTALL YES    setenv SOURCE_ROOT /Users/jbowles/spikes/opengl/4.1/objreader    setenv SRCROOT /Users/jbowles/spikes/opengl/4.1/objreader    setenv STRINGS_FILE_OUTPUT_ENCODING UTF-16    setenv STRIP_INSTALLED_PRODUCT YES    setenv STRIP_STYLE all    setenv SUPPORTED_PLATFORMS macosx    setenv SYMROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv SYSTEM_ADMIN_APPS_DIR /Applications/Utilities    setenv SYSTEM_APPS_DIR /Applications    setenv SYSTEM_CORE_SERVICES_DIR /System/Library/CoreServices    setenv SYSTEM_DEMOS_DIR /Applications/Extras    setenv SYSTEM_DEVELOPER_APPS_DIR /Developer/Applications    setenv SYSTEM_DEVELOPER_BIN_DIR /Developer/usr/bin    setenv SYSTEM_DEVELOPER_DEMOS_DIR "/Developer/Applications/Utilities/Built Examples"    setenv SYSTEM_DEVELOPER_DIR /Developer    setenv SYSTEM_DEVELOPER_DOC_DIR "/Developer/ADC Reference Library"    setenv SYSTEM_DEVELOPER_GRAPHICS_TOOLS_DIR "/Developer/Applications/Graphics Tools"    setenv SYSTEM_DEVELOPER_JAVA_TOOLS_DIR "/Developer/Applications/Java Tools"    setenv SYSTEM_DEVELOPER_PERFORMANCE_TOOLS_DIR "/Developer/Applications/Performance Tools"    setenv SYSTEM_DEVELOPER_RELEASENOTES_DIR "/Developer/ADC Reference Library/releasenotes"    setenv SYSTEM_DEVELOPER_TOOLS /Developer/Tools    setenv SYSTEM_DEVELOPER_TOOLS_DOC_DIR "/Developer/ADC Reference Library/documentation/DeveloperTools"    setenv SYSTEM_DEVELOPER_TOOLS_RELEASENOTES_DIR "/Developer/ADC Reference Library/releasenotes/DeveloperTools"    setenv SYSTEM_DEVELOPER_USR_DIR /Developer/usr    setenv SYSTEM_DEVELOPER_UTILITIES_DIR /Developer/Applications/Utilities    setenv SYSTEM_DOCUMENTATION_DIR /Library/Documentation    setenv SYSTEM_LIBRARY_DIR /System/Library    setenv TARGETNAME objreader    setenv TARGET_BUILD_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv TARGET_NAME objreader    setenv TARGET_TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_FILES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_ROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv TEST_AFTER_BUILD NO    setenv UID 501    setenv UNSTRIPPED_PRODUCT NO    setenv USER jbowles    setenv USER_APPS_DIR /Users/jbowles/Applications    setenv USER_LIBRARY_DIR /Users/jbowles/Library    setenv USE_DYNAMIC_NO_PIC YES    setenv USE_HEADERMAP NO    setenv USE_HEADER_SYMLINKS NO    setenv VALIDATE_PRODUCT NO    setenv VALID_ARCHS "i386 x86_64"    setenv VERBOSE_PBXCP NO    setenv VERSION_INFO_BUILDER jbowles    setenv VERSION_INFO_FILE objreader_vers.c    setenv VERSION_INFO_STRING "\"@(#)PROGRAM:objreader  PROJECT:objreader-\""    setenv WARNING_CFLAGS "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas"    setenv XCODE_APP_SUPPORT_DIR /Developer/Library/Xcode    setenv XCODE_PRODUCT_BUILD_VERSION 4B110    setenv XCODE_VERSION_ACTUAL 0410    setenv XCODE_VERSION_MAJOR 0400    setenv XCODE_VERSION_MINOR 0410    setenv YACC /Developer/usr/bin/yacc    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5B9807FD21BD5B980.sh
-
-CPhaseScriptExecution "CMake ReRun" /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5AE507FD21BD5AE50.sh
-s339895719.586152
-e339895719.609912
-r1
-xPhaseScriptExecution
-xCMake ReRun
-x/Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5AE507FD21BD5AE50.sh
-omake: `CMakeFiles/cmake.check_cache' is up to date.
-lSLF03#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection37"Run custom shell script 'CMake ReRun'2aaa96a76542b441^86e49ca76542b441^-52"make: `CMakeFiles/cmake.check_cache' is up to date.1(21%IDEActivityLogMessage2@52"make: `CMakeFiles/cmake.check_cache' is up to date.-339895719#0#52#-0#-----0#0#0#--15388"PhaseScriptExecution "CMake ReRun" build/objreader.build/Debug/objreader.build/Script-7FD21BD5AE507FD21BD5AE50.sh    cd /Users/jbowles/spikes/opengl/4.1/objreader    setenv ACTION build    setenv ALTERNATE_GROUP staff    setenv ALTERNATE_MODE u+w,go-w,a+rX    setenv ALTERNATE_OWNER jbowles    setenv ALWAYS_SEARCH_USER_PATHS YES    setenv APPLE_INTERNAL_DEVELOPER_DIR /AppleInternal/Developer    setenv APPLE_INTERNAL_DIR /AppleInternal    setenv APPLE_INTERNAL_DOCUMENTATION_DIR /AppleInternal/Documentation    setenv APPLE_INTERNAL_LIBRARY_DIR /AppleInternal/Library    setenv APPLE_INTERNAL_TOOLS /AppleInternal/Developer/Tools    setenv APPLY_RULES_IN_COPY_FILES NO    setenv ARCHS x86_64    setenv ARCHS_STANDARD_32_64_BIT "x86_64 i386"    setenv ARCHS_STANDARD_32_BIT i386    setenv ARCHS_STANDARD_64_BIT x86_64    setenv AVAILABLE_PLATFORMS "iphonesimulator macosx iphoneos"    setenv BUILD_COMPONENTS "headers build"    setenv BUILD_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv BUILD_ROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv BUILD_STYLE     setenv BUILD_VARIANTS normal    setenv BUILT_PRODUCTS_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv CACHE_ROOT /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501    setenv CCHROOT /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501    setenv CHMOD /bin/chmod    setenv CHOWN /usr/sbin/chown    setenv CLASS_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/JavaClasses    setenv CLEAN_PRECOMPS YES    setenv CLONE_HEADERS NO    setenv CODESIGNING_FOLDER_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/objreader    setenv CODE_SIGNING_ALLOWED YES    setenv COMBINE_HIDPI_IMAGES NO    setenv COMMAND_MODE legacy    setenv COMPOSITE_SDK_DIRS /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501/CompositeSDKs    setenv CONFIGURATION Debug    setenv CONFIGURATION_BUILD_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv CONFIGURATION_TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug    setenv COPYING_PRESERVES_HFS_DATA NO    setenv COPY_PHASE_STRIP YES    setenv COPY_RESOURCES_FROM_STATIC_FRAMEWORKS YES    setenv CP /bin/cp    setenv CURRENT_ARCH x86_64    setenv CURRENT_VARIANT normal    setenv DEAD_CODE_STRIPPING NO    setenv DEBUGGING_SYMBOLS YES    setenv DEBUG_INFORMATION_FORMAT dwarf    setenv DEPLOYMENT_LOCATION NO    setenv DEPLOYMENT_POSTPROCESSING NO    setenv DERIVED_FILES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources    setenv DERIVED_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources    setenv DERIVED_SOURCES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/DerivedSources    setenv DEVELOPER_APPLICATIONS_DIR /Developer/Applications    setenv DEVELOPER_BIN_DIR /Developer/usr/bin    setenv DEVELOPER_DIR /Developer    setenv DEVELOPER_FRAMEWORKS_DIR /Developer/Library/Frameworks    setenv DEVELOPER_FRAMEWORKS_DIR_QUOTED "\"/Developer/Library/Frameworks\""    setenv DEVELOPER_LIBRARY_DIR /Developer/Library    setenv DEVELOPER_SDK_DIR /Developer/SDKs    setenv DEVELOPER_TOOLS_DIR /Developer/Tools    setenv DEVELOPER_USR_DIR /Developer/usr    setenv DEVELOPMENT_LANGUAGE English    setenv DO_HEADER_SCANNING_IN_JAM NO    setenv DSTROOT /tmp/objreader.dst    setenv DWARF_DSYM_FILE_NAME objreader.dSYM    setenv DWARF_DSYM_FILE_SHOULD_ACCOMPANY_PRODUCT NO    setenv DWARF_DSYM_FOLDER_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv EMBEDDED_PROFILE_NAME embedded.provisionprofile    setenv ENABLE_HEADER_DEPENDENCIES YES    setenv ENABLE_OPENMP_SUPPORT NO    setenv EXCLUDED_INSTALLSRC_SUBDIRECTORY_PATTERNS ".svn CVS"    setenv EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES "*.nib *.lproj *.framework *.gch (*) CVS .svn .git *.xcodeproj *.xcode *.pbproj *.pbxproj"    setenv EXECUTABLE_NAME objreader    setenv EXECUTABLE_PATH objreader    setenv FILE_LIST /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects/LinkFileList    setenv FIXED_FILES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/FixedFiles    setenv FRAMEWORK_FLAG_PREFIX -framework    setenv FRAMEWORK_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug\" "    setenv FRAMEWORK_VERSION A    setenv FULL_PRODUCT_NAME objreader    setenv GCC3_VERSION 3.3    setenv GCC_DYNAMIC_NO_PIC NO    setenv GCC_GENERATE_DEBUGGING_SYMBOLS YES    setenv GCC_INLINES_ARE_PRIVATE_EXTERN NO    setenv GCC_OPTIMIZATION_LEVEL 0    setenv GCC_PFE_FILE_C_DIALECTS "c objective-c c++ objective-c++"    setenv GCC_PREPROCESSOR_DEFINITIONS "'CMAKE_INTDIR=\"Debug\"' 'SOURCE_DIR=\"/Users/jbowles/spikes/opengl/4.1/objreader\"'"    setenv GCC_SYMBOLS_PRIVATE_EXTERN NO    setenv GCC_TREAT_WARNINGS_AS_ERRORS NO    setenv GCC_VERSION com.apple.compilers.llvmgcc42    setenv GENERATE_MASTER_OBJECT_FILE NO    setenv GENERATE_PKGINFO_FILE NO    setenv GENERATE_PROFILING_CODE NO    setenv GID 20    setenv GROUP staff    setenv HEADERMAP_INCLUDES_FLAT_ENTRIES_FOR_TARGET_BEING_BUILT YES    setenv HEADERMAP_INCLUDES_FRAMEWORK_ENTRIES_FOR_ALL_PRODUCT_TYPES YES    setenv HEADERMAP_INCLUDES_NONPUBLIC_NONPRIVATE_HEADERS YES    setenv HEADERMAP_INCLUDES_PROJECT_HEADERS YES    setenv HEADER_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/include\" /usr/local/include"    setenv ICONV /usr/bin/iconv    setenv INFOPLIST_EXPAND_BUILD_SETTINGS YES    setenv INFOPLIST_OUTPUT_FORMAT same-as-input    setenv INFOPLIST_PREPROCESS NO    setenv INSTALL_DIR /tmp/objreader.dst    setenv INSTALL_GROUP staff    setenv INSTALL_MODE_FLAG u+w,go-w,a+rX    setenv INSTALL_OWNER jbowles    setenv INSTALL_ROOT /tmp/objreader.dst    setenv JAVAC_DEFAULT_FLAGS "-J-Xms64m -J-XX:NewSize=4M -J-Dfile.encoding=UTF8"    setenv JAVA_APP_STUB /System/Library/Frameworks/JavaVM.framework/Resources/MacOS/JavaApplicationStub    setenv JAVA_ARCHIVE_CLASSES YES    setenv JAVA_ARCHIVE_TYPE JAR    setenv JAVA_COMPILER /usr/bin/javac    setenv JAVA_FRAMEWORK_RESOURCES_DIRS Resources    setenv JAVA_JAR_FLAGS cv    setenv JAVA_SOURCE_SUBDIR .    setenv JAVA_USE_DEPENDENCIES YES    setenv JAVA_ZIP_FLAGS -urg    setenv JIKES_DEFAULT_FLAGS "+E +OLDCSO"    setenv KEEP_PRIVATE_EXTERNS NO    setenv LD_GENERATE_MAP_FILE NO    setenv LD_MAP_FILE_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/objreader-LinkMap-normal-x86_64.txt    setenv LD_NO_PIE NO    setenv LD_OPENMP_FLAGS -fopenmp    setenv LEGACY_DEVELOPER_DIR /Developer/Library/Xcode/PrivatePlugIns/Xcode3Core.ideplugin/Contents/SharedSupport/Developer    setenv LEX /Developer/usr/bin/lex    setenv LIBRARY_FLAG_NOSPACE YES    setenv LIBRARY_FLAG_PREFIX -l    setenv LIBRARY_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug\" "    setenv LINKER_DISPLAYS_MANGLED_NAMES NO    setenv LINK_FILE_LIST_normal_x86_64 /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal/x86_64/objreader.LinkFileList    setenv LINK_WITH_STANDARD_LIBRARIES YES    setenv LOCAL_ADMIN_APPS_DIR /Applications/Utilities    setenv LOCAL_APPS_DIR /Applications    setenv LOCAL_DEVELOPER_DIR /Library/Developer    setenv LOCAL_LIBRARY_DIR /Library    setenv MACOSX_DEPLOYMENT_TARGET 10.7    setenv MAC_OS_X_PRODUCT_BUILD_VERSION 11B26    setenv MAC_OS_X_VERSION_ACTUAL 1071    setenv MAC_OS_X_VERSION_MAJOR 1070    setenv MAC_OS_X_VERSION_MINOR 0701    setenv NATIVE_ARCH i386    setenv NATIVE_ARCH_32_BIT i386    setenv NATIVE_ARCH_64_BIT x86_64    setenv NATIVE_ARCH_ACTUAL x86_64    setenv NO_COMMON YES    setenv OBJECT_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects    setenv OBJECT_FILE_DIR_normal /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Objects-normal    setenv OBJROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv ONLY_ACTIVE_ARCH YES    setenv OPTIMIZATION_LEVEL 0    setenv OS MACOS    setenv OSAC /usr/bin/osacompile    setenv OTHER_CFLAGS "    "    setenv OTHER_CPLUSPLUSFLAGS "    "    setenv OTHER_LDFLAGS "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names -framework AGL -framework OpenGL /usr/local/lib/libglfw.a -framework Cocoa"    setenv PACKAGE_TYPE com.apple.package-type.mach-o-executable    setenv PASCAL_STRINGS YES    setenv PATH_PREFIXES_EXCLUDED_FROM_HEADER_DEPENDENCIES "/usr/include /usr/local/include /System/Library/Frameworks /System/Library/PrivateFrameworks /Developer/Headers /Developer/SDKs /Developer/Platforms"    setenv PFE_FILE_C_DIALECTS c++    setenv PKGINFO_FILE_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/PkgInfo    setenv PLATFORM_DEVELOPER_APPLICATIONS_DIR /Developer/Applications    setenv PLATFORM_DEVELOPER_BIN_DIR /Developer/usr/bin    setenv PLATFORM_DEVELOPER_LIBRARY_DIR /Developer/Library    setenv PLATFORM_DEVELOPER_SDK_DIR /Developer/SDKs    setenv PLATFORM_DEVELOPER_TOOLS_DIR /Developer/Tools    setenv PLATFORM_DEVELOPER_USR_DIR /Developer/usr    setenv PLATFORM_DIR /Developer/Platforms/MacOSX.platform    setenv PLATFORM_NAME macosx    setenv PLATFORM_PREFERRED_ARCH x86_64    setenv PLATFORM_PRODUCT_BUILD_VERSION 4B110    setenv PLIST_FILE_OUTPUT_FORMAT same-as-input    setenv PREBINDING NO    setenv PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR YES    setenv PRECOMP_DESTINATION_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/PrefixHeaders    setenv PRESERVE_DEAD_CODE_INITS_AND_TERMS NO    setenv PRODUCT_NAME objreader    setenv PRODUCT_SETTINGS_PATH     setenv PRODUCT_TYPE com.apple.product-type.tool    setenv PROFILING_CODE NO    setenv PROJECT objreader    setenv PROJECT_DERIVED_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/DerivedSources    setenv PROJECT_DIR /Users/jbowles/spikes/opengl/4.1/objreader    setenv PROJECT_FILE_PATH /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.xcodeproj    setenv PROJECT_NAME objreader    setenv PROJECT_TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build    setenv RECURSIVE_SEARCH_PATHS_FOLLOW_SYMLINKS YES    setenv REMOVE_CVS_FROM_RESOURCES YES    setenv REMOVE_GIT_FROM_RESOURCES YES    setenv REMOVE_SVN_FROM_RESOURCES YES    setenv REZ_COLLECTOR_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/ResourceManagerResources    setenv REZ_EXECUTABLE YES    setenv REZ_OBJECTS_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/ResourceManagerResources/Objects    setenv REZ_SEARCH_PATHS "\"/Users/jbowles/spikes/opengl/4.1/objreader/build/Debug\" "    setenv RUN_CLANG_STATIC_ANALYZER NO    setenv SCAN_ALL_SOURCE_FILES_FOR_INCLUDES NO    setenv SCRIPT_INPUT_FILE_COUNT 0    setenv SCRIPT_OUTPUT_FILE_COUNT 0    setenv SDKROOT /Developer/SDKs/MacOSX10.7.sdk    setenv SDK_DIR /Developer/SDKs/MacOSX10.7.sdk    setenv SDK_NAME macosx10.7    setenv SDK_PRODUCT_BUILD_VERSION 11A511a    setenv SED /usr/bin/sed    setenv SEPARATE_STRIP NO    setenv SEPARATE_SYMBOL_EDIT NO    setenv SET_DIR_MODE_OWNER_GROUP YES    setenv SET_FILE_MODE_OWNER_GROUP NO    setenv SHARED_DERIVED_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug/DerivedSources    setenv SHARED_PRECOMPS_DIR /var/folders/yf/4hsqmrq12w98ztnrjs0n13h80000gn/C/com.apple.Xcode.501/SharedPrecompiledHeaders    setenv SKIP_INSTALL YES    setenv SOURCE_ROOT /Users/jbowles/spikes/opengl/4.1/objreader    setenv SRCROOT /Users/jbowles/spikes/opengl/4.1/objreader    setenv STRINGS_FILE_OUTPUT_ENCODING UTF-16    setenv STRIP_INSTALLED_PRODUCT YES    setenv STRIP_STYLE all    setenv SUPPORTED_PLATFORMS macosx    setenv SYMROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv SYSTEM_ADMIN_APPS_DIR /Applications/Utilities    setenv SYSTEM_APPS_DIR /Applications    setenv SYSTEM_CORE_SERVICES_DIR /System/Library/CoreServices    setenv SYSTEM_DEMOS_DIR /Applications/Extras    setenv SYSTEM_DEVELOPER_APPS_DIR /Developer/Applications    setenv SYSTEM_DEVELOPER_BIN_DIR /Developer/usr/bin    setenv SYSTEM_DEVELOPER_DEMOS_DIR "/Developer/Applications/Utilities/Built Examples"    setenv SYSTEM_DEVELOPER_DIR /Developer    setenv SYSTEM_DEVELOPER_DOC_DIR "/Developer/ADC Reference Library"    setenv SYSTEM_DEVELOPER_GRAPHICS_TOOLS_DIR "/Developer/Applications/Graphics Tools"    setenv SYSTEM_DEVELOPER_JAVA_TOOLS_DIR "/Developer/Applications/Java Tools"    setenv SYSTEM_DEVELOPER_PERFORMANCE_TOOLS_DIR "/Developer/Applications/Performance Tools"    setenv SYSTEM_DEVELOPER_RELEASENOTES_DIR "/Developer/ADC Reference Library/releasenotes"    setenv SYSTEM_DEVELOPER_TOOLS /Developer/Tools    setenv SYSTEM_DEVELOPER_TOOLS_DOC_DIR "/Developer/ADC Reference Library/documentation/DeveloperTools"    setenv SYSTEM_DEVELOPER_TOOLS_RELEASENOTES_DIR "/Developer/ADC Reference Library/releasenotes/DeveloperTools"    setenv SYSTEM_DEVELOPER_USR_DIR /Developer/usr    setenv SYSTEM_DEVELOPER_UTILITIES_DIR /Developer/Applications/Utilities    setenv SYSTEM_DOCUMENTATION_DIR /Library/Documentation    setenv SYSTEM_LIBRARY_DIR /System/Library    setenv TARGETNAME objreader    setenv TARGET_BUILD_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/Debug    setenv TARGET_NAME objreader    setenv TARGET_TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_FILES_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_FILE_DIR /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build    setenv TEMP_ROOT /Users/jbowles/spikes/opengl/4.1/objreader/build    setenv TEST_AFTER_BUILD NO    setenv UID 501    setenv UNSTRIPPED_PRODUCT NO    setenv USER jbowles    setenv USER_APPS_DIR /Users/jbowles/Applications    setenv USER_LIBRARY_DIR /Users/jbowles/Library    setenv USE_DYNAMIC_NO_PIC YES    setenv USE_HEADERMAP NO    setenv USE_HEADER_SYMLINKS NO    setenv VALIDATE_PRODUCT NO    setenv VALID_ARCHS "i386 x86_64"    setenv VERBOSE_PBXCP NO    setenv VERSION_INFO_BUILDER jbowles    setenv VERSION_INFO_FILE objreader_vers.c    setenv VERSION_INFO_STRING "\"@(#)PROGRAM:objreader  PROJECT:objreader-\""    setenv WARNING_CFLAGS "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas"    setenv XCODE_APP_SUPPORT_DIR /Developer/Library/Xcode    setenv XCODE_PRODUCT_BUILD_VERSION 4B110    setenv XCODE_VERSION_ACTUAL 0410    setenv XCODE_VERSION_MAJOR 0400    setenv XCODE_VERSION_MINOR 0410    setenv YACC /Developer/usr/bin/yacc    /bin/sh -c /Users/jbowles/spikes/opengl/4.1/objreader/build/objreader.build/Debug/objreader.build/Script-7FD21BD5AE507FD21BD5AE50.sh
-

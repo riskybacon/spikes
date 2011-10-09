@@ -1,2 +1,0 @@
-/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/ALL_BUILD.dir
-/Users/jbowles/spikes/opengl/4.1/objreader/build/CMakeFiles/objreader.dir
