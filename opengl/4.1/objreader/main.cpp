@@ -472,7 +472,7 @@ int update(double time)
                                            0.1f,                          // Near clip 
                                            4000.0f);                      // Far clip
    // Camera matrix
-   glm::mat4 view       = glm::lookAt(glm::vec3(4,3,3), // Camera position is at (4,3,3), in world space
+   glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (4,3,3), in world space
                                       glm::vec3(0,0,0), // and looks at the origin
                                       glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                       );
