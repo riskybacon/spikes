@@ -1,5 +1,5 @@
 //
-// Rotating triangle demo using OpenGL 3.2 / 4.1
+// OBJ model loader using OpenGL 3.2 / 4.1
 //
 // main.cpp
 //
@@ -33,21 +33,22 @@ using std::vector;
 
 // Global variables have an underscore prefix.
 GLuint       _program;        //< Shader program handle
-GLuint       _vao;            //< Vertex array object for the vertices
-GLuint       _cao;            //< Vertex array object for the colors
-GLuint       _iao;            //< Array object for the indices
-GLuint       _vertexBuffer;   //< Vertex buffer object for the vertices
-GLuint       _colors;         //< Vertex buffer object for the colors
-GLuint       _indices;        //< Buffer object for the vertex indices
-GLint        _vertexLocation; //< Location of the vertex attribute in the shader program
-GLint        _colorLocation;  //< Location of the color attribute in the shader program
+GLuint       _vao;            //< Array object for the vertices
+GLuint       _nao;            //< Array object for the normals
+GLuint       _tao;            //< Array object for the texture coordintes
+GLuint       _vertexBuffer;   //< Buffer object for the vertices
+GLuint       _normalBuffer;   //< Buffer object for the normals
+GLuint       _tcBuffer;       //< Buffer object for the texture coordinates
+GLint        _vertexLocation; //< Location of the vertex attribute in the shader
+GLint        _normalLocation; //< Location of the normal attribute in the shader
+GLint        _tcLocation;     //< Location of the texture coordinate attribute in the shader
 bool         _running;        //< true if the program is running, false if it is time to terminate
 GLuint       _mvp;            //< Location of the model, view, projection matrix in vertex shader
 bool         _tracking;       //< True if mouse location is being tracked
 Trackball*   _trackball;      //< Pointer to virtual trackball
-vector<vec4> _vertexData;
-vector<vec2> _texcoordData;
-vector<vec3> _normalData;
+vector<vec4> _vertexData;     //< Vertex data
+vector<vec4> _normalData;     //< Normal data
+vector<vec2> _tcData;         //< Texture coordinate data
 
 
 /**
@@ -299,7 +300,7 @@ void init(void)
 
    GLuint mode = GLM_SMOOTH | GLM_TEXTURE;
    
-   glmCreateBuffers(model, mode, _vertexData, _normalData, _texcoordData);
+   glmCreateBuffers(model, mode, _vertexData, _normalData, _tcData);
    std::string vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
    std::string fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
    
@@ -308,7 +309,8 @@ void init(void)
 
    // Get vertex and color attribute locations
    _vertexLocation = glGetAttribLocation(_program, "vertex");
-   _colorLocation  = glGetAttribLocation(_program, "color");
+   _normalLocation = glGetAttribLocation(_program, "normal");
+   _tcLocation     = glGetAttribLocation(_program, "tc");
       
    // Generate a single handle for a vertex array. Only one vertex
    // array is needed
@@ -344,23 +346,27 @@ void init(void)
    // Enable the generic vertex attribute array
    glEnableVertexAttribArray(_vertexLocation);
 
-#if 0
-   // Set up color attributes
-   glGenBuffers(1, &_colors);
-   glBindBuffer(GL_ARRAY_BUFFER, _colors);
-   glBufferData(GL_ARRAY_BUFFER,
-                8 * 4 * sizeof(GLfloat),
-                (GLfloat*) colors,
-                GL_STATIC_DRAW);
-   _colorLocation = glGetAttribLocation(_program, "color");
-   glVertexAttribPointer(_colorLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(_colorLocation);
+   // Set up normal attribute
+   glGenBuffers(1, &_nao);
+   glBindBuffer(GL_ARRAY_BUFFER, _nao);
+   
+   glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
+                &_normalData[0], GL_STATIC_DRAW);
 
-   // Create the index buffer
-   glGenBuffers(1, &_indices);
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indices);
-   glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-#endif
+   glVertexAttribPointer(_normalLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_normalLocation);
+
+   
+   // Set up texture attribute
+   glGenBuffers(1, &_tao);
+   glBindBuffer(GL_ARRAY_BUFFER, _tao);
+   
+   glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
+                &_tcData[0], GL_STATIC_DRAW);
+   
+   glVertexAttribPointer(_tcLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_tcLocation);
+
    // Set the clear color
    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
    

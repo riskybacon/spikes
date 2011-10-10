@@ -1576,7 +1576,7 @@ glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode)
 GLvoid
 glmCreateBuffers(GLMmodel* model, GLuint mode,
                  std::vector<glm::vec4>& vertices,
-                 std::vector<glm::vec3>& normals,
+                 std::vector<glm::vec4>& normals,
                  std::vector<glm::vec2>& texcoords
                  )
 {
@@ -1599,7 +1599,7 @@ glmCreateBuffers(GLMmodel* model, GLuint mode,
          ptr = &model->facetnorms[3 * triangle->findex];
          for(j = 0; j < 3; ++j)
          {
-            normals.push_back(glm::vec3(*ptr, *(ptr + 1), *(ptr + 2)));
+            normals.push_back(glm::vec4(*ptr, *(ptr + 1), *(ptr + 2), 0.0f));
          }
       }
       
@@ -1609,7 +1609,7 @@ glmCreateBuffers(GLMmodel* model, GLuint mode,
          for(j = 0; j < 3; ++j)
          {
             ptr = &model->normals[3 * triangle->nindices[j]];
-            normals.push_back(glm::vec3(*ptr, *(ptr + 1), *(ptr + 2)));
+            normals.push_back(glm::vec4(*ptr, *(ptr + 1), *(ptr + 2), 0.0f));
          }
       }
       if (mode & GLM_TEXTURE)

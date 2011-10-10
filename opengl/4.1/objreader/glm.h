@@ -217,7 +217,7 @@ glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode);
 GLvoid
 glmCreateBuffers(GLMmodel* model, GLuint mode,
                  std::vector<glm::vec4>& vertices,
-                 std::vector<glm::vec3>& normals,
+                 std::vector<glm::vec4>& normals,
                  std::vector<glm::vec2>& texcoords);
 #if 0
 /* glmDraw: Renders the model to the current OpenGL context using the
