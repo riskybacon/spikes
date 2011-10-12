@@ -27,9 +27,6 @@
 
 #include "glm.h"
 
-#include <vector>
-#include <glm/glm.hpp>
-
 #define T(x) (model->triangles[(x)])
 
 
@@ -1573,66 +1570,6 @@ glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode)
     fclose(file);
 }
 
-GLvoid
-glmCreateBuffers(GLMmodel* model, GLuint mode,
-                 std::vector<glm::vec4>& vertices,
-                 std::vector<glm::vec4>& normals,
-                 std::vector<glm::vec2>& texcoords
-                 )
-{
-   GLuint i;
-   GLuint j;
-   GLMgroup* group = model->groups;
-   GLMtriangle* triangle;
-
-   vertices.clear();
-   normals.clear();
-   texcoords.clear();
-   
-   printf("group->numtriangles: %d\n", group->numtriangles);
-   for (i = 0; i < group->numtriangles; i++) {
-      triangle = &T(group->triangles[i]);
-      GLfloat* ptr;
-      if (mode & GLM_FLAT)
-      {
-         // glNormal3fv(&model->facetnorms[3 * triangle->findex]);
-         ptr = &model->facetnorms[3 * triangle->findex];
-         for(j = 0; j < 3; ++j)
-         {
-            normals.push_back(glm::vec4(*ptr, *(ptr + 1), *(ptr + 2), 0.0f));
-         }
-      }
-      
-      if (mode & GLM_SMOOTH)
-      {
-         //         glNormal3fv(&model->normals[3 * triangle->nindices[0]]);
-         for(j = 0; j < 3; ++j)
-         {
-            ptr = &model->normals[3 * triangle->nindices[j]];
-            normals.push_back(glm::vec4(*ptr, *(ptr + 1), *(ptr + 2), 0.0f));
-         }
-      }
-      if (mode & GLM_TEXTURE)
-      {
-//         glTexCoord2fv(&model->texcoords[2 * triangle->tindices[0]]);
-         for(j = 0; j < 3; ++j)
-         {
-            ptr = &model->texcoords[2 * triangle->tindices[j]];
-            texcoords.push_back(glm::vec2(*ptr, *(ptr + 1)));
-         }
-      }
-      
-      for(j = 0; j < 3; ++j)
-      {
-         //      glVertex3fv(&model->vertices[3 * triangle->vindices[0]]);
-         ptr = &model->vertices[3 * triangle->vindices[j]];
-         vertices.push_back(glm::vec4(*ptr,
-                                      *(ptr + 1),
-                                      *(ptr + 2),
-                                      1.0f));
-      }
-   }
-}
 #if 0
 /* glmDraw: Renders the model to the current OpenGL context using the
  * mode specified.

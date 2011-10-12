@@ -24,9 +24,11 @@ add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
 # Add a target executable
 add_executable(${PROJ_NAME}
   main.cpp
-  glm.cpp
+  glm.c
+  objmodel.cpp
   trackball.cpp
   glm.h
+  objmodel.h
   platform_specific.h
   trackball.h
 )

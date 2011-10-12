@@ -36,7 +36,9 @@
 // Constructor
 //----------------------------------------------------------------------
 Trackball::Trackball(int width, int height)
-: _tracking(false)
+:  _tracking   (false)
+,  _havePrevPos(false)
+
 {
    // Set the width and height
    reshape(width, height);
@@ -111,38 +113,43 @@ void Trackball::motion(int x, int y)
    if(_tracking)
    {
       glm::vec3 curPos;
-      glm::vec3 delta;
-      
       // Project the mouse window space coordinates into trackball space
       curPos = projection(x, y);
-      
-      // Find the change in position
-      delta = curPos - _prevPos;
-      // Compute distance of the change
-      float deltaLen = glm::length(delta);
-      
-      // If the change is really small, then don't bother updating
-      // the transformation.
-      if(deltaLen > 0.00001)
-      {
-         float angle = 90 * deltaLen;
-         glm::vec3 axis;
-         // Cross product of prevPos and curPos
-         axis = glm::cross(_prevPos, curPos);
 
-         // Copy current postion into the previous position
-         _prevPos = curPos;
-         // The new rotation needs to be applied after the previous
-         // rotation, so premultiply:
-         //
-         // rotation = new_rotation * old_rotation
-         //
-         // If you use this class, replace this section with your own matrix
-         // class. This section ugly, but cuts down on the amount of code in
-         // this example and you probably already have your own matrix class.
-         glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
-         _trans = rotation * _trans;
+      if(_havePrevPos)
+      {
+         glm::vec3 delta;
+         
+         
+         // Find the change in position
+         delta = curPos - _prevPos;
+         // Compute distance of the change
+         float deltaLen = glm::length(delta);
+         
+         // If the change is really small, then don't bother updating
+         // the transformation.
+         if(deltaLen > 0.00001)
+         {
+            float angle = 90 * deltaLen;
+            glm::vec3 axis;
+            // Cross product of prevPos and curPos
+            axis = glm::cross(_prevPos, curPos);
+            
+            // The new rotation needs to be applied after the previous
+            // rotation, so premultiply:
+            //
+            // rotation = new_rotation * old_rotation
+            //
+            // If you use this class, replace this section with your own matrix
+            // class. This section ugly, but cuts down on the amount of code in
+            // this example and you probably already have your own matrix class.
+            glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
+            _trans = rotation * _trans;
+         }
       }
+      // Copy current postion into the previous position
+      _prevPos = curPos;
+      _havePrevPos = true;
    }
 }
 
@@ -161,4 +168,5 @@ void Trackball::start(int x, int y)
 void Trackball::stop(void)
 {
    _tracking = false;
+   _havePrevPos = false;
 }

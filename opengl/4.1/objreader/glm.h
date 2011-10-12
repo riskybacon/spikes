@@ -11,6 +11,8 @@
 
  */
 
+#ifndef _GLM_OBJMODEL_H
+#define _GLM_OBJMODEL_H
 
 #if defined(__APPLE__) || defined(MACOSX)
 #include <OpenGL/gl3.h>
@@ -18,9 +20,6 @@
 #include <gl/gl.h>
 #endif
 
-
-#include <vector>
-#include <glm/glm.hpp>
 
 #ifndef M_PI
 #define M_PI 3.14159265f
@@ -214,11 +213,6 @@ glmReadOBJ(const char* filename);
 GLvoid
 glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode);
 
-GLvoid
-glmCreateBuffers(GLMmodel* model, GLuint mode,
-                 std::vector<glm::vec4>& vertices,
-                 std::vector<glm::vec4>& normals,
-                 std::vector<glm::vec2>& texcoords);
 #if 0
 /* glmDraw: Renders the model to the current OpenGL context using the
  * mode specified.
@@ -290,3 +284,5 @@ glmWeld(GLMmodel* model, GLfloat epsilon);
  */
 GLubyte* 
 glmReadPPM(char* filename, int* width, int* height);
+
+#endif

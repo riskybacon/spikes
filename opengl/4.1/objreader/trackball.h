@@ -106,11 +106,12 @@ public:
    
 private:
    
-   bool      _tracking;   //< True if motion being tracked
-   glm::vec3 _prevPos;    //< Last recorded position of the trackball.
-   glm::mat4 _trans;      //< Transformation matrix
-   int       _width;      //< Window width
-   int       _height;     //< Window height
+   bool      _tracking;     //< True if motion being tracked
+   bool      _havePrevPos;  //< True if there is a previous position, false if tracking just started
+   glm::vec3 _prevPos;      //< Last recorded position of the trackball.
+   glm::mat4 _trans;        //< Transformation matrix
+   int       _width;        //< Window width
+   int       _height;       //< Window height
 };
 
 #endif

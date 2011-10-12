@@ -19,15 +19,16 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// Include OBJ reader
-#include "glm.h"
-
 using namespace glm;
 using std::vector;
 
 // Include this file before glfw.h
 #include "platform_specific.h"
 #include <GL/glfw.h>
+
+// Include OBJ reader. It was called glm long before glm.g-truc.net
+#include "objmodel.h"
+
 
 #include "trackball.h"
 
@@ -44,6 +45,7 @@ GLint        _normalLocation; //< Location of the normal attribute in the shader
 GLint        _tcLocation;     //< Location of the texture coordinate attribute in the shader
 bool         _running;        //< true if the program is running, false if it is time to terminate
 GLuint       _mvp;            //< Location of the model, view, projection matrix in vertex shader
+GLuint       _invTP;          //< Location of the inverse transpose of the MVP matrix
 bool         _tracking;       //< True if mouse location is being tracked
 Trackball*   _trackball;      //< Pointer to virtual trackball
 vector<vec4> _vertexData;     //< Vertex data
@@ -295,12 +297,12 @@ void init(void)
    
    std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
    
-   GLMmodel* model = glmReadOBJ(objFile.c_str());
-   glmUnitize(model);
+   OBJModel* model = new OBJModel(objFile);
+   model->unitize();
 
    GLuint mode = GLM_SMOOTH | GLM_TEXTURE;
    
-   glmCreateBuffers(model, mode, _vertexData, _normalData, _tcData);
+   model->createBuffers(mode, _vertexData, _normalData, _tcData);
    std::string vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
    std::string fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
    
@@ -311,7 +313,9 @@ void init(void)
    _vertexLocation = glGetAttribLocation(_program, "vertex");
    _normalLocation = glGetAttribLocation(_program, "normal");
    _tcLocation     = glGetAttribLocation(_program, "tc");
-      
+   _mvp            = glGetUniformLocation(_program, "mvp");
+   _invTP          = glGetUniformLocation(_program, "invTP");
+   
    // Generate a single handle for a vertex array. Only one vertex
    // array is needed
    glGenVertexArrays(1, &_vao);
@@ -492,11 +496,17 @@ int update(double time)
    // Create  model, view, projection matrix
    glm::mat4 mvp        = projection * view * model; // Remember, matrix multiplication is the other way around
    
+   // Calculate the inverse transpose for use with normals
+   glm::mat4 invTP      = transpose(glm::inverse(mvp));
+   
    // Use the shader program that was loaded, compiled and linked
    glUseProgram(_program);
    
    // Set the MVP uniform
    glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);
+   
+   // Set the inverse transpose uniform
+   glUniformMatrix4fv(_invTP, 1, GL_FALSE, &invTP[0][0]);
 
    // Draw the triangles
    glDrawArrays(GL_TRIANGLES, 0, _vertexData.size());
