@@ -25,9 +25,11 @@ add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
 add_executable(${PROJ_NAME}
   main.cpp
   glm.c
+  glslprogram.cpp
   objmodel.cpp
   trackball.cpp
   glm.h
+  glslprogram.h
   objmodel.h
   platform_specific.h
   trackball.h

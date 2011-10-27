@@ -32,8 +32,12 @@ using std::vector;
 
 #include "trackball.h"
 
+#define _DEBUG
+
+#include "glslprogram.h"
+
 // Global variables have an underscore prefix.
-GLuint       _program;        //< Shader program handle
+GL::Program* _program;        //< GLSL program
 GLuint       _vao;            //< Array object for the vertices
 GLuint       _nao;            //< Array object for the normals
 GLuint       _tao;            //< Array object for the texture coordintes
@@ -51,6 +55,8 @@ Trackball*   _trackball;      //< Pointer to virtual trackball
 vector<vec4> _vertexData;     //< Vertex data
 vector<vec4> _normalData;     //< Normal data
 vector<vec2> _tcData;         //< Texture coordinate data
+std::string  _vertexFile;     //< Name of the vertex shader file
+std::string  _fragFile;       //< Name of the fragment shader file
 
 
 /**
@@ -73,200 +79,9 @@ void terminate(int exitCode)
       glDeleteVertexArrays(1, &_vao);
    }
    
-   // Delete shader program
-   if(_program)
-   {
-      glDeleteProgram(_program);
-   }
-
    glfwTerminate();
 
    exit(exitCode);
-}
-
-/**
- * Creates a string by reading a text file.
- *
- * @param filename	The name of the file
- * @return			A string that contains the contents of the file
- */
-std::string readTextFile(const std::string& filename)
-{
-   std::ifstream infile(filename.c_str()); // File stream
-   std::string source;                     // Text file string
-   std::string line;                       // A line in the file
-
-   // Make sure the file could be opened
-   if(!infile.is_open())
-   {
-      std::cerr << "Could not open file: " << filename << std::endl;
-      terminate(EXIT_FAILURE);
-   }
-
-   // Read in the source one line at a time, then append it
-   // to the source string. Not efficient.
-   while(infile.good())
-   {
-	  getline(infile, line);
-	  source = source + line + "\n";
-   }
-
-   infile.close();
-   return source;
-}
-
-/**
- * Check the compile status of a shader
- *
- * @param shader     Handle to a shader
- * @return           true if the shader was compiled, false otherwise
- */
-bool shaderCompileStatus(GLuint shader)
-{
-   GLint compiled;
-   glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-   return compiled ? true : false;
-}
-
-/**
- * Retrieve a shader log
- *
- * @param shader     Handle to a shader
- * @return           The contents of the log
- */
-std::string getShaderLog(GLuint shader)
-{
-   // Get the size of the log and allocate the required space
-   GLint size;
-   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
-
-   // Allocate space for the log
-   char* log = new char[size];
- 
-   // Get the shader log
-   glGetShaderInfoLog(shader, size, NULL, log);
-
-   // Convert it into a string (not efficient)
-   std::string retval(log);
-
-   // Free up space
-   delete [] log;
-   
-   return retval;
-}
-
-/**
- * Check the link status of a program
- *
- * @param shader     Handle to a shader
- * @return           true if the shader was compiled, false otherwise
- */
-bool programLinkStatus(GLuint program)
-{
-   GLint linked;
-   glGetProgramiv(_program, GL_LINK_STATUS, &linked);
-   return linked ? true : false;
-}
-
-/**
- * Retrieve a GLSL program log
- *
- * @param shader     Handle to a GLSL program
- * @return           The contents of the log
- */
-std::string getProgramLog(GLuint program)
-{
-   // Get the size of the log and allocate the required space
-   GLint size;
-   glGetProgramiv(_program, GL_INFO_LOG_LENGTH, &size);
-   char* log = new char[size];
-
-   // Get the program log
-   glGetProgramInfoLog(program, size, NULL, log);
-
-   // Convert it into a string (blah)
-   std::string retval(log);
-
-   // Clean up and return
-   delete [] log;
-   return retval;
-}
-
-/**
- * Create a shader program from a source string. The caller should
- * check the compile status
- *
- * @param source        The shader source
- * @param shaderType    The type of shader (GL_VERTEX_SHADER, etc)
- * @return              A handle to the shader program. 0 if an
- *                      error occured.
- */
-GLuint createShader(const std::string& source, GLenum shaderType)
-{
-   GLuint shader = glCreateShader(shaderType);
-   
-   const GLchar* sourcePtr0 = source.c_str();
-   const GLchar** sourcePtr = &sourcePtr0;
-   
-   // Set the source and attempt compilation
-   glShaderSource(shader, 1, sourcePtr, NULL);
-   glCompileShader(shader);
-   
-   return shader;
-}
-
-/**
- * Create a GLSL program object from vertex and fragment shader files.
- *
- * @param  vShaderFile   The vertex shader filename
- * @param  fShaderFile   The fragment shader filename
- * @return handle to the GLSL program
- */
-GLuint createGLSLProgram(const std::string& vShaderFile, const std::string& fShaderFile)
-{
-   std::string vertexSource   = readTextFile(vShaderFile);
-   std::string fragmentSource = readTextFile(fShaderFile);
-   
-   _program = glCreateProgram();
-   
-   // Create vertex shader
-   GLuint vertexShader  = createShader(vertexSource, GL_VERTEX_SHADER);
-
-   // Check for compile errors
-   if(!shaderCompileStatus(vertexShader))
-   {
-      std::cerr << "Could not compile " << vShaderFile << std::endl;
-      std::cerr << getShaderLog(vertexShader) << std::endl;
-      terminate(EXIT_FAILURE);
-   }
-
-   // Create fragment shader
-   GLuint fragmentShader = createShader(fragmentSource, GL_FRAGMENT_SHADER);
-   
-   // Check for compile errors
-   if(!shaderCompileStatus(fragmentShader))
-   {
-      std::cerr << "Could not compile " << fShaderFile << std::endl;
-      std::cerr << getShaderLog(fragmentShader) << std::endl;
-      terminate(EXIT_FAILURE);
-   }
-
-   // Attach the shaders to the program
-   glAttachShader(_program, vertexShader);
-   glAttachShader(_program, fragmentShader);
-   
-   // Link the program
-   glLinkProgram(_program);
-   
-   // Check for linker errors
-   if(!programLinkStatus(_program))
-   {
-      std::cerr << "GLSL program failed to link:" << std::endl;
-      std::cerr << getProgramLog(_program) << std::endl;
-      terminate(EXIT_FAILURE);
-   }
-
-   return _program;
 }
 
 /**
@@ -293,94 +108,116 @@ void initGLEW(void)
  */
 void init(void)
 {
-   initGLEW();
-   
-   std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
-   
-   OBJModel* model = new OBJModel(objFile);
-   model->unitize();
+   try {
+      initGLEW();
+      
+      std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
+      
+      OBJModel* model = new OBJModel(objFile);
+      model->unitize();
+      
+      GLuint mode = GLM_SMOOTH | GLM_TEXTURE;
+      
+      model->createBuffers(mode, _vertexData, _normalData, _tcData);
+      _vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
+      _fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
+      
+      _program = new GL::Program(_vertexFile, _fragFile);
+      
+      // Get vertex and color attribute locations
+      _vertexLocation = _program->getAttribLocation("vertex");
+      _normalLocation = _program->getAttribLocation("normal");
+      _tcLocation     = _program->getAttribLocation("tc");
+      _mvp            = _program->getUniformLocation("mvp");
+      _invTP          = _program->getUniformLocation("invTP");
+      
+      // Generate a single handle for a vertex array. Only one vertex
+      // array is needed
+      glGenVertexArrays(1, &_vao);
+      
+      // Bind that vertex array
+      glBindVertexArray(_vao);
+      
+      // Generate one handle for the vertex buffer object
+      glGenBuffers(1, &_vertexBuffer);
+      
+      // Make that vbo the current array buffer. Subsequent array buffer operations
+      // will affect this vbo
+      //
+      // It is possible to place all data into a single buffer object and use
+      // offsets to tell OpenGL where the data for a vertex array or any other
+      // attribute may reside.
+      glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+      GL_ERR_CHECK();
+      
+      // Set the data for the vbo. This will load it onto the GPU
+      glBufferData(GL_ARRAY_BUFFER, _vertexData.size() * sizeof(glm::vec4),
+                   &_vertexData[0], GL_STATIC_DRAW);
+      
+      // Specify the location and data format of the array of generic vertex attributes
+      glVertexAttribPointer(_vertexLocation, // Attribute location in the shader program
+                            4,               // Number of components per attribute
+                            GL_FLOAT,        // Data type of attribute
+                            GL_FALSE,        // GL_TRUE: values are normalized or
+                            // GL_FALSE: values are converted to fixed point
+                            0,               // Stride
+                            0);              // Offset into currently bound array buffer for this data
+      
+      // Enable the generic vertex attribute array
+      glEnableVertexAttribArray(_vertexLocation);
+      
+      // Set up normal attribute
+      glGenBuffers(1, &_nao);
+      glBindBuffer(GL_ARRAY_BUFFER, _nao);
+      
+      glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
+                   &_normalData[0], GL_STATIC_DRAW);
+      
+      glVertexAttribPointer(_normalLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_normalLocation);
+      
+      
+      // Set up texture attribute
+      glGenBuffers(1, &_tao);
+      glBindBuffer(GL_ARRAY_BUFFER, _tao);
+      
+      glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
+                   &_tcData[0], GL_STATIC_DRAW);
+      
+      glVertexAttribPointer(_tcLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_tcLocation);
+      
+      // Set the clear color
+      glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+      
+      // Set the depth clearing value
+      glClearDepth(1.0f);
+      
+      // Enable depth test
+      glEnable(GL_DEPTH_TEST);
+   } 
+   catch (GL::Exception exception)
+   {
+      std::cerr << exception.what() << std::endl;
+      terminate(EXIT_FAILURE);
+   }
 
-   GLuint mode = GLM_SMOOTH | GLM_TEXTURE;
-   
-   model->createBuffers(mode, _vertexData, _normalData, _tcData);
-   std::string vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
-   std::string fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
-   
-   
-   _program = createGLSLProgram(vertexFile, fragFile);
-
-   // Get vertex and color attribute locations
-   _vertexLocation = glGetAttribLocation(_program, "vertex");
-   _normalLocation = glGetAttribLocation(_program, "normal");
-   _tcLocation     = glGetAttribLocation(_program, "tc");
-   _mvp            = glGetUniformLocation(_program, "mvp");
-   _invTP          = glGetUniformLocation(_program, "invTP");
-   
-   // Generate a single handle for a vertex array. Only one vertex
-   // array is needed
-   glGenVertexArrays(1, &_vao);
-   
-   // Bind that vertex array
-   glBindVertexArray(_vao);
-   
-   // Generate one handle for the vertex buffer object
-   glGenBuffers(1, &_vertexBuffer);
-   
-   // Make that vbo the current array buffer. Subsequent array buffer operations
-   // will affect this vbo
-   //
-   // It is possible to place all data into a single buffer object and use
-   // offsets to tell OpenGL where the data for a vertex array or any other
-   // attribute may reside.
-   glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-   
-   // Set the data for the vbo. This will load it onto the GPU
-   glBufferData(GL_ARRAY_BUFFER, _vertexData.size() * sizeof(glm::vec4),
-                &_vertexData[0], GL_STATIC_DRAW);
-   
-   // Specify the location and data format of the array of generic vertex attributes
-   glVertexAttribPointer(_vertexLocation, // Attribute location in the shader program
-                         4,               // Number of components per attribute
-                         GL_FLOAT,        // Data type of attribute
-                         GL_FALSE,        // GL_TRUE: values are normalized or
-                         // GL_FALSE: values are converted to fixed point
-                         0,               // Stride
-                         0);              // Offset into currently bound array buffer for this data
-   
-   // Enable the generic vertex attribute array
-   glEnableVertexAttribArray(_vertexLocation);
-
-   // Set up normal attribute
-   glGenBuffers(1, &_nao);
-   glBindBuffer(GL_ARRAY_BUFFER, _nao);
-   
-   glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
-                &_normalData[0], GL_STATIC_DRAW);
-
-   glVertexAttribPointer(_normalLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(_normalLocation);
-
-   
-   // Set up texture attribute
-   glGenBuffers(1, &_tao);
-   glBindBuffer(GL_ARRAY_BUFFER, _tao);
-   
-   glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
-                &_tcData[0], GL_STATIC_DRAW);
-   
-   glVertexAttribPointer(_tcLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(_tcLocation);
-
-   // Set the clear color
-   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-   
-   // Set the depth clearing value
-   glClearDepth(1.0f);
-   
-   // Enable depth test
-   glEnable(GL_DEPTH_TEST);
 }
 
+void reloadShaders(void)
+{
+   try
+   {
+      GL::Program* newProgram = new GL::Program(_vertexFile, _fragFile);
+      delete _program;
+      _program = newProgram;
+      
+   }
+   catch (GL::Exception exception)
+   {
+      std::cerr << exception.what() << std::endl;
+   }
+}
 /**
  * Window resize callback
  * 
@@ -443,6 +280,11 @@ void GLFWCALL keypress(int key, int state)
          case GLFW_KEY_ESC:
             _running = false;
             break;
+         case 'R':
+         case 'r':
+            reloadShaders();
+            break;
+            
       }
    }
 }
@@ -500,7 +342,7 @@ int update(double time)
    glm::mat4 invTP      = transpose(glm::inverse(mvp));
    
    // Use the shader program that was loaded, compiled and linked
-   glUseProgram(_program);
+   _program->bind();
    
    // Set the MVP uniform
    glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);

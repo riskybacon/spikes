@@ -345,6 +345,8 @@ void init(void)
    
    // Set the depth clearing value
    glClearDepth(1.0f);
+   
+   glPointSize(10.0f);
 }
 
 /**
@@ -395,7 +397,7 @@ int update(double time)
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    // Draw the triangle. 
-   glDrawArrays(GL_TRIANGLES, 0, 3);
+   glDrawArrays(GL_POINTS, 0, 3);
    
    return GL_TRUE;
 }
