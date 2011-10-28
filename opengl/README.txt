@@ -11,3 +11,5 @@ Simple OpenGL demonstrations:
 +- trackball - demonstrates a virtual trackball.
 |
 +- objreader - a hacked version of Nate Robbin's OBJ reader for OpenGL 3.2
+|
++- texture - a simple texture mapping example
