@@ -1,6 +1,6 @@
 Purpose: 
 
-Builds on the glfw-2.7.2 demo by introducing a uniform variable for
+Builds on the triangle demo by introducing a uniform variable for
 the model/view/projection matrix. Rotates the triangle about the
 y-axis once every second.
 
@@ -36,13 +36,13 @@ mkdir build
 cd build
 cmake ..
 make
-./rotating_tri
+./cub41
 
 To build a debug version under Linux or OS X:
 
 cmake "-DCMAKE_BUILD_TYPE:STRING=Debug" ..
 make
-./rotating_tri
+./cube41
 
 
 Building on Windows:
