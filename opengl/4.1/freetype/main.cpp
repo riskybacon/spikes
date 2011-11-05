@@ -59,6 +59,7 @@ vector<vec2> _tcData;          //< Texture coordinate data
 std::string  _vertexFile;      //< Name of the vertex shader file
 std::string  _fragFile;        //< Name of the fragment shader file
 Font*        _font;
+GLuint       _fontTexID;       //< Texture ID for the font
 
 /**
  * Clean up and exit
@@ -136,43 +137,45 @@ void init(void)
       
      std::string fontFile = std::string(SOURCE_DIR) + "/HelveticaLight.ttf";
      _font = new Font(fontFile, 256);
-//     std::cout << "(maxWidth, maxHeight): " << _font->maxWidth() << "," << _font->maxHeight() << std::endl;
+     
+     // Turn the font into a texture
+     glGenTextures(1, &_fontTexID);
+     glBindTexture(GL_TEXTURE_2D, _fontTexID);
+     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+     GL_ERR_CHECK();
+     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+     GL_ERR_CHECK();
+     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+     GL_ERR_CHECK();
+     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+     GL_ERR_CHECK();
+     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _font->texWidth(), _font->texHeight(), 0, GL_RED, GL_FLOAT, _font->data());
      GL_ERR_CHECK();
 
-      std::string filename = std::string(SOURCE_DIR) + "/cat.ppm";
-      
-     _texture = _font->texID('A');
-     glBindTexture(GL_TEXTURE_2D, _texture);
-     
       glActiveTexture(GL_TEXTURE0);
       GL_ERR_CHECK();
       
-      _vertexData.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
-      _vertexData.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
-      _vertexData.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
-      _vertexData.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
+     unsigned char glyph = 'A';
+     float width = _font->glyphWidth(glyph) * 0.5;
+     float height = _font->glyphHeight(glyph) * 0.5;
+      _vertexData.push_back(glm::vec4(-1.0f * width, -1.0f * height, 0.0f, 1.0f));
+      _vertexData.push_back(glm::vec4( 1.0f * width, -1.0f * height, 0.0f, 1.0f));
+      _vertexData.push_back(glm::vec4(-1.0f * width,  1.0f * height, 0.0f, 1.0f));
+      _vertexData.push_back(glm::vec4( 1.0f * width,  1.0f * height, 0.0f, 1.0f));
       
       _normalData.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalData.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalData.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalData.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
 
-#if 0
-      _tcData.push_back(glm::vec2(0.0f, 0.0f));
-      _tcData.push_back(glm::vec2(1.0f, 0.0f));
-      _tcData.push_back(glm::vec2(0.0f, 1.0f));
-      _tcData.push_back(glm::vec2(1.0f, 1.0f));
-#else
      float xMin, xMax, yMin, yMax;
-     _font->texCoords('r', xMin, xMax, yMin, yMax);
+     _font->texCoords(glyph, xMin, xMax, yMin, yMax);
      std::cout << "(xMin, yMin) , (xMax, yMax): (" << xMin << "," << yMin << "),(" << xMax << "," << yMax << ")" << std::endl;
      _tcData.push_back(glm::vec2(xMin, yMin));
      _tcData.push_back(glm::vec2(xMax, yMin));
      _tcData.push_back(glm::vec2(xMin, yMax));
      _tcData.push_back(glm::vec2(xMax, yMax));
 
-#endif
-     
       _vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
       _fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
       

@@ -4,6 +4,7 @@
 
 Font::Font(const std::string& filename, float height) 
 : mFilename   (filename)
+, mData       (NULL)
 , mNumGlyphs  (128)
 , mHeight     (height)
 , mMaxRow     (12)
@@ -14,10 +15,19 @@ Font::Font(const std::string& filename, float height)
   init();
 }
 
-void Font::init(void) {
-  // Generate texture handles for all characters
-  glGenTextures(mNumGlyphs, mTextures);
+/**
+ * Destructor
+ */
+Font::~Font() {
+  if(mData != NULL) {
+    delete mData;
+  }
+}
 
+/**
+ * Initialize the font
+ */
+void Font::init(void) {
 	// Initialize a freetype font library
 	FT_Library library;
 	if(FT_Init_FreeType(&library)) {
@@ -40,7 +50,7 @@ void Font::init(void) {
 	FT_Set_Char_Size(face, mHeight * 64, mHeight * 64, 96, 96);
 
   // Create a 2D texture map with all of the characters from the font
-  createBitmapVector(face);
+  createBitmap(face);
 
   // Clean up the face
 	FT_Done_Face(face);
@@ -64,15 +74,16 @@ void Font::texCoords(unsigned char ch, float& xMin, float& xMax, float& yMin, fl
   yMax /= mTexHeight;
 }
 
-void Font::createBitmapVector(const FT_Face& face) {
+void Font::createBitmap(const FT_Face& face) {
 //  int mGlyphWidth;
 //  int mGlyphHeight;
   
   // Find width and heights of the glyphs
   for(unsigned char ch = 0; ch < mNumGlyphs; ++ch) {
     // Load the Glyph for the requested character
-    if(FT_Load_Glyph( face, FT_Get_Char_Index( face, ch ), FT_LOAD_DEFAULT ))
+    if(FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT)) {
       throw std::runtime_error("FT_Load_Glyph failed");
+    }
     
     // Move the face's glyph into a Glyph object.
     FT_Glyph glyph;
@@ -106,16 +117,13 @@ void Font::createBitmapVector(const FT_Face& face) {
   mTexWidth = mMaxRow * mGlyphWidth;
   mTexHeight = mMaxCol * mGlyphHeight;
 
-  float* fontData = new float[mTexWidth * mTexHeight];
+  mData = new float[mTexWidth * mTexHeight];
   
   // Fill in the data with zeros
   for(int i = 0; i < mTexWidth * mTexHeight; ++i) {
-    fontData[i] = 0.1f;
+    mData[i] = 0.1f;
   }
 
-  std::cout << "texWidth, texHeight: " << mTexWidth << "," << mTexHeight << std::endl;
-
-#if 1
   for(unsigned char ch = 0; ch < mNumGlyphs; ++ch) {
     // Load the Glyph for the requested character
     if(FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT))
@@ -144,28 +152,8 @@ void Font::createBitmapVector(const FT_Face& face) {
       for(int u = 0; u < bitmap.width; ++u) {
         int idx = xStart + v * mTexWidth + u;
         float color = bitmap.buffer[(bitmap.rows - v) * bitmap.width + u] / 255.0f;
-//        float color = bitmap.buffer[v * bitmap.width + u] / 255.0f;
-        fontData[idx] = color;
+        mData[idx] = color;
       }
     }
   }
-#endif
-
-#if 1
-  //Now we just setup some texture paramaters.
-  glGenTextures(1, &mTexID);
-  glBindTexture(GL_TEXTURE_2D, mTexID);
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  GL_ERR_CHECK();
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  GL_ERR_CHECK();
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-  GL_ERR_CHECK();
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-  GL_ERR_CHECK();
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mTexWidth, mTexHeight, 0, GL_RED, GL_FLOAT, fontData);
-  GL_ERR_CHECK();
-#endif
-  
-  
 }

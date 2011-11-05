@@ -222,7 +222,7 @@ GLuint createShader(const std::string& source, GLenum shaderType)
  * @param  fShaderFile   The fragment shader filename
  * @return handle to the GLSL program
  */
-GLuint createGLSLProgram(const std::string& vShaderFile, const std::string& fShaderFile)
+GLuint createGLSLProgram(const std::string& vShaderFile, const std::string& fShaderFile, const std::string& gShaderFile)
 {
 #ifdef SHADER_IN_SOURCE
    std::string vertexSource(_vertexSource);
@@ -230,6 +230,7 @@ GLuint createGLSLProgram(const std::string& vShaderFile, const std::string& fSha
 #else
    std::string vertexSource   = readTextFile(vShaderFile);
    std::string fragmentSource = readTextFile(fShaderFile);
+   std::string geometrySource = readTextFile(gShaderFile);
 #endif
    
    _program = glCreateProgram();
@@ -256,9 +257,12 @@ GLuint createGLSLProgram(const std::string& vShaderFile, const std::string& fSha
       terminate(EXIT_FAILURE);
    }
 
+   GLuint geometryShader = createShader(geometrySource, GL_GEOMETRY_SHADER);
+
    // Attach the shaders to the program
    glAttachShader(_program, vertexShader);
    glAttachShader(_program, fragmentShader);
+   glAttachShader(_program, geometryShader);
    
    // Link the program
    glLinkProgram(_program);
@@ -291,13 +295,15 @@ void init(void)
     }
 #endif
    // Points of a triangle.
-   GLfloat points[] = {-1.0f, -0.75f, 0.0f, 1.0f,
-                        0.0f,  0.75f, 0.0f, 1.0f,
-                        1.0f, -0.75f, 0.0f, 1.0f };
+   GLfloat points[] = {-0.75f, -0.75f, 0.0f, 1.0f,
+                        0.00f,  0.75f, 0.0f, 1.0f,
+                        0.75f, -0.75f, 0.0f, 1.0f };
 
    std::string vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
    std::string fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
-   _program = createGLSLProgram(vertexFile, fragFile);
+   std::string geomFile   = std::string(SOURCE_DIR) + "/geometry.c";
+
+   _program = createGLSLProgram(vertexFile, fragFile, geomFile);
 
    // Generate a single handle for a vertex array
    glGenVertexArrays(1, &_vao);

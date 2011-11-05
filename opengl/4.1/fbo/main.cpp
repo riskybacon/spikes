@@ -32,27 +32,20 @@ using std::vector;
 
 // Global variables have an underscore prefix.
 GL::Program* _program;             //< GLSL program
+GL::Program* _programDepth;        //< GLSL program for displaying a depth texture
 
 // Array objects - quad
 GLuint       _vaoQuad;             //< Array object for the vertices
 GLuint       _naoQuad;             //< Array object for the normals
 GLuint       _taoQuad;             //< Array object for the texture coordintes
 
-// Array objects - cube
-GLuint       _vaoCube;             //< Array object for the vertices
-GLuint       _naoCube;             //< Array object for the normals
-GLuint       _taoCube;             //< Array object for the texture coordintes
-
 // Buffer objects - quad 
 GLuint       _vertexBufferQuad;    //< Buffer object for the vertices
 GLuint       _normalBufferQuad;    //< Buffer object for the normals
 GLuint       _tcBufferQuad;        //< Buffer object for the texture coordinates
 
-// Buffer objects - cube
-GLuint       _vertexBufferCube;    //< Buffer object for the vertices
-GLuint       _normalBufferCube;    //< Buffer object for the normals
-GLuint       _tcBufferCube;        //< Buffer object for the texture coordinates
 
+// Checkerboard texture
 GLuint       _checkboard;          //< Texture object
 int          _texWidth;            //< Width of the texture
 int          _texHeight;           //< Height of the texture
@@ -63,19 +56,23 @@ GLint        _normalLocation;      //< Location of the normal attribute in the s
 GLint        _tcLocation;          //< Location of the texture coordinate attribute in the shader
 GLint        _samplerLocation;     //< Location of the texture sampler in the fragment program
 
+// Shader file names
+std::string  _vertexFile;          //< Name of the vertex shader file
+std::string  _fragFile;            //< Name of the fragment shader file
+std::string  _fragDepthFile;       //< Name of the fragment shader file
+
 bool         _running;             //< true if the program is running, false if it is time to terminate
 GLuint       _mvp;                 //< Location of the model, view, projection matrix in vertex shader
 GLuint       _invTP;               //< Location of the inverse transpose of the MVP matrix
 bool         _tracking;            //< True if mouse location is being tracked
 Trackball*   _trackball;           //< Pointer to virtual trackball
+
+// Data for quad
 vector<vec4> _verticesQuad;        //< Vertex data
 vector<vec4> _normalsQuad;         //< Normal data
 vector<vec2> _tcQuad;       //< Texture coordinate data
-vector<vec4> _cubeVertices;        //< Vertex data
-vector<vec4> _cubeNormals;         //< Normal data
-vector<vec2> _cubeTexCoords;       //< Texture coordinate data
-std::string  _vertexFile;          //< Name of the vertex shader file
-std::string  _fragFile;            //< Name of the fragment shader file
+
+// FBO related handles and size
 GLuint       _fbo;                 //< Frame buffer object handle
 GLuint       _fboTextures[2];      //< FBO related textures
 GLuint       _renderbuffer;        //< Render buffer handle
@@ -249,8 +246,8 @@ void createFBO(void)
       GL_ERR_CHECK();
       
       // Attach render buffer to the FBO
-//      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _renderbuffer);
-      GL_ERR_CHECK();
+//      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
+//      GL_ERR_CHECK();
 
       // Set the drawing buffer
       glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -331,8 +328,6 @@ void init(void)
    {
       initGLEW();
       
-      std::string filename = std::string(SOURCE_DIR) + "/cat.ppm";
-      
       _texWidth = 256;
       _texHeight = 256;
       
@@ -359,13 +354,13 @@ void init(void)
       GL_ERR_CHECK();
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_FLOAT, texels);
       GL_ERR_CHECK();
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       GL_ERR_CHECK();
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       GL_ERR_CHECK();
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       GL_ERR_CHECK();
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       GL_ERR_CHECK();
       glActiveTexture(GL_TEXTURE0);
       GL_ERR_CHECK();
@@ -385,10 +380,12 @@ void init(void)
       _tcQuad.push_back(glm::vec2(0.0f, 1.0f));
       _tcQuad.push_back(glm::vec2(1.0f, 1.0f));
                         
-      _vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
-      _fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
+      _vertexFile    = std::string(SOURCE_DIR) + "/vertex.c";
+      _fragFile      = std::string(SOURCE_DIR) + "/fragment.c";
+      _fragDepthFile = std::string(SOURCE_DIR) + "/fragmentDepth.c";
       
-      _program = new GL::Program(_vertexFile, _fragFile);
+      _program      = new GL::Program(_vertexFile, _fragFile);
+      _programDepth = new GL::Program(_vertexFile, _fragDepthFile);
       
       // Get vertex and color attribute locations
       getAttribLocations();

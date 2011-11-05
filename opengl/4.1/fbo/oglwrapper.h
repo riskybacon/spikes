@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <map>
 
 #define OPENGL3
 
@@ -198,6 +199,11 @@ namespace GL
       ~Program();
 
       /**
+       * Map the names of uniforms to indices
+       */
+      void mapUniformNamesToIndices(void);
+      
+      /**
        * Check the link status of the program
        *
        * @param shader     Handle to a shader
@@ -252,11 +258,89 @@ namespace GL
          glUseProgram(_handle);
       }
       
+      /**
+       * @return the number of shader objects attached to program.
+       */
+      const GLint getAttachedShaders(void) const
+      {
+         GLint params;
+         glGetProgramiv(_handle, GL_ATTACHED_SHADERS, &params);
+         return params;
+      }
+      
+      /**
+       * @return the number of active attribute variables for program.
+       */
+      const GLint getActiveAttributes(void) const
+      {
+         GLint params;
+         glGetProgramiv(_handle, GL_ACTIVE_ATTRIBUTES, &params);
+         return params;
+      }
+      
+      /**
+       * @return the length of the longest active attribute name for program, including
+       *   the null termination character (i.e., the size of the character buffer required
+       *   to store the longest attribute name). If no active attributes exist, 0 is 
+       *   returned.
+       */
+      const GLint getActiveAttributeMaxLength(void) const
+      {
+         GLint params;
+         glGetProgramiv(_handle, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &params);
+         return params;
+      }
+      
+      /**
+       * @return the number of active uniform variables for program.
+       */
+      const GLint getActiveUniforms(void) const
+      {
+         GLint params;
+         glGetProgramiv(_handle, GL_ACTIVE_UNIFORMS, &params);
+         return params;
+      }
+      
+      /**
+       * Get the name of a uniform variable at the specified index
+       *
+       * @param index
+       *   The index for the uniform
+       *
+       * @return The name of the uniform
+       */
+      const std::string getUniformName(GLuint index) const
+      {
+         static const GLsizei maxNameSize = 256;
+         GLchar  glName[maxNameSize];
+         GLsizei length;
+         GLint   size;
+         GLenum  type;
+         glGetActiveUniform(_handle, index, maxNameSize, &length, &size, &type, glName);
+         std::string name(glName);
+         return name;
+      }
+
+      /**
+       * @return the length of the longest active uniform variable name for program,
+       *   including the null termination character (i.e., the size of the character buffer
+       *   required to store the longest uniform variable name). If no active uniform 
+       *   variables exist, 0 is returned.
+       */
+      const GLint getActiveUniformMaxLength(void) const
+      {
+         GLint params;
+         glGetProgramiv(_handle, GL_ACTIVE_UNIFORM_MAX_LENGTH, &params);
+         return params;
+      }
+
    private:
       
-      GLuint      _handle;         //< OpenGL handle for a GLSL shader
-      Shader* _vertexShader;   //< Pointer to the fragment shader
-      Shader* _fragmentShader; //< Pointer to the vertex shader
+      GLuint                        _handle;         //< OpenGL handle for a GLSL shader
+      Shader*                       _vertexShader;   //< Pointer to the fragment shader
+      Shader*                       _fragmentShader; //< Pointer to the vertex shader
+      std::map<std::string, GLuint> _uniform;        //< Map of uniform names to GLuint indices
+
    };
 }
 #endif

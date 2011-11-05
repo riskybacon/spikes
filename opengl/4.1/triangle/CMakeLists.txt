@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------
 cmake_minimum_required(VERSION 2.8)
 
-set(PROJ_NAME glfw272)
+set(PROJ_NAME triangle)
 
 project(${PROJ_NAME})
 
@@ -15,7 +15,9 @@ project(${PROJ_NAME})
 include(${CMAKE_SOURCE_DIR}/PlatformSpecifics.cmake)
 
 # Set the include directories
-include_directories(${INCLUDE_PATH})
+include_directories(
+  ${INCLUDE_PATH}
+)
 
 # Get the path to the source code and create a define. This is used
 # for locating the shaders

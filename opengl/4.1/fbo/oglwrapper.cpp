@@ -239,4 +239,25 @@ namespace GL
       delete [] log;
       return retval;
    }
+   
+   ///////////////////////////////////////////////////////////////////////////////////////
+   /// Build a mapping of uniform names to uniform indices
+   ///////////////////////////////////////////////////////////////////////////////////////
+   void Program::mapUniformNamesToIndices(void)
+   {
+      for(int i = 0; i < getActiveUniforms(); ++i)
+      {
+         _uniform[getUniformName(i)] = i;
+      }
+      
+#if 1
+      std::map<std::string, GLuint>::const_iterator itr;
+      for(itr = _uniform.begin(); itr != _uniform.end(); ++itr)
+      {
+         std::cout << "(name, index): (" << itr->first << "," << itr->second << ")" << std::endl;
+      }
+#endif
+      
+   }
+
 }
