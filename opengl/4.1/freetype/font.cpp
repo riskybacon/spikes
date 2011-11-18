@@ -64,9 +64,9 @@ void Font::texCoords(unsigned char ch, float& xMin, float& xMax, float& yMin, fl
   int row = ch / mMaxRow;
 
   xMin = (col       * mGlyphWidth);
-  xMax = (xMin + mFontWidth[ch] - 1);
+  xMax = (xMin + mFontWidth[ch]);
   yMin = (row       * mGlyphHeight);
-  yMax = (yMin + mFontHeight[ch] - 1);
+  yMax = (yMin + mFontHeight[ch]);
   
   xMin /= mTexWidth;
   xMax /= mTexWidth;
@@ -121,7 +121,7 @@ void Font::createBitmap(const FT_Face& face) {
   
   // Fill in the data with zeros
   for(int i = 0; i < mTexWidth * mTexHeight; ++i) {
-    mData[i] = 0.1f;
+    mData[i] = 0.0f;
   }
 
   for(unsigned char ch = 0; ch < mNumGlyphs; ++ch) {

@@ -136,7 +136,7 @@ void init(void)
       initGLEW();
       
      std::string fontFile = std::string(SOURCE_DIR) + "/HelveticaLight.ttf";
-     _font = new Font(fontFile, 256);
+     _font = new Font(fontFile, 32);
      
      // Turn the font into a texture
      glGenTextures(1, &_fontTexID);
@@ -155,9 +155,11 @@ void init(void)
       glActiveTexture(GL_TEXTURE0);
       GL_ERR_CHECK();
       
-     unsigned char glyph = 'A';
+     unsigned char glyph = 'q';
      float width = _font->glyphWidth(glyph) * 0.5;
      float height = _font->glyphHeight(glyph) * 0.5;
+     width = 1.0f;
+     height = 1.0f;
       _vertexData.push_back(glm::vec4(-1.0f * width, -1.0f * height, 0.0f, 1.0f));
       _vertexData.push_back(glm::vec4( 1.0f * width, -1.0f * height, 0.0f, 1.0f));
       _vertexData.push_back(glm::vec4(-1.0f * width,  1.0f * height, 0.0f, 1.0f));
@@ -171,11 +173,17 @@ void init(void)
      float xMin, xMax, yMin, yMax;
      _font->texCoords(glyph, xMin, xMax, yMin, yMax);
      std::cout << "(xMin, yMin) , (xMax, yMax): (" << xMin << "," << yMin << "),(" << xMax << "," << yMax << ")" << std::endl;
+#if 0
      _tcData.push_back(glm::vec2(xMin, yMin));
      _tcData.push_back(glm::vec2(xMax, yMin));
      _tcData.push_back(glm::vec2(xMin, yMax));
      _tcData.push_back(glm::vec2(xMax, yMax));
-
+#else
+     _tcData.push_back(glm::vec2(0,0));
+     _tcData.push_back(glm::vec2(1,0));
+     _tcData.push_back(glm::vec2(0,1));
+     _tcData.push_back(glm::vec2(1,1));
+#endif
       _vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
       _fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
       
