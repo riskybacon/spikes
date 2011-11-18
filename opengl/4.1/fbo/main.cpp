@@ -4,10 +4,6 @@
 // main.cpp
 //
 // Author: Jeff Bowles <jbowles@riskybacon.com>
-//
-// Changelog: 
-// 2011-10-28, Initial revision <jbowles@riskybacon.com>
-//
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,11 +13,13 @@
 
 // Include GLM
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>  // rotation, translation, scale, etc
+#include <glm//gtc/type_ptr.hpp>         // value_ptr
 
 using namespace glm;
 using std::vector;
 
+// Comment this out to turn GL_ERR_CHECK into a no-op
 #define _DEBUG
 
 #include "platform_specific.h" // Include this file before glfw.h
@@ -70,7 +68,7 @@ Trackball*   _trackball;           //< Pointer to virtual trackball
 // Data for quad
 vector<vec4> _verticesQuad;        //< Vertex data
 vector<vec4> _normalsQuad;         //< Normal data
-vector<vec2> _tcQuad;       //< Texture coordinate data
+vector<vec2> _tcQuad;              //< Texture coordinate data
 
 // FBO related handles and size
 GLuint       _fbo;                 //< Frame buffer object handle
@@ -81,8 +79,8 @@ int          _fboHeight;           //< Height of the FBO textures
 
 enum FBOTextures
 {
-   DEPTH,
-   RGBA
+   DEPTH = 0,
+   RGBA  = 1
 };
 
 /**
@@ -98,7 +96,7 @@ void terminate(int exitCode)
       glDeleteBuffers(1, &_vertexBufferQuad);
       _vertexBufferQuad = 0;
    }
-
+   
    // Delete vertex array object
    if(_vaoQuad)
    {
@@ -106,7 +104,7 @@ void terminate(int exitCode)
    }
    
    glfwTerminate();
-
+   
    exit(exitCode);
 }
 
@@ -144,18 +142,18 @@ void fboStatus(void)
          error = "[ERROR] Framebuffer incomplete: Read buffer.";
          bufferComplete = false;
          break;
-
+         
       case GL_FRAMEBUFFER_UNSUPPORTED:
          error = "[ERROR] Unsupported by Framebuffer implementation.";
          bufferComplete = false;
          break;
-   
+         
       default:
          error = "[ERROR] Unknow error.";
          bufferComplete = false;
          break;
    }
-         
+   
    if(!bufferComplete)
    {
       throw GL::Exception(error);
@@ -168,14 +166,14 @@ void fboStatus(void)
  */
 void createFBO(void)
 {
-   
+   GL_ERR_CHECK();
    try
    {
       _fboWidth = 256;
       _fboHeight = 256;
       glGenTextures(2, _fboTextures);
       GL_ERR_CHECK();
-
+      
       for(int i = 0; i < 2; ++i)
       {
          if(_fboTextures[i] <= 0)
@@ -188,15 +186,10 @@ void createFBO(void)
       // Set up the texture to hold depth data
       //------------------------------------------------------------------------------------------
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-      GL_ERR_CHECK();
       glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _fboWidth, _fboHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
       GL_ERR_CHECK();
       
@@ -204,68 +197,57 @@ void createFBO(void)
       // Set up the RGBA texture for the rendered image
       //------------------------------------------------------------------------------------------
       glBindTexture(GL_TEXTURE_2D, _fboTextures[RGBA]);
-      GL_ERR_CHECK();
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _fboWidth, _fboHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
       GL_ERR_CHECK();
-
+      
       //------------------------------------------------------------------------------------------
       // Set up the render buffer
       //------------------------------------------------------------------------------------------
       glGenRenderbuffers(1, &_renderbuffer);
-      GL_ERR_CHECK();
       glBindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
-      GL_ERR_CHECK();
       glRenderbufferStorage(GL_RENDERBUFFER,  GL_RGBA32F, _fboWidth, _fboHeight);
       GL_ERR_CHECK();
       
-
+      
       //------------------------------------------------------------------------------------------
       // Create the frame buffer object
       //------------------------------------------------------------------------------------------
       glGenFramebuffers(1, &_fbo);
       glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+      GL_ERR_CHECK();
       
       //------------------------------------------------------------------------------------------
       // Attach textures and renderbuffer to FBO
       //------------------------------------------------------------------------------------------
-
+      
       // Attach RGBA / Color texture to the FBO
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _fboTextures[RGBA], 0);
-      GL_ERR_CHECK();
       
       // Attach depth texture to the FBO
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _fboTextures[DEPTH], 0);
-      GL_ERR_CHECK();
       
       // Attach render buffer to the FBO
-//      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
-//      GL_ERR_CHECK();
-
+      //      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
+      //      GL_ERR_CHECK();
+      
       // Set the drawing buffer
       glDrawBuffer(GL_COLOR_ATTACHMENT0);
-      GL_ERR_CHECK();
       
       // Set the reading buffer
       glReadBuffer(GL_NONE);
       GL_ERR_CHECK();
-
+      
       fboStatus();
 
+      // Return to default OpenGL state
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
-      GL_ERR_CHECK();
       glBindTexture(GL_TEXTURE_2D, 0);
-      GL_ERR_CHECK();
       // Set the drawing buffer
       glDrawBuffer(GL_BACK);
-      GL_ERR_CHECK();
       // Set the reading buffer
       glReadBuffer(GL_BACK);
       GL_ERR_CHECK();
@@ -276,7 +258,7 @@ void createFBO(void)
       std::cerr << exception.what() << std::endl;
       terminate(EXIT_FAILURE);
    }
-
+   GL_ERR_CHECK();
 }
 
 /**
@@ -298,7 +280,7 @@ void initGLEW(void)
 }
 
 /**
- * Get locations of attributes
+ * Get locations of attributes and uniform variables
  */
 void getAttribLocations(void)
 {
@@ -328,11 +310,14 @@ void init(void)
    {
       initGLEW();
       
+      
+      createFBO();
+      
       _texWidth = 256;
       _texHeight = 256;
       
       GLfloat texels[_texWidth][_texHeight][4];
-
+      
       // Create a checkerboard pattern
       for(int i = 0; i < _texWidth; i++ )
       {
@@ -346,25 +331,19 @@ void init(void)
          }
       }
 
-      createFBO();
-   
+      // Load the texture into OpenGL server
+      GL_ERR_CHECK();
       glGenTextures(1, &_checkboard);
-      GL_ERR_CHECK();
       glBindTexture(GL_TEXTURE_2D, _checkboard);
-      GL_ERR_CHECK();
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_FLOAT, texels);
-      GL_ERR_CHECK();
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      GL_ERR_CHECK();
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      GL_ERR_CHECK();
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      GL_ERR_CHECK();
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      GL_ERR_CHECK();
       glActiveTexture(GL_TEXTURE0);
       GL_ERR_CHECK();
-
+      
+      // Create a quad
       _verticesQuad.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
       _verticesQuad.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
       _verticesQuad.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
@@ -374,12 +353,13 @@ void init(void)
       _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-
+      
       _tcQuad.push_back(glm::vec2(0.0f, 0.0f));
       _tcQuad.push_back(glm::vec2(1.0f, 0.0f));
       _tcQuad.push_back(glm::vec2(0.0f, 1.0f));
       _tcQuad.push_back(glm::vec2(1.0f, 1.0f));
-                        
+      
+      // Load the shader programs
       _vertexFile    = std::string(SOURCE_DIR) + "/vertex.c";
       _fragFile      = std::string(SOURCE_DIR) + "/fragment.c";
       _fragDepthFile = std::string(SOURCE_DIR) + "/fragmentDepth.c";
@@ -389,7 +369,7 @@ void init(void)
       
       // Get vertex and color attribute locations
       getAttribLocations();
-
+      
       // Generate a single handle for a vertex array. Only one vertex
       // array is needed
       glGenVertexArrays(1, &_vaoQuad);
@@ -459,7 +439,6 @@ void init(void)
       std::cerr << exception.what() << std::endl;
       terminate(EXIT_FAILURE);
    }
-
 }
 
 /**
@@ -565,6 +544,18 @@ int GLFWCALL close(void)
 }
 
 /**
+ * Draw the scene. Used to draw the scene into the fbo and
+ * then into the default OpenGL framebuffer
+ */
+void drawScene(void)
+{
+   GL_ERR_CHECK();
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glBindTexture(GL_TEXTURE_2D, _checkboard);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
+   GL_ERR_CHECK();
+}
+/**
  * Main loop
  * @param time    time elapsed in seconds since the start of the program
  */
@@ -583,7 +574,7 @@ int update(double time)
                                               0.1f,                          // Near clip 
                                               4000.0f);                      // Far clip
       // Camera matrix
-      glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (4,3,3), in world space
+      glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (0,0,2), in world space
                                          glm::vec3(0,0,0), // and looks at the origin
                                          glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                          );
@@ -593,7 +584,7 @@ int update(double time)
       
       // Get vertex and color attribute locations
       getAttribLocations();
-
+      
       // Model matrix 
       glm::mat4 model = _trackball->getTransform();
       
@@ -608,11 +599,11 @@ int update(double time)
       GL_ERR_CHECK();
       
       // Set the MVP uniform
-      glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);
+      glUniformMatrix4fv(_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
       GL_ERR_CHECK();
       
       // Set the inverse transpose uniform
-      glUniformMatrix4fv(_invTP, 1, GL_FALSE, &invTP[0][0]);
+      glUniformMatrix4fv(_invTP, 1, GL_FALSE, glm::value_ptr(invTP));
       GL_ERR_CHECK();
       
       //------------------------------------------------------------------------------------------
@@ -620,53 +611,37 @@ int update(double time)
       //------------------------------------------------------------------------------------------
       glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
       GL_ERR_CHECK();
-
+      
       // Set the viewport for the fbo
       glViewport(0, 0, _fboWidth, _fboHeight);
       GL_ERR_CHECK();
-
+      
       glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
       GL_ERR_CHECK();
 
-      // Clear the color and depth buffers
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      GL_ERR_CHECK();
-
-      glBindTexture(GL_TEXTURE_2D, _checkboard);
-      GL_ERR_CHECK();
-
-      // Draw the triangles
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
-      GL_ERR_CHECK();
-
+      drawScene();
+      
       //------------------------------------------------------------------------------------------
       // End draw FBO scene into an FBO
       //------------------------------------------------------------------------------------------
-
+      
       //------------------------------------------------------------------------------------------
       // Draw the same scene into the default framebuffer
       //------------------------------------------------------------------------------------------
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       GL_ERR_CHECK();
-
-      // Bind the checkerboard texture
-      glBindTexture(GL_TEXTURE_2D, _checkboard);
-      GL_ERR_CHECK();
       
       // Set the viewport for the default framebuffer
       glViewport(0, 0, width, height);
-
+      
       // Clear the color and depth buffers
       glClearColor(0.3f, 0.5f, 0.9f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      drawScene();
+      GL_ERR_CHECK();
 
-      // Draw the triangles
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
-      GL_ERR_CHECK();
-      glFlush();
-      GL_ERR_CHECK();
       //------------------------------------------------------------------------------------------
-      // End
+      // End draw scene into default framebuffer
       //------------------------------------------------------------------------------------------
       
       //------------------------------------------------------------------------------------------
@@ -676,50 +651,52 @@ int update(double time)
       glm::mat4 colorTrans 
          = glm::translate(glm::mat4(1.0f), glm::vec3(-0.8,0.7,0))
          * glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor, scaleFactor, 1.0f));
-
+      
       glm::mat4 depthTrans 
-      = glm::translate(glm::mat4(1.0f), glm::vec3(-0.6,0.7,0))
-      * glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor, scaleFactor, 1.0f));
-
+         = glm::translate(glm::mat4(1.0f), glm::vec3(-0.6,0.7,0))
+         * glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor, scaleFactor, 1.0f));
+      
       mvp = projection * view * colorTrans;
       invTP = glm::transpose(glm::inverse(mvp));
+      
+      GL_ERR_CHECK();
 
       // Set the MVP uniform
-      glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);
-      GL_ERR_CHECK();
+      glUniformMatrix4fv(_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
       
       // Set the inverse transpose uniform
-      glUniformMatrix4fv(_invTP, 1, GL_FALSE, &invTP[0][0]);
-      GL_ERR_CHECK();
-
+      glUniformMatrix4fv(_invTP, 1, GL_FALSE, glm::value_ptr(invTP));
+      
       glBindTexture(GL_TEXTURE_2D, _fboTextures[RGBA]);
-      GL_ERR_CHECK();
       
       // Draw the triangles
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
       GL_ERR_CHECK();
-
+      
+      
+      //------------------------------------------------------------------------------------------
+      // Draw a textured quad that contains the depth texture from the FBO
+      //------------------------------------------------------------------------------------------
+      GL_ERR_CHECK();
+      _programDepth->bind();
       mvp = projection * view * depthTrans;
       invTP = glm::transpose(glm::inverse(mvp));
       
       // Set the MVP uniform
-      glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);
-      GL_ERR_CHECK();
+      glUniformMatrix4fv(_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
       
       // Set the inverse transpose uniform
-      glUniformMatrix4fv(_invTP, 1, GL_FALSE, &invTP[0][0]);
-      GL_ERR_CHECK();
+      glUniformMatrix4fv(_invTP, 1, GL_FALSE, glm::value_ptr(invTP));
       
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-      GL_ERR_CHECK();
       
       // Draw the triangles
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
       GL_ERR_CHECK();
       //------------------------------------------------------------------------------------------
-      // End
+      // End drawing textured quads
       //------------------------------------------------------------------------------------------
-
+      
       glBindTexture(GL_TEXTURE_2D, 0);
       GL_ERR_CHECK();
    } 
@@ -728,7 +705,7 @@ int update(double time)
       std::cerr << exception.what() << std::endl;
       terminate(EXIT_FAILURE);
    }
-
+   
    glfwSwapBuffers();
    return GL_TRUE;
 }
@@ -745,14 +722,14 @@ int main(int argc, char* argv[])
    _trackball = new Trackball(width, height);
    // Initialize GLFW
    glfwInit();
-
-   // Request an OpenGL core profile context, without backwards compatibility
+   
+   // Request an OpenGL core profile context, no backwards compatibility
    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR,  GL_MAJOR);
    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR,  GL_MINOR);
    glfwOpenWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
    glfwOpenWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
    glfwOpenWindowHint(GLFW_FSAA_SAMPLES,          4 );
-
+   
    // Open a window and create its OpenGL context
    if(!glfwOpenWindow(width, height, 0,0,0,0, 32,0, GLFW_WINDOW ))
    {
@@ -760,7 +737,7 @@ int main(int argc, char* argv[])
       glfwTerminate();
       return -1;
    }
-
+   
    glfwSetWindowSizeCallback(resize);
    glfwSetKeyCallback(keypress);
    glfwSetWindowCloseCallback(close);
@@ -768,15 +745,15 @@ int main(int argc, char* argv[])
    glfwSetMousePosCallback(mouseMove);
    
    std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
-
+   
    init();
    resize(width, height);
-  
+   
    // Main loop. Run until ESC key is pressed or the window is closed
    while(_running)
    {
       update(glfwGetTime());
    }
-
+   
    terminate(EXIT_SUCCESS);
 }
