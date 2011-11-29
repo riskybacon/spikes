@@ -22,7 +22,7 @@ When installing glfw, follow this procedure:
 
 tar zxf glfw-2.7.2.tar.gz
 cd glfw-2.7.2
-patch -p1 < path/to/dir/lion_ogl32.patch 
+patch -p1 < ../lion_ogl32.patch 
 sudo make cocoa-install
 
 This will install the library in /usr/local
