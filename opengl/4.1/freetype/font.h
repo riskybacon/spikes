@@ -102,6 +102,18 @@ protected:
    */
   void createBitmap(const FT_Face&);
 
+   /**
+    * Copy the glyph's bitmap into the texture
+    *
+    * @param bitmap
+    *    The bitmap that contains the glyph
+    * @param x
+    *    The starting x position in the texture
+    * @param y
+    *    The starting y position in the texture
+    */
+   void copyGlyphBitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y);
+
   /** 
    * Initialize the freetype library
    */

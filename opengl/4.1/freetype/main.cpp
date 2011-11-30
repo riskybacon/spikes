@@ -149,7 +149,8 @@ void init(void)
      GL_ERR_CHECK();
      glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
      GL_ERR_CHECK();
-     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _font->texWidth(), _font->texHeight(), 0, GL_RED, GL_FLOAT, _font->data());
+//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _font->texWidth(), _font->texHeight(), 0, GL_RED, GL_FLOAT, _font->data());
+     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _font->texWidth(), _font->texHeight(), 0, GL_RGBA, GL_FLOAT, _font->data());
      GL_ERR_CHECK();
 
       glActiveTexture(GL_TEXTURE0);
