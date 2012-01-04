@@ -36,7 +36,7 @@ mkdir build
 cd build
 cmake ..
 make
-./glfw272
+./triangle
 
 To build a debug version under Linux or OS X:
 
