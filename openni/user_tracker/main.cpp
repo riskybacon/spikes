@@ -27,6 +27,8 @@
 #include <XnCppWrapper.h>
 #include "SceneDrawer.h"
 #include <XnPropNames.h>
+#include <GL/glfw.h>
+#include <iostream>
 
 //---------------------------------------------------------------------------
 // Globals
@@ -45,21 +47,7 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
-#ifndef USE_GLES
-#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
-	#include <GLUT/glut.h>
-#else
-	#include <GL/glut.h>
-#endif
-#else
-	#include "opengles.h"
-#endif
-
-#ifdef USE_GLES
-static EGLDisplay display = EGL_NO_DISPLAY;
-static EGLSurface surface = EGL_NO_SURFACE;
-static EGLContext context = EGL_NO_CONTEXT;
-#endif
+bool _running = true;
 
 #define GL_WIN_SIZE_X 720
 #define GL_WIN_SIZE_Y 480
@@ -80,7 +68,7 @@ void CleanupExit()
 	g_UserGenerator.Release();
 	g_Player.Release();
 	g_Context.Release();
-
+   _running = false;
 	exit (1);
 }
 
@@ -198,9 +186,10 @@ void LoadCalibration()
 }
 
 // this function is called each frame
-void glutDisplay (void)
+void update(double time)
 {
 
+   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Setup the OpenGL viewpoint
@@ -211,13 +200,9 @@ void glutDisplay (void)
 	xn::SceneMetaData sceneMD;
 	xn::DepthMetaData depthMD;
 	g_DepthGenerator.GetMetaData(depthMD);
-#ifndef USE_GLES
 	glOrtho(0, depthMD.XRes(), depthMD.YRes(), 0, -1.0, 1.0);
-#else
-	glOrthof(0, depthMD.XRes(), depthMD.YRes(), 0, -1.0, 1.0);
-#endif
 
-	glDisable(GL_TEXTURE_2D);
+   //	glDisable(GL_TEXTURE_2D);
 
 	if (!g_bPause)
 	{
@@ -225,32 +210,17 @@ void glutDisplay (void)
 		g_Context.WaitOneUpdateAll(g_UserGenerator);
 	}
 
-		// Process the data
-		g_DepthGenerator.GetMetaData(depthMD);
-		g_UserGenerator.GetUserPixels(0, sceneMD);
-		DrawDepthMap(depthMD, sceneMD);
-
-#ifndef USE_GLES
-	glutSwapBuffers();
-#endif
+   // Process the data
+   g_DepthGenerator.GetMetaData(depthMD);
+   g_UserGenerator.GetUserPixels(0, sceneMD);
+   DrawDepthMap(depthMD, sceneMD);
 }
 
-#ifndef USE_GLES
-void glutIdle (void)
-{
-	if (g_bQuit) {
-		CleanupExit();
-	}
-
-	// Display the frame
-	glutPostRedisplay();
-}
-
-void glutKeyboard (unsigned char key, int x, int y)
+void GLFWCALL keypress(int key, int state)
 {
 	switch (key)
 	{
-	case 27:
+	case GLFW_KEY_ESC:
 		CleanupExit();
 	case 'b':
 		// Draw background?
@@ -283,10 +253,46 @@ void glutKeyboard (unsigned char key, int x, int y)
 		break;
 	}
 }
+
+/**
+ * Window close callback
+ */
+int GLFWCALL close(void)
+{
+   _running = false;
+   return GL_TRUE;
+}
+
 void glInit (int * pargc, char ** argv)
 {
-	glutInit(pargc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+   // Initialize GLFW
+   glfwInit();
+   // Request an OpenGL core profile context, without backwards compatibility
+   glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR,  2);
+   glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR,  1);
+#if 0
+   glfwOpenWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+   //   glfwOpenWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
+   //   glfwOpenWindowHint(GLFW_FSAA_SAMPLES,          4 );
+#endif
+
+   if(!glfwOpenWindow(GL_WIN_SIZE_X, GL_WIN_SIZE_Y, 0,0,0,0, 32,0, GLFW_WINDOW ))
+   {
+      std::cerr << "Failed to open GLFW window" << std::endl;
+      glfwTerminate();
+   }
+
+   //   glfwSetWindowSizeCallback(resize);
+   glfwSetKeyCallback(keypress);
+   glfwSetWindowCloseCallback(close);
+
+   glDisable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+   
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
+
+#if 0
 	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
 	glutCreateWindow ("User Tracker Viewer");
 	//glutFullScreen();
@@ -301,8 +307,9 @@ void glInit (int * pargc, char ** argv)
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
+#endif
 }
-#endif // USE_GLES
+
 
 #define CHECK_RC(nRetVal, what)										\
 	if (nRetVal != XN_STATUS_OK)									\
@@ -420,28 +427,14 @@ int main(int argc, char **argv)
 	nRetVal = g_Context.StartGeneratingAll();
 	CHECK_RC(nRetVal, "StartGenerating");
 
-#ifndef USE_GLES
 	glInit(&argc, argv);
-	glutMainLoop();
-#else
-	if (!opengles_init(GL_WIN_SIZE_X, GL_WIN_SIZE_Y, &display, &surface, &context))
-	{
-		printf("Error initializing opengles\n");
-		CleanupExit();
-	}
 
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
+   _running = true;
+   // Main loop. Run until ESC key is pressed or the window is closed
+   while(_running)
+   {
+      update(glfwGetTime());
+      glfwSwapBuffers();
+   }
 
-	while (!g_bQuit)
-	{
-		glutDisplay();
-		eglSwapBuffers(display, surface);
-	}
-	opengles_shutdown(display, surface, context);
-
-	CleanupExit();
-#endif
 }

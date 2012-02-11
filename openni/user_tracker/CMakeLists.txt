@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 2.8)
 set(PROJ_NAME user_tracker)
 
 # The project name. A project can have multiple targets
-project(skeleton_tracker)
+project(${PROJ_NAME})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
  ${CMAKE_SOURCE_DIR}/../cmake/
@@ -14,7 +14,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 include(FindOpenNI)
 include(FindOpenGL)
 include(FindGLFW)
-include(FindGLUT)
 
 # Make sure that OpenNI is found
 if(NOT OpenNI_FOUND)
@@ -39,8 +38,7 @@ add_definitions("-DCONFIG_FILE=\"${CMAKE_SOURCE_DIR}/../config/samples_config.xm
 include_directories(
   ${OpenNI_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIR}
-  #${GLFW_INCLUDE_DIR}
-  ${GLUT_INCLUDE_DIR}
+  ${GLFW_INCLUDE_DIR}
 )
 
 # Add the executable target. It does not need to 
@@ -56,6 +54,5 @@ add_executable(${PROJ_NAME}  # Name of the program
 target_link_libraries(${PROJ_NAME}
   ${OpenNI_LIBRARIES}
   ${OPENGL_LIBRARIES}
-#  ${GLFW_LIBRARIES}
-  ${GLUT_LIBRARIES}
+  ${GLFW_LIBRARIES}
 )

@@ -24,15 +24,7 @@
 //---------------------------------------------------------------------------
 #include "SceneDrawer.h"
 
-#ifndef USE_GLES
-#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
-	#include <GLUT/glut.h>
-#else
-	#include <GL/glut.h>
-#endif
-#else
-	#include "opengles.h"
-#endif
+#include <GL/glfw.h>
 
 extern xn::UserGenerator g_UserGenerator;
 extern xn::DepthGenerator g_DepthGenerator;
@@ -118,17 +110,19 @@ XnFloat Colors[][3] =
 	{1,1,1}
 };
 XnUInt32 nColors = 10;
-#ifndef USE_GLES
+
 void glPrintString(void *font, char *str)
 {
 	int i,l = strlen(str);
 
+#if 0
 	for(i=0; i<l; i++)
 	{
 		glutBitmapCharacter(font,*str++);
 	}
-}
 #endif
+}
+
 void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 {
 	if (!g_UserGenerator.GetSkeletonCap().IsTracking(player))
@@ -151,15 +145,8 @@ void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 	pt[1] = joint2.position;
 
 	g_DepthGenerator.ConvertRealWorldToProjective(2, pt, pt);
-#ifndef USE_GLES
 	glVertex3i(pt[0].X, pt[0].Y, 0);
 	glVertex3i(pt[1].X, pt[1].Y, 0);
-#else
-	GLfloat verts[4] = {pt[0].X, pt[0].Y, pt[1].X, pt[1].Y};
-	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_LINES, 0, 2);
-	glFlush();
-#endif
 }
 
 const XnChar* GetCalibrationErrorString(XnCalibrationStatus error)
@@ -343,7 +330,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 
 	glEnable(GL_TEXTURE_2D);
 	DrawTexture(dmd.XRes(),dmd.YRes(),0,0);	
-	glDisable(GL_TEXTURE_2D);
+   //	glDisable(GL_TEXTURE_2D);
 
 	char strLabel[50] = "";
 	XnUserID aUsers[15];
@@ -382,9 +369,10 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 
 
 			glColor4f(1-Colors[i%nColors][0], 1-Colors[i%nColors][1], 1-Colors[i%nColors][2], 1);
-
+#if 0
 			glRasterPos2i(com.X, com.Y);
 			glPrintString(GLUT_BITMAP_HELVETICA_18, strLabel);
+#endif
 		}
 #endif
 		if (g_bDrawSkeleton && g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i]))

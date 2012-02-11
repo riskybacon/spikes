@@ -111,7 +111,8 @@ void init(void)
    try {
       initGLEW();
       
-      std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
+      //      std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
+      std::string objFile = std::string(SOURCE_DIR) + std::string("/nissan_micra.obj");
       
       OBJModel* model = new OBJModel(objFile);
       model->unitize();
