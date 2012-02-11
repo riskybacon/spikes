@@ -330,7 +330,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 
 	glEnable(GL_TEXTURE_2D);
 	DrawTexture(dmd.XRes(),dmd.YRes(),0,0);	
-   //	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_TEXTURE_2D);
 
 	char strLabel[50] = "";
 	XnUserID aUsers[15];
@@ -338,7 +338,6 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 	g_UserGenerator.GetUsers(aUsers, nUsers);
 	for (int i = 0; i < nUsers; ++i)
 	{
-#ifndef USE_GLES
 		if (g_bPrintID)
 		{
 			XnPoint3D com;
@@ -374,12 +373,10 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			glPrintString(GLUT_BITMAP_HELVETICA_18, strLabel);
 #endif
 		}
-#endif
+
 		if (g_bDrawSkeleton && g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i]))
 		{
-#ifndef USE_GLES
 			glBegin(GL_LINES);
-#endif
 			glColor4f(1-Colors[aUsers[i]%nColors][0], 1-Colors[aUsers[i]%nColors][1], 1-Colors[aUsers[i]%nColors][2], 1);
 			DrawLimb(aUsers[i], XN_SKEL_HEAD, XN_SKEL_NECK);
 
@@ -403,9 +400,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			DrawLimb(aUsers[i], XN_SKEL_RIGHT_KNEE, XN_SKEL_RIGHT_FOOT);
 
 			DrawLimb(aUsers[i], XN_SKEL_LEFT_HIP, XN_SKEL_RIGHT_HIP);
-#ifndef USE_GLES
 			glEnd();
-#endif
 		}
 	}
 }
