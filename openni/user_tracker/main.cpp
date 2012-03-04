@@ -28,7 +28,12 @@
 #include "SceneDrawer.h"
 #include <XnPropNames.h>
 #include <GL/glfw.h>
+#include <string>
 #include <iostream>
+
+#include "font_face.h"
+
+#include "depth_texture.h"
 
 //---------------------------------------------------------------------------
 // Globals
@@ -56,6 +61,8 @@ XnBool g_bPause = false;
 XnBool g_bRecord = false;
 
 XnBool g_bQuit = false;
+
+DepthTexture* _depthTex;
 
 //---------------------------------------------------------------------------
 // Code
@@ -290,8 +297,9 @@ void glInit (int * pargc, char ** argv)
 	glEnable(GL_TEXTURE_2D);
    
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
 
+   SceneDrawerInit();
+   
 #if 0
 	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
 	glutCreateWindow ("User Tracker Viewer");

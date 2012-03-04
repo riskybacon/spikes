@@ -35,6 +35,56 @@ extern XnBool g_bDrawSkeleton;
 extern XnBool g_bPrintID;
 extern XnBool g_bPrintState;
 
+//@{ Font layout
+FontFace*                _fontFace;
+std::vector<FontLayout*> _fontLayout;
+GL::Program*             _fontProgram;
+std::string              _fontVertFile;
+std::string              _fontFragFile;
+//@}
+
+//@{ Depth texture shader program
+std::string             _depthVertFile;
+std::string             _depthFragFile;
+GL::Program*            _depthProgram;
+DepthTexture*           _depthTexture;
+//@}
+ 
+GLuint _depthTexID = 0;
+
+#define MAX_USERS 15
+
+#define USE_DEPTH_TEXTURE
+
+void SceneDrawerInit() {
+   try {
+      std::string fontFile = std::string(FONT_DIR) + std::string("/MesloLGS-Regular.ttf");
+      _fontFace = new FontFace(fontFile, 25.0f);
+      _fontVertFile = std::string(SOURCE_DIR) + std::string("/font_vertex.c");
+      _fontFragFile = std::string(SOURCE_DIR) + std::string("/font_fragment.c");
+      _fontProgram = new GL::Program(_fontVertFile, _fontFragFile);
+      
+#ifdef USE_DEPTH_TEXTURE
+      _depthVertFile = std::string(SOURCE_DIR) + std::string("/texture_vertex.c");
+      _depthFragFile = std::string(SOURCE_DIR) + std::string("/texture_fragment.c");
+      _depthProgram  = new GL::Program(_depthVertFile, _depthFragFile);
+
+      _depthTexture = new DepthTexture();
+      
+      _depthTexture->init(_depthProgram, 640, 480);
+#endif
+      for(int i = 0; i < MAX_USERS; ++i) {
+         _fontLayout.push_back(new FontLayout(_fontFace, _fontProgram));
+      }
+      
+      _fontProgram->release();
+   } catch(const std::runtime_error& exception) {
+      std::cerr << exception.what() << std::endl;
+      exit(1);
+   }
+   
+
+}
 #include <map>
 std::map<XnUInt32, std::pair<XnCalibrationStatus, XnPoseDetectionStatus> > m_Errors;
 void XN_CALLBACK_TYPE MyCalibrationInProgress(xn::SkeletonCapability& capability, XnUserID id, XnCalibrationStatus calibrationError, void* pCookie)
@@ -89,7 +139,7 @@ void DrawTexture(float topLeftX, float topLeftY, float bottomRightX, float botto
 {
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
-
+   glBindTexture(GL_TEXTURE_2D, _depthTexID);
 	DrawRectangle(topLeftX, topLeftY, bottomRightX, bottomRightY);
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -198,7 +248,6 @@ const XnChar* GetPoseErrorString(XnPoseDetectionStatus error)
 void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 {
 	static bool bInitialized = false;	
-	static GLuint depthTexID;
 	static unsigned char* pDepthTexBuf;
 	static int texWidth, texHeight;
 
@@ -215,7 +264,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 		texHeight = getClosestPowerOfTwo(dmd.YRes());
 
 //		printf("Initializing depth texture: width = %d, height = %d\n", texWidth, texHeight);
-		depthTexID = initTexture((void**)&pDepthTexBuf,texWidth, texHeight) ;
+		_depthTexID = initTexture((void**)&pDepthTexBuf,texWidth, texHeight) ;
 
 //		printf("Initialized depth texture: width = %d, height = %d\n", texWidth, texHeight);
 		bInitialized = true;
@@ -322,7 +371,8 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 		xnOSMemSet(pDepthTexBuf, 0, 3*2*g_nXRes*g_nYRes);
 	}
 
-	glBindTexture(GL_TEXTURE_2D, depthTexID);
+#ifndef USE_DEPTH_TEXTURE
+	glBindTexture(GL_TEXTURE_2D, _depthTexID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, pDepthTexBuf);
 
 	// Display the OpenGL texture map
@@ -331,10 +381,33 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 	glEnable(GL_TEXTURE_2D);
 	DrawTexture(dmd.XRes(),dmd.YRes(),0,0);	
 	glDisable(GL_TEXTURE_2D);
+#else
+   
+   
+   gutz::mat4f mv;
+   gutz::mat4f proj;
+   glGetFloatv(GL_PROJECTION_MATRIX, proj.m);
+   glGetFloatv(GL_MODELVIEW_MATRIX, mv.m);
 
+   glEnable(GL_TEXTURE_2D);
+
+   // OpenGL returns matrices in column major, gutz (and almost everything else)
+   // operates in row major
+   proj = proj.tp();
+   mv = mv.tp();
+   _depthTexture->load(dmd.Data(), dmd.XRes(), dmd.YRes());
+   _depthProgram->bind();
+   _depthProgram->setUniform("proj", proj);
+   _depthProgram->setUniform("mv",  mv);
+   _depthTexture->draw();
+   _depthProgram->release();
+   glDisable(GL_TEXTURE_2D);
+#endif
+   
+#if 0
 	char strLabel[50] = "";
-	XnUserID aUsers[15];
-	XnUInt16 nUsers = 15;
+	XnUserID aUsers[MAX_USERS];
+	XnUInt16 nUsers = MAX_USERS;
 	g_UserGenerator.GetUsers(aUsers, nUsers);
 	for (int i = 0; i < nUsers; ++i)
 	{
@@ -344,6 +417,8 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			g_UserGenerator.GetCoM(aUsers[i], com);
 			g_DepthGenerator.ConvertRealWorldToProjective(1, &com, &com);
 
+         std::cout << "com: " << com.X << "," << com.Y << "," << com.Z << std::endl;
+         
 			xnOSMemSet(strLabel, 0, sizeof(strLabel));
 			if (!g_bPrintState)
 			{
@@ -368,6 +443,23 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 
 
 			glColor4f(1-Colors[i%nColors][0], 1-Colors[i%nColors][1], 1-Colors[i%nColors][2], 1);
+         
+         gutz::mat4f mv;
+         gutz::mat4f proj;
+         glGetFloatv(GL_PROJECTION_MATRIX, proj.m);
+
+         mv = gutz::translate(com.X, com.Y, 0.0f);
+         
+         glEnable(GL_TEXTURE_2D);
+         _fontProgram->bind();
+         _fontProgram->setUniform("proj", proj);
+         _fontProgram->setUniform("mv", mv);
+         _fontLayout[i]->setText(std::string(strLabel));
+#if 1
+         _fontLayout[i]->draw();
+#endif
+         _fontProgram->release();
+         glDisable(GL_TEXTURE_2D);
 #if 0
 			glRasterPos2i(com.X, com.Y);
 			glPrintString(GLUT_BITMAP_HELVETICA_18, strLabel);
@@ -403,4 +495,5 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			glEnd();
 		}
 	}
+#endif
 }
