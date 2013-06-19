@@ -29,11 +29,15 @@ else(APPLE)
   if(WIN32) # Also true on windows 64-bit
 
     set(LIBRARY_SEARCH_PATH
+      "C:/Program Files (x86)/Microsoft SDKs/Windows/v8.0A/Lib"
+      "C:/Program Files/Microsoft SDKs/Windows/v8.0a/Lib"
       "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Lib"
       "C:/Program Files/Microsoft SDKs/Windows/v7.0a/Lib"
     )
 
     set(HEADER_SEARCH_PATH
+      "C:/Program Files (x86)/Microsoft SDKs/Windows/v8.0a/Include"
+      "C:/Program Files/Microsoft SDKs/Windows/v8.0a/Include"
       "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0a/Include"
       "C:/Program Files/Microsoft SDKs/Windows/v7.0a/Include"
     )
@@ -69,19 +73,15 @@ endif(APPLE)
 find_package(OpenGL)
 
 # Find glfw header
-find_path(GLFW_INCLUDE_DIR GL/glfw.h ${HEADER_SEARCH_PATH})
+find_path(GLFW_INCLUDE_DIR GLFW/glfw3.h ${HEADER_SEARCH_PATH})
 
 # Find glfw library
-find_library(GLFW_LIBRARIES glfw ${LIBRARY_SEARCH_PATH})
-
-# Find glm header. This is a header only library
-find_path(GLM_INCLUDE_DIR glm/glm.hpp ${HEADER_SEARCH_PATH})
+find_library(GLFW_LIBRARIES glfw3 ${LIBRARY_SEARCH_PATH})
 
 # Include directories for this project
-set(INCUDE_PATH
+set(INCLUDE_PATH
   ${OPENGL_INCLUDE_DIR}
   ${GLFW_INCLUDE_DIR}
-  ${GLM_INCLUDE_DIR}
 )
 
 # Libraries needed on all platforms for this project
@@ -96,27 +96,18 @@ if(APPLE)
   # Add OS X specific libraries
   set(LIBRARIES ${LIBRARIES}
     "-framework Cocoa"
+    "-framework IOKit"
   )
-
-  set(INCLUDE_PATH ${GLFW_INCLUDE_DIR})
 
 else(APPLE)
 
-  # Windows and Linux need GLEW, the OpenGL Extension Wrangler
+  # Handle Linux specific dependencies
   if(WIN32)
-
-    find_library(GLEW_LIBRARY glew32
-      ${LIBRARY_SEARCH_PATH}
+    set(LIBRARIES ${LIBRARIES}
+      "winmm"
     )
-
-    set(LIBRARIES ${LIBRARIES} ${GLEW_LIBRARY})
 
   else(WIN32)
-
-    # Unix specific header paths and libraries
-    find_library(GLEW_LIBRARY GLEW
-      ${LIBRARY_SEARCH_PATH}
-    )
 
     # Find Xrandr - needed by GLFW under Unix
     find_library(XRANDR_LIBRARY Xrandr
@@ -124,18 +115,26 @@ else(APPLE)
     )
 
     set(LIBRARIES ${LIBRARIES}
-      ${GLEW_LIBRARY}
       ${XRANDR_LIBRARY}
     )
 
   endif(WIN32)
 
+  # Windows and Linux need GLEW, the OpenGL Extension Wrangler
   find_path(GLEW_INCLUDE_DIR GL/glew.h
     ${HEADER_SEARCH_PATH}
   )
 
-  set(INCUDE_PATH ${INCUDE_PATH}
+  set(INCLUDE_PATH ${INCUDE_PATH}
     ${GLEW_INCLUDE_DIR} 
+  )
+
+  find_library(GLEW_LIBRARY glew32
+    ${LIBRARY_SEARCH_PATH}
+  )
+
+  set(LIBRARIES ${LIBRARIES}
+    ${GLEW_LIBRARY}
   )
 
 endif(APPLE)

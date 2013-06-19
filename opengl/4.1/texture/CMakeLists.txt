@@ -11,21 +11,37 @@ project(${PROJ_NAME})
 # INCLUDE_PATH	Path to the include files
 include(${CMAKE_SOURCE_DIR}/PlatformSpecifics.cmake)
 
+set(SHADER_SOURCE_DIR
+  ${CMAKE_SOURCE_DIR}/../shader
+)
+
+set(INCLUDE_PATH ${INCLUDE_PATH} ${SHADER_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+
 # Set the include directories
 include_directories(${INCLUDE_PATH})
 
-# Get the path to the source code and create a define. This is used
-# for locating the shaders
-add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
+# OpenGL core context version
+set (GL_MAJOR 3)
+set (GL_MINOR 2)
+
+configure_file (
+  "${PROJECT_SOURCE_DIR}/config.h.in"
+  "${PROJECT_BINARY_DIR}/config.h"
+)
+
+set(SOURCE_FILES
+  main.cpp
+  ${SHADER_SOURCE_DIR}/shader.cpp
+)
+
+set(HEADER_FILES
+  ${SHADER_SOURCE_DIR}/shader.h
+)
 
 # Add a target executable
 add_executable(${PROJ_NAME}
-  main.cpp
-  oglwrapper.cpp
-  trackball.cpp
-  oglwrapper.h
-  platform_specific.h
-  trackball.h
+  ${SOURCE_FILES}
+  ${HEADER_FILES}
 )
 
 # Libraries to be linked

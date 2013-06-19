@@ -1,16 +1,9 @@
 //
-// OBJ model loader using OpenGL 3.2 / 4.1
-//
-// main.cpp
+// OpenGL 3.2 Texture Mapping example
 //
 // Author: Jeff Bowles <jbowles@riskybacon.com>
 //
-// Changelog: 
-// 2011-10-03, Initial revision <jbowles@riskybacon.com>
-//
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -18,23 +11,31 @@
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 using namespace glm;
 using std::vector;
 
 #define _DEBUG
 
-#include "platform_specific.h" // Include this file before glfw.h
-#include <GL/glfw.h>
-#include "trackball.h"
-#include "oglwrapper.h"
+#ifdef __APPLE__
+#  define GLFW_INCLUDE_GLCOREARB
+#else
+// Non-Apple platforms need the GL Extension Wrangler
+#  include <GL/glew.h>
+#  if !defined(_WIN32) && !defined(_WIN64)
+//  Assuming Unix, which needs glext.h
+#    include <GL/glext.h>
+#  endif
+#endif
 
+#include <shader.h>
+#include <GLFW/glfw3.h>
+#include "config.h"
 
 // Global variables have an underscore prefix.
 GL::Program* _program;         //< GLSL program
 GLuint       _vao;             //< Array object for the vertices
-GLuint       _nao;             //< Array object for the normals
-GLuint       _tao;             //< Array object for the texture coordintes
 GLuint       _vertexBuffer;    //< Buffer object for the vertices
 GLuint       _normalBuffer;    //< Buffer object for the normals
 GLuint       _tcBuffer;        //< Buffer object for the texture coordinates
@@ -49,13 +50,25 @@ bool         _running;         //< true if the program is running, false if it i
 GLuint       _mvp;             //< Location of the model, view, projection matrix in vertex shader
 GLuint       _invTP;           //< Location of the inverse transpose of the MVP matrix
 bool         _tracking;        //< True if mouse location is being tracked
-Trackball*   _trackball;       //< Pointer to virtual trackball
 vector<vec4> _vertexData;      //< Vertex data
 vector<vec4> _normalData;      //< Normal data
 vector<vec2> _tcData;          //< Texture coordinate data
 std::string  _vertexFile;      //< Name of the vertex shader file
 std::string  _fragFile;        //< Name of the fragment shader file
+int          _winWidth;        //< Width of the window
+int          _winHeight;       //< Height of the window
+quat         _objRot;          //< Quaternion that describes the rotation of the object
+vec2         _prevCurPos;      //< Previous cursor pos
+float        _sensitivity;     //< Sensitivity to mouse motion
 
+// Log file
+std::ofstream _log;	//< Log file
+
+void logException(const std::runtime_error& exception)
+{
+	std::cerr << exception.what() << std::endl;
+	_log << exception.what() << std::endl;
+}
 
 /**
  * Clean up and exit
@@ -89,12 +102,16 @@ void terminate(int exitCode)
 void initGLEW(void)
 {
 #ifndef __APPLE__
-   // GLEW has trouble supporting the core profile
-   glewExperimental = GL_TRUE;
    glewInit();
+   // Initializing GLEW when using a core profile will result in the GL
+   // being in an invalid state. This is because GLEW is trying to set
+   // function pointers for deprecated functions. This next step
+   // clears the GL error state
+   while(glGetError());
+   GL_ERR_CHECK();
    if(!GLEW_ARB_vertex_array_object)
    {
-      std::cerr << "ARB_vertex_array_object not available." << std::endl; 
+      std::cerr << "ARB_vertex_array_object not available." << std::endl;
       terminate(EXIT_FAILURE);
    }
 #endif
@@ -116,9 +133,10 @@ void getAttribLocations(void)
       _samplerLocation = _program->getUniformLocation("tex");
       GL_ERR_CHECK();
    }
-   catch(GL::Exception exception)
+   catch (std::runtime_error exception)
    {
-      std::cerr << exception.what() << std::endl;
+      logException(exception);
+      terminate(EXIT_FAILURE);
    }
 }
 /**
@@ -131,41 +149,33 @@ void init(void)
    {
       initGLEW();
       
-      std::string filename = std::string(SOURCE_DIR) + "/cat.ppm";
-      
+      // Create a checkerboard pattern
       _texWidth = 256;
       _texHeight = 256;
       
-      GLfloat texels[_texWidth][_texHeight][4];
-
-      // Create a checkerboard pattern
+      vector<vec4> texels;
+      texels.resize(_texWidth * _texHeight);
       for(int i = 0; i < _texWidth; i++ )
       {
          for(int j = 0; j < _texHeight; j++ )
          {
             GLubyte c = (((i & 0x8) == 0) ^ ((j & 0x8)  == 0)) * 255;
-            texels[i][j][0] = c / (255.0f * 1.5f);
-            texels[i][j][1] = 0;
-            texels[i][j][2] = c / 255.0f;
-            texels[i][j][3] = 1.0f;
+            int idx = j * _texWidth + i;
+            texels.at(idx).r = c / (255.0f * 1.5f);
+            texels.at(idx).g = 0;
+            texels.at(idx).b = c / 255.0f;
+            texels.at(idx).a = 1.0f;
          }
       }
 
-      
+      // Set up the texture
       glGenTextures(1, &_texture);
-      GL_ERR_CHECK();
       glBindTexture(GL_TEXTURE_2D, _texture);
-      GL_ERR_CHECK();
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_FLOAT, texels);
-      GL_ERR_CHECK();
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_FLOAT, &texels[0]);
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-      GL_ERR_CHECK();
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-      GL_ERR_CHECK();
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-      GL_ERR_CHECK();
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-      GL_ERR_CHECK();
+      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
       glActiveTexture(GL_TEXTURE0);
       GL_ERR_CHECK();
       
@@ -227,8 +237,8 @@ void init(void)
       glEnableVertexAttribArray(_vertexLocation);
       
       // Set up normal attribute
-      glGenBuffers(1, &_nao);
-      glBindBuffer(GL_ARRAY_BUFFER, _nao);
+      glGenBuffers(1, &_normalBuffer);
+      glBindBuffer(GL_ARRAY_BUFFER, _normalBuffer);
       
       glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
                    &_normalData[0], GL_STATIC_DRAW);
@@ -238,8 +248,8 @@ void init(void)
       
       
       // Set up texture attribute
-      glGenBuffers(1, &_tao);
-      glBindBuffer(GL_ARRAY_BUFFER, _tao);
+      glGenBuffers(1, &_tcBuffer);
+      glBindBuffer(GL_ARRAY_BUFFER, _tcBuffer);
       
       glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
                    &_tcData[0], GL_STATIC_DRAW);
@@ -257,12 +267,11 @@ void init(void)
       glEnable(GL_DEPTH_TEST);
       GL_ERR_CHECK();
    } 
-   catch (GL::Exception exception)
+   catch (std::runtime_error exception)
    {
-      std::cerr << exception.what() << std::endl;
+      logException(exception);
       terminate(EXIT_FAILURE);
    }
-
 }
 
 void reloadShaders(void)
@@ -274,114 +283,110 @@ void reloadShaders(void)
       _program = newProgram;
       
    }
-   catch (GL::Exception exception)
+   catch (std::runtime_error exception)
    {
-      std::cerr << exception.what() << std::endl;
+      logException(exception);
+      terminate(EXIT_FAILURE);
    }
 }
 /**
  * Window resize callback
  * 
+ * @param window  pointer to the window being resized
  * @param width   the width of the window
  * @param height  the height of the window
  */
-void GLFWCALL resize(int width, int height)
+void resize(GLFWwindow* window, int width, int height)
 {
    // Set the affine transform of (x,y) from normalized device coordinates to
    // window coordinates. In this case, (-1,1) -> (0, width) and (-1,1) -> (0, height)
    glViewport(0, 0, width, height);
    
-   _trackball->reshape(width, height);
+   _winWidth = width;
+   _winHeight = height;
 }
 
 /**
  *  Mouse click callback
  *
+ *  @param window  pointer to the window being resized
  *  @param button that was clicked
  *  @param button state
  */
-void GLFWCALL mouseButton(int button, int action)
+void mouseButton(GLFWwindow* window, int button, int action, int mods)
 {
-   if(button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS)
+   if(button == GLFW_MOUSE_BUTTON_1)
    {
-      _tracking = !_tracking;
-      
-   }
-   
-   if(_tracking)
-   {
-      int x, y;
-      glfwGetMousePos(&x, &y);
-      _trackball->start(x,y);
-   }
-   else
-   {
-      _trackball->stop();
-   }
-}
-
-void GLFWCALL mouseMove(int x, int y)
-{
-   if(_tracking)
-   {
-      int width, height;
-      glfwGetWindowSize(&width, &height);
-      _trackball->motion(x, height - y);
-   }
-}
-/**
- * Keypress callback
- */ 
-void GLFWCALL keypress(int key, int state)
-{
-   if(state == GLFW_PRESS)
-   {
-      switch(key)
+      if(action == GLFW_PRESS)
       {
-         case GLFW_KEY_ESC:
-            _running = false;
-            break;
-         case 'R':
-         case 'r':
-            reloadShaders();
-            break;
-            
+         _tracking = true;
+         double x, y;
+         glfwGetCursorPos(window, &x, &y);
+         _prevCurPos = vec2(x,y);
+      }
+      else
+      {
+         _tracking = false;
       }
    }
 }
 
 /**
- * Window close callback
+ * Mouse movement callback
  */
-int GLFWCALL close(void)
+void cursorPos(GLFWwindow* window, double x, double y)
 {
-   _running = false;
-   return GL_TRUE;
+   if(_tracking)
+   {
+      // Get the change in position
+      vec2 curPos(x,y);
+      vec2 delta = curPos - _prevCurPos;
+      _prevCurPos = curPos;
+      
+      // This operation looks backwards, but movement in the x direction on
+      // the rotates the model about the y-axis
+
+      // Create Euler angle quaternion rotations based on cursor movement
+      glm::quat yRot(vec3(0,                      delta.x * _sensitivity, 0));
+      glm::quat xRot(vec3(delta.y * _sensitivity, 0,                      0));
+      _objRot = glm::normalize(yRot * xRot * _objRot);
+   }
+}
+
+/**
+ * Keypress callback
+ */
+void keypress(GLFWwindow* window, int key, int scancode, int state, int mods)
+{
+   if(state == GLFW_PRESS)
+   {
+      switch(key)
+      {
+         case GLFW_KEY_ESCAPE:
+            glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+      }
+   }
 }
 
 /**
  * Main loop
  * @param time    time elapsed in seconds since the start of the program
  */
-int update(double time)
+int render(double time)
 {
    try
    {
       // Clear the color and depth buffers
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
-      // Get the width and height of the window
-      int width;
-      int height;
-      glfwGetWindowSize(&width, &height);
-      
       // Projection matrix
-      glm::mat4 projection = glm::perspective(45.0f,                         // 45 degree field of view
-                                              float(width) / float(height),  // Ratio
-                                              0.1f,                          // Near clip 
-                                              4000.0f);                      // Far clip
+      glm::mat4 projection = glm::perspective(45.0f,                                // 45 degree field of view
+                                              float(_winWidth) / float(_winHeight), // Ratio
+                                              0.1f,                                 // Near clip
+                                              4000.0f);                             // Far clip
       // Camera matrix
-      glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (4,3,3), in world space
+      glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (0, 0, 2), in world space
                                          glm::vec3(0,0,0), // and looks at the origin
                                          glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                          );
@@ -393,13 +398,13 @@ int update(double time)
       getAttribLocations();
 
       // Model matrix 
-      glm::mat4 model = _trackball->getTransform();
+      glm::mat4 model = glm::mat4_cast(_objRot);
       
       // Create  model, view, projection matrix
-      glm::mat4 mvp        = projection * view * translate * model; // Remember, matrix multiplication is the other way around
+      glm::mat4 mvp   = projection * view * translate * model; // Remember, matrix multiplication is the other way around
       
       // Calculate the inverse transpose for use with normals
-      glm::mat4 invTP      = transpose(glm::inverse(mvp));
+      glm::mat4 invTP = transpose(glm::inverse(mvp));
       
       // Use the shader program that was loaded, compiled and linked
       _program->bind();
@@ -414,17 +419,26 @@ int update(double time)
       GL_ERR_CHECK();
       
       // Draw the triangles
+      glBindVertexArray(_vao);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _vertexData.size());
       GL_ERR_CHECK();
       
    } 
-   catch (GL::Exception exception)
+   catch (std::runtime_error exception)
    {
-      std::cerr << exception.what() << std::endl;
+      logException(exception);
+      terminate(EXIT_FAILURE);
    }
 
-   glfwSwapBuffers();
    return GL_TRUE;
+}
+
+/**
+ * Window close callback
+ */
+void close(GLFWwindow* window)
+{
+   glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
 /**
@@ -434,43 +448,67 @@ int main(int argc, char* argv[])
 {
    int width = 1024; // Initial window width
    int height = 768; // Initial window height
-   _running = true;
-   _tracking = false;
-   _trackball = new Trackball(width, height);
-   // Initialize GLFW
-   glfwInit();
-
-   // Request an OpenGL core profile context, without backwards compatibility
-   glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR,  GL_MAJOR);
-   glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR,  GL_MINOR);
-   glfwOpenWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-   glfwOpenWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
-   glfwOpenWindowHint(GLFW_FSAA_SAMPLES,          4 );
-
-   // Open a window and create its OpenGL context
-   if(!glfwOpenWindow(width, height, 0,0,0,0, 32,0, GLFW_WINDOW ))
-   {
-      std::cerr << "Failed to open GLFW window" << std::endl;
-      glfwTerminate();
-      return -1;
-   }
-
-   glfwSetWindowSizeCallback(resize);
-   glfwSetKeyCallback(keypress);
-   glfwSetWindowCloseCallback(close);
-   glfwSetMouseButtonCallback(mouseButton);
-   glfwSetMousePosCallback(mouseMove);
+   _sensitivity = M_PI / 360.0f;
    
-   std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
+   // Open up the log file
+   std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
+   _log.open(logFile.c_str());
 
-   init();
-   resize(width, height);
-  
-   // Main loop. Run until ESC key is pressed or the window is closed
-   while(_running)
+   GLFWwindow* window;
+   
+   // Initialize GLFW
+   if(!glfwInit())
    {
-      update(glfwGetTime());
+      return EXIT_FAILURE;
    }
-
+   
+   // Request an OpenGL core profile context, without backwards compatibility
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
+#ifdef __APPLE__
+   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+   glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
+   glfwWindowHint(GLFW_SAMPLES,               8);
+   
+   // Create a windowed mode window and its OpenGL context
+   window = glfwCreateWindow(1024, 768, "Triangle", NULL, NULL);
+   if (!window)
+   {
+      fprintf(stderr, "Failed to open GLFW window\n");
+      glfwTerminate();
+      return EXIT_FAILURE;
+   }
+   
+   glfwSetKeyCallback(window,         keypress);
+   glfwSetMouseButtonCallback(window, mouseButton);
+   glfwSetWindowSizeCallback(window,  resize);
+   glfwSetWindowCloseCallback(window, close);
+   glfwSetCursorPosCallback(window,   cursorPos);
+   
+   // Make the window's context current
+   glfwMakeContextCurrent(window);
+   
+   printf("GL Version: %s\n", glGetString(GL_VERSION));
+   
+   resize(window, width, height);
+   
+   init();
+   
+   // Loop until the user closes the window
+   while(!glfwWindowShouldClose(window))
+   {
+      // Render scene
+      render(glfwGetTime());
+      
+      // Swap front and back buffers
+      glfwSwapBuffers(window);
+      
+      // Poll for and process events
+      glfwPollEvents();
+   }
+   
+   glfwTerminate();
+   
    terminate(EXIT_SUCCESS);
 }
