@@ -23,8 +23,7 @@ add_definitions("-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\"")
 
 # Add a target executable
 add_executable(${PROJ_NAME}
-  main.cpp
-  platform_specific.h
+  main.c
 )
 
 # Libraries to be linked
