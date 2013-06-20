@@ -21,6 +21,7 @@
 
 using namespace glm;
 using std::vector;
+using std::string;
 
 // Comment this out to turn GL_ERR_CHECK into a no-op
 //#define _DEBUG
@@ -41,48 +42,69 @@ using std::vector;
 #include "config.h"
 
 // Global variables have an underscore prefix.
-GL::Program* _program;             //< GLSL program
-GL::Program* _programDepth;        //< GLSL program for displaying a depth texture
+GL::Program* _shadowShader;
+GL::Program* _flatShader;
+
 glm::mat4    _projection;          //< Camera projection matrix
 
 // Array objects - quad
-GLuint       _vaoQuad;             //< Array object for the vertices
-GLuint       _naoQuad;             //< Array object for the normals
-GLuint       _taoQuad;             //< Array object for the texture coordintes
+enum VAO_OBJECTS
+{
+   FLAT_QUAD = 0,
+   SHADED_QUAD,
+   NUM_VAO
+};
 
-// Buffer objects - quad 
-GLuint       _vertexBufferQuad;    //< Buffer object for the vertices
-GLuint       _normalBufferQuad;    //< Buffer object for the normals
-GLuint       _tcBufferQuad;        //< Buffer object for the texture coordinates
+std::vector<GLuint> _vao; //< Vertex array object handles
 
-// Checkerboard texture
-GLuint       _checkboard;          //< Texture object
-int          _texWidth;            //< Width of the texture
-int          _texHeight;           //< Height of the texture
+// Buffer objects - quad
+enum BUFFER_OBJECTS
+{
+   QUAD_POS = 0,
+   QUAD_NORMAL,
+   QUAD_TC,
+   NUM_BUFFER
+};
+
+enum OBJ_TO_ROTATE
+{
+   ROTATE_OCCLUDER = 0,
+   ROTATE_EYE,
+   NUM_OBJ_TO_ROTATE
+};
+
+OBJ_TO_ROTATE _objToRotate;
+
+std::vector<GLuint> _buffers;
 
 // Shader file names
-std::string  _vertexFile;          //< Name of the vertex shader file
-std::string  _fragFile;            //< Name of the fragment shader file
+std::string  _shadowVertexFile;    //< Name of the vertex shader file
+std::string  _shadowFragFile;      //< Name of the fragment shader file
 std::string  _fragDepthFile;       //< Name of the fragment shader file
 
+std::string  _flatVertFile;        //< Vertex shader filename for flat shading
+std::string  _flatFragFile;        //< Fragment shader filename for flat shading
+
 bool         _running;             //< true if the program is running, false if it is time to terminate
-GLuint       _mvp;                 //< Location of the model, view, projection matrix in vertex shader
-GLuint       _invTP;               //< Location of the inverse transpose of the MVP matrix
 bool         _tracking;            //< True if mouse location is being tracked
 
 // Data for quad
-vector<vec4> _verticesQuad;        //< Vertex data
+vector<vec4> _posQuad;             //< Position data
 vector<vec4> _normalsQuad;         //< Normal data
 vector<vec2> _tcQuad;              //< Texture coordinate data
 
 // Window size
-int          _winWidth;        //< Width of the window
-int          _winHeight;       //< Height of the window
+int          _winWidth;            //< Width of the window
+int          _winHeight;           //< Height of the window
 
 // Rotation
-quat         _objRot;          //< Quaternion that describes the rotation of the object
-vec2         _prevCurPos;      //< Previous cursor pos
-float        _sensitivity;     //< Sensitivity to mouse motion
+quat         _occluderRot;         //< Quaternion that describes the rotation of occluding object
+quat         _receiverRot;         //< Rotation for the plane that receives the shadow
+quat         _eyeRot;              //< Eye rotation
+vec2         _prevCurPos;          //< Previous cursor pos
+float        _sensitivity;         //< Sensitivity to mouse motion
+
+vec4         _eye;                 //< Eye position;
 
 // FBO related handles and size
 GLuint       _fbo;                 //< Frame buffer object handle
@@ -113,19 +135,8 @@ void logException(const std::runtime_error& exception)
  */
 void terminate(int exitCode)
 {
-   // Delete vertex buffer object
-   if(_vertexBufferQuad)
-   {
-      glDeleteBuffers(1, &_vertexBufferQuad);
-      _vertexBufferQuad = 0;
-   }
-   
-   // Delete vertex array object
-   if(_vaoQuad)
-   {
-      glDeleteVertexArrays(1, &_vaoQuad);
-   }
-   
+   glDeleteVertexArrays(NUM_VAO, &_vao[0]);
+   glDeleteBuffers(NUM_BUFFER, &_buffers[0]);
    glfwTerminate();
    
    exit(exitCode);
@@ -321,47 +332,17 @@ void init(void)
 {
    try
    {
-      GL_ERR_CHECK();
       initGLEW();
-      GL_ERR_CHECK();
-      createFBO();	  
-      
-      // Create a checkerboard pattern
-      _texWidth = 256;
-      _texHeight = 256;
-      
-      vector<vec4> texels;
-      texels.resize(_texWidth * _texHeight);
-      for(int i = 0; i < _texWidth; i++ )
-      {
-         for(int j = 0; j < _texHeight; j++ )
-         {
-            GLubyte c = (((i & 0x8) == 0) ^ ((j & 0x8)  == 0)) * 255;
-            int idx = j * _texWidth + i;
-            texels.at(idx).r = c / (255.0f * 1.5f);
-            texels.at(idx).g = 0;
-            texels.at(idx).b = c / 255.0f;
-            texels.at(idx).a = 1.0f;
-         }
-      }
-      
-      // Load the texture into OpenGL server
-      GL_ERR_CHECK();
-      glGenTextures(1, &_checkboard);
-      glBindTexture(GL_TEXTURE_2D, _checkboard);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_FLOAT, &texels[0]);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glActiveTexture(GL_TEXTURE0);
-      GL_ERR_CHECK();
+      createFBO();
+
+      _occluderRot = quat(vec3(M_PI / 2, 0, 0));
+      _receiverRot = quat(vec3(M_PI / 2, 0, 0));
       
       // Create a quad
-      _verticesQuad.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
-      _verticesQuad.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
-      _verticesQuad.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
-      _verticesQuad.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
+      _posQuad.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
+      _posQuad.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
+      _posQuad.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
+      _posQuad.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
       
       _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
@@ -374,69 +355,59 @@ void init(void)
       _tcQuad.push_back(glm::vec2(1.0f, 1.0f));
       
       // Load the shader programs
-      _vertexFile    = std::string(SOURCE_DIR) + "/vertex.c";
-      _fragFile      = std::string(SOURCE_DIR) + "/fragment.c";
+      _shadowVertexFile    = std::string(SOURCE_DIR) + "/shadow_vertex.c";
+      _shadowFragFile      = std::string(SOURCE_DIR) + "/shadow_fragment.c";
       _fragDepthFile = std::string(SOURCE_DIR) + "/fragmentDepth.c";
       
-      _program      = new GL::Program(_vertexFile, _fragFile);
-      _programDepth = new GL::Program(_vertexFile, _fragDepthFile);
+      _flatVertFile  = std::string(SOURCE_DIR) + "/flat_vertex.c";
+      _flatFragFile  = std::string(SOURCE_DIR) + "/flat_fragment.c";
       
-      // Get vertex and color attribute locations
-      //      getAttribLocations();
+      _shadowShader = new GL::Program(_shadowVertexFile, _shadowFragFile);
+      _flatShader   = new GL::Program(_flatVertFile,     _flatFragFile);
+
+      // Generate handles for vertex array objects
+      _vao.resize(NUM_VAO, 0);
+      glGenVertexArrays(NUM_VAO, &_vao[0]);
+
+      // Generate handles for buffers
+      _buffers.resize(NUM_BUFFER, 0);
+      glGenBuffers(NUM_BUFFER, &_buffers[0]);
       
-      // Generate a single handle for a vertex array. Only one vertex
-      // array is needed
-      glGenVertexArrays(1, &_vaoQuad);
       
-      // Bind that vertex array
-      glBindVertexArray(_vaoQuad);
-      
-      // Generate one handle for the vertex buffer object
-      glGenBuffers(1, &_vertexBufferQuad);
-      
-      // Make that vbo the current array buffer. Subsequent array buffer operations
-      // will affect this vbo
-      //
-      // It is possible to place all data into a single buffer object and use
-      // offsets to tell OpenGL where the data for a vertex array or any other
-      // attribute may reside.
-      glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferQuad);
+      // Load buffer data for positions, normals and texture coordinates
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+      glBufferData(GL_ARRAY_BUFFER, _posQuad.size()     * sizeof(glm::vec4), &_posQuad[0],     GL_STATIC_DRAW);
       GL_ERR_CHECK();
-      // Set the data for the vbo. This will load it onto the GPU
-      glBufferData(GL_ARRAY_BUFFER, _verticesQuad.size() * sizeof(glm::vec4),
-                   &_verticesQuad[0], GL_STATIC_DRAW);
-      
-      // Specify the location and data format of the array of generic vertex attributes
-      glVertexAttribPointer(_program->getAttribLocation("vertex"), // Attribute location in the shader program
-                            4,               // Number of components per attribute
-                            GL_FLOAT,        // Data type of attribute
-                            GL_FALSE,        // GL_TRUE: values are normalized or
-                            0,               // Stride
-                            0);              // Offset into currently bound array buffer for this data
-      
-      // Enable the generic vertex attribute array
-      glEnableVertexAttribArray(_program->getAttribLocation("vertex"));
-      
-      // Set up normal attribute
-      glGenBuffers(1, &_naoQuad);
-      glBindBuffer(GL_ARRAY_BUFFER, _naoQuad);
-      
-      glBufferData(GL_ARRAY_BUFFER, _normalsQuad.size() * sizeof(glm::vec4),
-                   &_normalsQuad[0], GL_STATIC_DRAW);
-      
-      glVertexAttribPointer(_program->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_program->getAttribLocation("normal"));
-      
-      
-      // Set up texture attribute
-      glGenBuffers(1, &_taoQuad);
-      glBindBuffer(GL_ARRAY_BUFFER, _taoQuad);
-      
-      glBufferData(GL_ARRAY_BUFFER, _tcQuad.size() * sizeof(glm::vec2),
-                   &_tcQuad[0], GL_STATIC_DRAW);
-      
-      glVertexAttribPointer(_program->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_program->getAttribLocation("tc"));
+
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
+      glBufferData(GL_ARRAY_BUFFER, _normalsQuad.size() * sizeof(glm::vec4), &_normalsQuad[0], GL_STATIC_DRAW);
+      GL_ERR_CHECK();
+
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
+      glBufferData(GL_ARRAY_BUFFER, _tcQuad.size()      * sizeof(glm::vec2), &_tcQuad[0],      GL_STATIC_DRAW);
+      GL_ERR_CHECK();
+
+      // Set up VAO for flat shaded quads, no texture coords
+      glBindVertexArray(_vao[FLAT_QUAD]);
+
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+      glVertexAttribPointer(_flatShader->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_flatShader->getAttribLocation("vertex"));
+
+      // Set up VAO for shaded quads, with texture coords
+      glBindVertexArray(_vao[SHADED_QUAD]);
+
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+      glVertexAttribPointer(_shadowShader->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_shadowShader->getAttribLocation("vertex"));
+
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
+      glVertexAttribPointer(_shadowShader->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_shadowShader->getAttribLocation("normal"));
+
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
+      glVertexAttribPointer(_shadowShader->getAttribLocation("tc"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_shadowShader->getAttribLocation("tc"));
       
       // Set the clear color
       glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -460,6 +431,7 @@ void init(void)
  */
 void reloadShaders(void)
 {
+#if 0
    try
    {
       GL::Program* newProgram = new GL::Program(_vertexFile, _fragFile);
@@ -471,6 +443,7 @@ void reloadShaders(void)
    {
       std::cerr << exception.what() << std::endl;
    }
+#endif
 }
 
 /**
@@ -547,7 +520,17 @@ void cursorPos(GLFWwindow* window, double x, double y)
       // Create Euler angle quaternion rotations based on cursor movement
       glm::quat yRot(vec3(0,                      delta.x * _sensitivity, 0));
       glm::quat xRot(vec3(delta.y * _sensitivity, 0,                      0));
-      _objRot = glm::normalize(yRot * xRot * _objRot);
+      
+      switch(_objToRotate)
+      {
+         case ROTATE_OCCLUDER:
+            _occluderRot = glm::normalize(yRot * xRot * _occluderRot);
+            break;
+         case ROTATE_EYE:
+            _eyeRot      = glm::normalize(yRot * xRot * _eyeRot);
+         default:
+            break;
+      }
    }
 }
 
@@ -567,6 +550,9 @@ void keypress(GLFWwindow* window, int key, int scancode, int state, int mods)
          case 'r':
             reloadShaders();
             break;
+         case GLFW_KEY_SPACE:
+            _objToRotate = _objToRotate == ROTATE_OCCLUDER ? ROTATE_EYE : ROTATE_OCCLUDER;
+            break;
       }
    }
 }
@@ -583,12 +569,43 @@ void close(GLFWwindow* window)
  * Draw the scene. Used to draw the scene into the fbo and
  * then into the default OpenGL framebuffer
  */
-void drawScene(void)
+void drawScene(const glm::mat4& view, const glm::mat4& projection, bool flat = true)
 {
    GL_ERR_CHECK();
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glBindTexture(GL_TEXTURE_2D, _checkboard);
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
+
+   mat4 translate;
+   mat4 scale;
+   mat4 mvp;
+   mat4 rot;
+   GL::Program* program = _flatShader;
+   GLuint vao = _vao[FLAT_QUAD];
+
+   
+   rot        = glm::mat4_cast(_occluderRot);
+   translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+   mvp        = projection * view * translate * rot;
+
+   if(!flat)
+   {
+      program = _shadowShader;
+      vao     = _vao[SHADED_QUAD];
+   }
+
+   program->bind();
+   program->setUniform("mvp", mvp);
+
+   glBindVertexArray(vao);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+
+   rot        = glm::mat4_cast(_receiverRot);
+   translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+   scale      = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 1.0f));
+   mvp        = projection * view * translate * rot * scale;
+
+   _flatShader->setUniform("mvp", mvp);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+   
    GL_ERR_CHECK();
 }
 /**
@@ -599,14 +616,67 @@ int render(double time)
 {
    try
    {
-      // Camera matrix
-      glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (0,0,2), in world space
-                                         glm::vec3(0,0,0), // and looks at the origin
-                                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-                                         );
+      glClearDepth(1.0f);
+
+      mat4 translate;
+      mat4 scale;
+      mat4 mvp;
+      mat4 rot;
+      mat4 invTP;
+      vec3 lightPos(10, 10, 0);
       
-      glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
+#if 0
+      glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+      glViewport(0, 0, _fboWidth, _fboHeight);
+      glClearColor(0, 0, 0, 0);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
+      glm::mat4 lightView = glm::lookAt(lightPos, vec3(0, 0, 0), vec3(0, 0, 1));
+      glm::mat4 lightProj = glm::perspective(45.0f,                        // 45 degree field of view
+                                             float(_winWidth) / float(_winHeight), // Ratio
+                                             0.1f,                         // Near clip
+                                             4000.0f);                     // Far clip
+      drawScene(lightView, lightProj);
+#endif
+      
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      glViewport(0, 0, _winWidth, _winHeight);
+      glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      glm::mat4 view = glm::lookAt(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)) * glm::mat4_cast(_eyeRot);
+      
+      
+      rot        = glm::mat4_cast(_occluderRot);
+      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+      mvp        = _projection * view * translate * rot;
+      invTP      = transpose(inverse(mvp));
+
+      _shadowShader->bind();
+      _shadowShader->setUniform("model",    translate * rot);
+      _shadowShader->setUniform("view",     view);
+      _shadowShader->setUniform("proj",     _projection);
+      _shadowShader->setUniform("invTP",    invTP);
+      _shadowShader->setUniform("lightPos", lightPos);
+      _shadowShader->setUniform("mvp",      mvp);
+
+      glBindVertexArray(_vao[SHADED_QUAD]);
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      
+      rot        = glm::mat4_cast(_receiverRot);
+      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+      scale      = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 1.0f));
+      mvp        = _projection * view * translate * rot * scale;
+      invTP      = transpose(inverse(mvp));
+      
+      _shadowShader->setUniform("model",    translate * rot);
+      _shadowShader->setUniform("invTP",    invTP);
+      _shadowShader->setUniform("mvp",      mvp);
+
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+
+      
+#if 0
       
       // Model matrix
       glm::mat4 model = glm::mat4_cast(_objRot);
@@ -707,7 +777,8 @@ int render(double time)
       
       glBindTexture(GL_TEXTURE_2D, 0);
       GL_ERR_CHECK();
-   } 
+#endif
+   }
    catch (std::runtime_error exception)
    {
 	  logException(exception);
@@ -725,6 +796,8 @@ int main(int argc, char* argv[])
    int width = 1024; // Initial window width
    int height = 768; // Initial window height
    _sensitivity = float(M_PI) / 360.0f;
+   _objToRotate = ROTATE_OCCLUDER;
+   _eye = vec4(0.0f, 0.0f, 2.0f, 1.0f);
    
    // Open up the log file
    std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
