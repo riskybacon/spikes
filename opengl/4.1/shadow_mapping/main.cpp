@@ -42,8 +42,9 @@ using std::string;
 #include "config.h"
 
 // Global variables have an underscore prefix.
-GL::Program* _shadowShader;
-GL::Program* _flatShader;
+GL::Program* _shadowProgram;
+GL::Program* _flatProgram;
+GL::Program* _texProgram;
 
 glm::mat4    _projection;          //< Camera projection matrix
 
@@ -52,6 +53,7 @@ enum VAO_OBJECTS
 {
    FLAT_QUAD = 0,
    SHADED_QUAD,
+   TEXTURED_QUAD,
    NUM_VAO
 };
 
@@ -85,6 +87,9 @@ std::string  _fragDepthFile;       //< Name of the fragment shader file
 std::string  _flatVertFile;        //< Vertex shader filename for flat shading
 std::string  _flatFragFile;        //< Fragment shader filename for flat shading
 
+std::string  _texVertFile;
+std::string  _texFragFile;
+
 bool         _running;             //< true if the program is running, false if it is time to terminate
 bool         _tracking;            //< True if mouse location is being tracked
 
@@ -112,6 +117,8 @@ GLuint       _fboTextures[2];      //< FBO related textures
 GLuint       _renderbuffer;        //< Render buffer handle
 int          _fboWidth;            //< Width of the FBO textures
 int          _fboHeight;           //< Height of the FBO textures
+
+bool         _viewFromLight;
 
 // Log file
 std::ofstream _log;	//< Log file
@@ -228,25 +235,6 @@ void createFBO(void)
       GL_ERR_CHECK();
       
       //------------------------------------------------------------------------------------------
-      // Set up the RGBA texture for the rendered image
-      //------------------------------------------------------------------------------------------
-      glBindTexture(GL_TEXTURE_2D, _fboTextures[RGBA]);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _fboWidth, _fboHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-      GL_ERR_CHECK();
-      
-      //------------------------------------------------------------------------------------------
-      // Set up the render buffer
-      //------------------------------------------------------------------------------------------
-      glGenRenderbuffers(1, &_renderbuffer);
-      glBindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
-      glRenderbufferStorage(GL_RENDERBUFFER,  GL_RGBA32F, _fboWidth, _fboHeight);
-      GL_ERR_CHECK();
-      
-      //------------------------------------------------------------------------------------------
       // Create the frame buffer object
       //------------------------------------------------------------------------------------------
       glGenFramebuffers(1, &_fbo);
@@ -256,24 +244,11 @@ void createFBO(void)
       //------------------------------------------------------------------------------------------
       // Attach textures and renderbuffer to FBO
       //------------------------------------------------------------------------------------------
-      
-      // Attach RGBA / Color texture to the FBO
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _fboTextures[RGBA], 0);
-      
+
       // Attach depth texture to the FBO
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _fboTextures[DEPTH], 0);
-      
-      // Attach render buffer to the FBO
-      //      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderbuffer);
-      //      GL_ERR_CHECK();
-      
-      // Set the drawing buffer
-      glDrawBuffer(GL_COLOR_ATTACHMENT0);
-      
-      // Set the reading buffer
-      glReadBuffer(GL_NONE);
       GL_ERR_CHECK();
-      
+
       fboStatus();
 
       // Return to default OpenGL state
@@ -344,10 +319,10 @@ void init(void)
       _posQuad.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
       _posQuad.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
       
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
       
       _tcQuad.push_back(glm::vec2(0.0f, 0.0f));
       _tcQuad.push_back(glm::vec2(1.0f, 0.0f));
@@ -355,16 +330,19 @@ void init(void)
       _tcQuad.push_back(glm::vec2(1.0f, 1.0f));
       
       // Load the shader programs
-      _shadowVertexFile    = std::string(SOURCE_DIR) + "/shadow_vertex.c";
-      _shadowFragFile      = std::string(SOURCE_DIR) + "/shadow_fragment.c";
-      _fragDepthFile = std::string(SOURCE_DIR) + "/fragmentDepth.c";
+      _shadowVertexFile = std::string(SOURCE_DIR) + "/shadow_vertex.c";
+      _shadowFragFile   = std::string(SOURCE_DIR) + "/shadow_fragment.c";
       
-      _flatVertFile  = std::string(SOURCE_DIR) + "/flat_vertex.c";
-      _flatFragFile  = std::string(SOURCE_DIR) + "/flat_fragment.c";
+      _flatVertFile     = std::string(SOURCE_DIR) + "/flat_vertex.c";
+      _flatFragFile     = std::string(SOURCE_DIR) + "/flat_fragment.c";
       
-      _shadowShader = new GL::Program(_shadowVertexFile, _shadowFragFile);
-      _flatShader   = new GL::Program(_flatVertFile,     _flatFragFile);
-
+      _texVertFile      = std::string(SOURCE_DIR) + "/tex_vertex.c";
+      _texFragFile      = std::string(SOURCE_DIR) + "/tex_fragment.c";
+      
+      _shadowProgram = new GL::Program(_shadowVertexFile, _shadowFragFile);
+      _flatProgram   = new GL::Program(_flatVertFile,     _flatFragFile);
+      _texProgram   = new GL::Program(_texVertFile,      _texFragFile);
+      
       // Generate handles for vertex array objects
       _vao.resize(NUM_VAO, 0);
       glGenVertexArrays(NUM_VAO, &_vao[0]);
@@ -391,24 +369,40 @@ void init(void)
       glBindVertexArray(_vao[FLAT_QUAD]);
 
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-      glVertexAttribPointer(_flatShader->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_flatShader->getAttribLocation("vertex"));
+      glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
 
       // Set up VAO for shaded quads, with texture coords
       glBindVertexArray(_vao[SHADED_QUAD]);
 
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-      glVertexAttribPointer(_shadowShader->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_shadowShader->getAttribLocation("vertex"));
+      glVertexAttribPointer(_shadowProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_shadowProgram->getAttribLocation("vertex"));
 
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
-      glVertexAttribPointer(_shadowShader->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_shadowShader->getAttribLocation("normal"));
+      glVertexAttribPointer(_shadowProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_shadowProgram->getAttribLocation("normal"));
 
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
-      glVertexAttribPointer(_shadowShader->getAttribLocation("tc"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_shadowShader->getAttribLocation("tc"));
+      glVertexAttribPointer(_shadowProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_shadowProgram->getAttribLocation("tc"));
+
       
+      // Set up VAO for shaded quads, with texture coords
+      glBindVertexArray(_vao[TEXTURED_QUAD]);
+      
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+      glVertexAttribPointer(_texProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_texProgram->getAttribLocation("vertex"));
+      
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
+      glVertexAttribPointer(_texProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_texProgram->getAttribLocation("normal"));
+      
+      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
+      glVertexAttribPointer(_texProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(_texProgram->getAttribLocation("tc"));
+
       // Set the clear color
       glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
       
@@ -431,19 +425,25 @@ void init(void)
  */
 void reloadShaders(void)
 {
-#if 0
    try
    {
-      GL::Program* newProgram = new GL::Program(_vertexFile, _fragFile);
-      delete _program;
-      _program = newProgram;
-      
+      GL::Program* newProgram;
+      newProgram = new GL::Program(_flatVertFile, _flatFragFile);
+      delete _flatProgram;
+      _flatProgram = newProgram;
+
+      newProgram = new GL::Program(_shadowVertexFile, _shadowFragFile);
+      delete _shadowProgram;
+      _shadowProgram = newProgram;
+
+      newProgram = new GL::Program(_texVertFile, _texFragFile);
+      delete _shadowProgram;
+      _texProgram = newProgram;
    }
    catch (std::runtime_error exception)
    {
       std::cerr << exception.what() << std::endl;
    }
-#endif
 }
 
 /**
@@ -513,20 +513,29 @@ void cursorPos(GLFWwindow* window, double x, double y)
       vec2 curPos(x,y);
       vec2 delta = curPos - _prevCurPos;
       _prevCurPos = curPos;
+
+      
+      vec3 eulerY = vec3(0, 1, 0) * delta.x * _sensitivity;
+      vec3 eulerX = vec3(1, 0, 0) * delta.y * _sensitivity;
+      
+      glm::quat xRot;
+      glm::quat yRot;
       
       // This operation looks backwards, but movement in the x direction on
       // the rotates the model about the y-axis
       
       // Create Euler angle quaternion rotations based on cursor movement
-      glm::quat yRot(vec3(0,                      delta.x * _sensitivity, 0));
-      glm::quat xRot(vec3(delta.y * _sensitivity, 0,                      0));
-      
       switch(_objToRotate)
       {
          case ROTATE_OCCLUDER:
+            yRot = glm::quat(eulerY * _eyeRot);
+            xRot = glm::quat(eulerX * _eyeRot);
             _occluderRot = glm::normalize(yRot * xRot * _occluderRot);
             break;
+            
          case ROTATE_EYE:
+            yRot = glm::quat(eulerY);
+            xRot = glm::quat(eulerX);
             _eyeRot      = glm::normalize(yRot * xRot * _eyeRot);
          default:
             break;
@@ -553,6 +562,12 @@ void keypress(GLFWwindow* window, int key, int scancode, int state, int mods)
          case GLFW_KEY_SPACE:
             _objToRotate = _objToRotate == ROTATE_OCCLUDER ? ROTATE_EYE : ROTATE_OCCLUDER;
             break;
+            
+         case 'L':
+         case 'l':
+            _viewFromLight = !_viewFromLight;
+            break;
+            
       }
    }
 }
@@ -565,49 +580,6 @@ void close(GLFWwindow* window)
    glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-/**
- * Draw the scene. Used to draw the scene into the fbo and
- * then into the default OpenGL framebuffer
- */
-void drawScene(const glm::mat4& view, const glm::mat4& projection, bool flat = true)
-{
-   GL_ERR_CHECK();
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-   mat4 translate;
-   mat4 scale;
-   mat4 mvp;
-   mat4 rot;
-   GL::Program* program = _flatShader;
-   GLuint vao = _vao[FLAT_QUAD];
-
-   
-   rot        = glm::mat4_cast(_occluderRot);
-   translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-   mvp        = projection * view * translate * rot;
-
-   if(!flat)
-   {
-      program = _shadowShader;
-      vao     = _vao[SHADED_QUAD];
-   }
-
-   program->bind();
-   program->setUniform("mvp", mvp);
-
-   glBindVertexArray(vao);
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
-
-   rot        = glm::mat4_cast(_receiverRot);
-   translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-   scale      = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 1.0f));
-   mvp        = projection * view * translate * rot * scale;
-
-   _flatShader->setUniform("mvp", mvp);
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
-   
-   GL_ERR_CHECK();
-}
 /**
  * Main loop
  * @param time    time elapsed in seconds since the start of the program
@@ -623,161 +595,110 @@ int render(double time)
       mat4 mvp;
       mat4 rot;
       mat4 invTP;
-      vec3 lightPos(10, 10, 0);
+      vec4 lightPos = vec4(0, 10, 0, 1);
+      mat4 toShadowTex0;
+      mat4 toShadowTex1;
+      mat4 clipToTexture = glm::scale(glm::translate(mat4(1), vec3(0.5, 0.5, 0.5)), vec3(0.5, 0.5, 0.5));
       
-#if 0
-      glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
-      glViewport(0, 0, _fboWidth, _fboHeight);
+      if(!_viewFromLight)
+      {
+         glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+         glViewport(0, 0, _fboWidth, _fboHeight);
+      }
+      
       glClearColor(0, 0, 0, 0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
-      glm::mat4 lightView = glm::lookAt(lightPos, vec3(0, 0, 0), vec3(0, 0, 1));
+      glm::mat4 lightView = glm::lookAt(vec3(lightPos.x, lightPos.y, lightPos.z), vec3(0, 0, 0), vec3(0, 0, 1));
       glm::mat4 lightProj = glm::perspective(45.0f,                        // 45 degree field of view
                                              float(_winWidth) / float(_winHeight), // Ratio
                                              0.1f,                         // Near clip
                                              4000.0f);                     // Far clip
-      drawScene(lightView, lightProj);
-#endif
-      
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-      glViewport(0, 0, _winWidth, _winHeight);
-      glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      glm::mat4 view = glm::lookAt(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)) * glm::mat4_cast(_eyeRot);
-      
-      
       rot        = glm::mat4_cast(_occluderRot);
       translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-      mvp        = _projection * view * translate * rot;
-      invTP      = transpose(inverse(mvp));
-
-      _shadowShader->bind();
-      _shadowShader->setUniform("model",    translate * rot);
-      _shadowShader->setUniform("view",     view);
-      _shadowShader->setUniform("proj",     _projection);
-      _shadowShader->setUniform("invTP",    invTP);
-      _shadowShader->setUniform("lightPos", lightPos);
-      _shadowShader->setUniform("mvp",      mvp);
-
-      glBindVertexArray(_vao[SHADED_QUAD]);
+      mvp        = lightProj * lightView * translate * rot;
+      toShadowTex0 = clipToTexture * mvp;
+      
+      _flatProgram->bind();
+      _flatProgram->setUniform("mvp",      mvp);
+      
+      glBindVertexArray(_vao[FLAT_QUAD]);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       
       rot        = glm::mat4_cast(_receiverRot);
       translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-      scale      = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 3.0f, 1.0f));
-      mvp        = _projection * view * translate * rot * scale;
-      invTP      = transpose(inverse(mvp));
+      scale      = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
+      mvp        = lightProj * lightView * translate * rot * scale;
+      toShadowTex1 = clipToTexture * mvp;
       
-      _shadowShader->setUniform("model",    translate * rot);
-      _shadowShader->setUniform("invTP",    invTP);
-      _shadowShader->setUniform("mvp",      mvp);
-
+      _shadowProgram->setUniform("mvp",      mvp);
+      
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
 
-      
-#if 0
-      
-      // Model matrix
-      glm::mat4 model = glm::mat4_cast(_objRot);
-      
-      // Create  model, view, projection matrix
-      glm::mat4 mvp        = _projection * view * translate * model; // Remember, matrix multiplication is the other way around
-      
-      // Use the shader program that was loaded, compiled and linked
-      _program->bind();
-      GL_ERR_CHECK();
-      
-      // Set the MVP uniform
-      _program->setUniform("mvp", mvp);
-      GL_ERR_CHECK();
-      
-      //------------------------------------------------------------------------------------------
-      // Draw scene into an FBO
-      //------------------------------------------------------------------------------------------
-      glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
-      GL_ERR_CHECK();
-      
-      // Set the viewport for the fbo
-      glViewport(0, 0, _fboWidth, _fboHeight);
-      GL_ERR_CHECK();
-      
-      glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
-      GL_ERR_CHECK();
+      if(!_viewFromLight)
+      {
+         //-------------------
+         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+         glViewport(0, 0, _winWidth, _winHeight);
+         glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
+         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+         
+         glm::mat4 view = glm::lookAt(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)) * glm::mat4_cast(_eyeRot);
+         
+         lightPos = view * vec4(10, 10, -10, 1);
+         
+         rot        = glm::mat4_cast(_occluderRot);
+         translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+         mvp        = _projection * view * translate * rot;
+         invTP      = transpose(inverse(mvp));
+         
+         glActiveTexture(GL_TEXTURE0);
+         glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
+         
+         _shadowProgram->bind();
+         _shadowProgram->setUniform("mvp",      mvp);
+         _shadowProgram->setUniform("invTP",    invTP);
+         _shadowProgram->setUniform("lightPos", lightPos);
+         _shadowProgram->setUniform("depthMap", 0);
+         _shadowProgram->setUniform("toShadowTex", toShadowTex0);
+         
+         glBindVertexArray(_vao[SHADED_QUAD]);
+         glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+         
+         rot        = glm::mat4_cast(_receiverRot);
+         translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+         scale      = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
+         mvp        = _projection * view * translate * rot * scale;
+         invTP      = transpose(inverse(mvp));
+         
+         _shadowProgram->setUniform("mvp",      mvp);
+         _shadowProgram->setUniform("invTP",    invTP);
+         _shadowProgram->setUniform("toShadowTex", toShadowTex1);
+         
+         glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+         GL_ERR_CHECK();
 
-      drawScene();
-      
-      //------------------------------------------------------------------------------------------
-      // End draw FBO scene into an FBO
-      //------------------------------------------------------------------------------------------
-      
-      //------------------------------------------------------------------------------------------
-      // Draw the same scene into the default framebuffer
-      //------------------------------------------------------------------------------------------
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-      GL_ERR_CHECK();
-      
-      // Set the viewport for the default framebuffer
-      glViewport(0, 0, _winWidth, _winHeight);
-      
-      // Clear the color and depth buffers
-      glClearColor(0.3f, 0.5f, 0.9f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      drawScene();
-      GL_ERR_CHECK();
+         //------------------------------------------------------------------------------------------
+         // Draw a textured quad that contains the depth texture from the FBO
+         //------------------------------------------------------------------------------------------
+         float scaleFactor = 0.2f; //6125;
 
-      //------------------------------------------------------------------------------------------
-      // End draw scene into default framebuffer
-      //------------------------------------------------------------------------------------------
-      
-      //------------------------------------------------------------------------------------------
-      // Draw a textured quad that contains the RGBA texture from the FBO
-      //------------------------------------------------------------------------------------------
-      float scaleFactor = 0.08f; //6125;
-      glm::mat4 colorTrans 
-         = glm::translate(glm::mat4(1.0f), glm::vec3(-0.8,0.7,0))
-         * glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor, scaleFactor, 1.0f));
-      
-      glm::mat4 depthTrans 
-         = glm::translate(glm::mat4(1.0f), glm::vec3(-0.6,0.7,0))
-         * glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor, scaleFactor, 1.0f));
-      
-      mvp = _projection * view * colorTrans;
-      
-      GL_ERR_CHECK();
+         mat4 depthTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-0.75,0.75,0))
+                         * glm::scale(glm::mat4(1.0f),     glm::vec3(scaleFactor, scaleFactor, 1.0f));
+         
+         glActiveTexture(GL_TEXTURE0);
+         glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
 
-      // Set the MVP uniform
-      _program->setUniform("mvp", mvp);
-      
-      glBindTexture(GL_TEXTURE_2D, _fboTextures[RGBA]);
-      
-      // Draw the triangles
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
-      GL_ERR_CHECK();
-      
-      
-      //------------------------------------------------------------------------------------------
-      // Draw a textured quad that contains the depth texture from the FBO
-      //------------------------------------------------------------------------------------------
-      GL_ERR_CHECK();
-      _programDepth->bind();
-      mvp = _projection * view * depthTrans;
-      
-      // Set the MVP uniform
-      _program->setUniform("mvp", mvp);
-      
-      glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-      
-      // Draw the triangles
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _verticesQuad.size());
-      GL_ERR_CHECK();
-      //------------------------------------------------------------------------------------------
-      // End drawing textured quads
-      //------------------------------------------------------------------------------------------
-      
-      glBindTexture(GL_TEXTURE_2D, 0);
-      GL_ERR_CHECK();
-#endif
+         _texProgram->bind();
+         _texProgram->setUniform("mvp", depthTrans);
+         _texProgram->setUniform("tex", 0);
+         
+         
+         glBindVertexArray(_vao[TEXTURED_QUAD]);
+         glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+         GL_ERR_CHECK();
+      }
    }
    catch (std::runtime_error exception)
    {
@@ -798,6 +719,7 @@ int main(int argc, char* argv[])
    _sensitivity = float(M_PI) / 360.0f;
    _objToRotate = ROTATE_OCCLUDER;
    _eye = vec4(0.0f, 0.0f, 2.0f, 1.0f);
+   _viewFromLight = false;
    
    // Open up the log file
    std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
@@ -814,13 +736,17 @@ int main(int argc, char* argv[])
    // Request an OpenGL core profile context, without backwards compatibility
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
-   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+   glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
    glfwWindowHint(GLFW_SAMPLES,               8);
-
+   glfwWindowHint(GLFW_RED_BITS,              32);
+   glfwWindowHint(GLFW_GREEN_BITS,            32);
+   glfwWindowHint(GLFW_BLUE_BITS,             32);
+   glfwWindowHint(GLFW_ALPHA_BITS,            32);
+   
 #ifdef __APPLE__
    // This should never be needed and it is recommended to never set this bit,
    // but OS X requires it to be set.
-   glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
+   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
    // Create a windowed mode window and its OpenGL context
