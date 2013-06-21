@@ -1,7 +1,5 @@
 //
-// FBO example using OpenGL 3.2
-//
-// main.cpp
+// Basic shadow mapping using OpenGL 3.2
 //
 // Author: Jeff Bowles <jbowles@riskybacon.com>
 
@@ -468,7 +466,7 @@ void resize(GLFWwindow* window, int width, int height)
       _projection = glm::perspective(45.0f,                        // 45 degree field of view
                                   float(width) / float(height), // Ratio
                                   0.1f,                         // Near clip
-                                  4000.0f);                     // Far clip
+                                  100.0f);                     // Far clip
    }
    catch(std::runtime_error exception)
    {
@@ -610,10 +608,10 @@ int render(double time)
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
       glm::mat4 lightView = glm::lookAt(vec3(lightPos.x, lightPos.y, lightPos.z), vec3(0, 0, 0), vec3(0, 0, 1));
-      glm::mat4 lightProj = glm::perspective(45.0f,                        // 45 degree field of view
+      glm::mat4 lightProj = glm::perspective(30.0f,                        // 45 degree field of view
                                              float(_winWidth) / float(_winHeight), // Ratio
                                              0.1f,                         // Near clip
-                                             4000.0f);                     // Far clip
+                                             100.0f);                     // Far clip
 
       rot        = glm::mat4_cast(_occluderRot);
       translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
@@ -626,10 +624,11 @@ int render(double time)
       glBindVertexArray(_vao[FLAT_QUAD]);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       
-      rot        = glm::mat4_cast(_receiverRot);
-      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-      scale      = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
-      mvp        = lightProj * lightView * translate * rot * scale;
+      rot          = glm::mat4_cast(_receiverRot);
+      translate    = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+      scale        = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
+
+      mvp          = lightProj * lightView * translate * rot * scale;
       toShadowTex1 = clipToTexture * mvp;
       
       _shadowProgram->setUniform("mvp",      mvp);
@@ -638,7 +637,6 @@ int render(double time)
 
       if(!_viewFromLight)
       {
-         //-------------------
          glBindFramebuffer(GL_FRAMEBUFFER, 0);
          glViewport(0, 0, _winWidth, _winHeight);
          glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
