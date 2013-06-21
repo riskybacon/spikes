@@ -222,6 +222,18 @@ void createFBO(void)
       }
       
       //------------------------------------------------------------------------------------------
+      // Set up the RGBA texture for the rendered image
+      //------------------------------------------------------------------------------------------
+      glBindTexture(GL_TEXTURE_2D, _fboTextures[RGBA]);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _fboWidth, _fboHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+      GL_ERR_CHECK();
+
+
+      //------------------------------------------------------------------------------------------
       // Set up the texture to hold depth data
       //------------------------------------------------------------------------------------------
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
@@ -242,7 +254,7 @@ void createFBO(void)
       //------------------------------------------------------------------------------------------
       // Attach textures and renderbuffer to FBO
       //------------------------------------------------------------------------------------------
-
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _fboTextures[RGBA], 0);
       // Attach depth texture to the FBO
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _fboTextures[DEPTH], 0);
       GL_ERR_CHECK();
@@ -623,6 +635,7 @@ int render(double time)
       
       glBindVertexArray(_vao[FLAT_QUAD]);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      GL_ERR_CHECK();
       
       rot          = glm::mat4_cast(_receiverRot);
       translate    = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -631,9 +644,10 @@ int render(double time)
       mvp          = lightProj * lightView * translate * rot * scale;
       toShadowTex1 = clipToTexture * mvp;
       
-      _shadowProgram->setUniform("mvp",      mvp);
+      _flatProgram->setUniform("mvp",      mvp);
       
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      GL_ERR_CHECK();
 
       if(!_viewFromLight)
       {
@@ -641,6 +655,7 @@ int render(double time)
          glViewport(0, 0, _winWidth, _winHeight);
          glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+         GL_ERR_CHECK();
          
          glm::mat4 view = glm::lookAt(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)) * glm::mat4_cast(_eyeRot);
          
@@ -660,9 +675,11 @@ int render(double time)
          _shadowProgram->setUniform("lightPos", lightPos);
          _shadowProgram->setUniform("depthMap", 0);
          _shadowProgram->setUniform("toShadowTex", toShadowTex0);
+         GL_ERR_CHECK();
          
          glBindVertexArray(_vao[SHADED_QUAD]);
          glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+         GL_ERR_CHECK();
          
          rot        = glm::mat4_cast(_receiverRot);
          translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -700,7 +717,7 @@ int render(double time)
    }
    catch (std::runtime_error exception)
    {
-	  logException(exception);
+	   logException(exception);
       terminate(EXIT_FAILURE);
    }
    
