@@ -553,44 +553,69 @@ int render(double time)
       vec4 lightPos = vec4(0, 10, 0, 1);
       mat4 toShadowTex0;
       mat4 toShadowTex1;
-      mat4 clipToTexture = glm::scale(glm::translate(mat4(1), vec3(0.5, 0.5, 0.5)), vec3(0.5, 0.5, 0.5));
       
+      // Matrix that maps from [-1, 1] -> [0,1], which maps from clip space to texture map space
+      mat4 clipToTexture = glm::scale(glm::translate(mat4(1), vec3(0.5, 0.5, 0.5)), vec3(0.5, 0.5, 0.5));
+
+      //----------------------------------------------------------------------------------------------------
+      // Draw depth pass from light's point of view
+      //----------------------------------------------------------------------------------------------------
       glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
       glViewport(0, 0, _fboWidth, _fboHeight);
       
+      // Clear the framebuffer
       glClearColor(0, 0, 0, 0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
+      // Set up the light's view and projection matrices
       glm::mat4 lightView = glm::lookAt(vec3(lightPos.x, lightPos.y, lightPos.z), vec3(0, 0, 0), vec3(0, 0, 1));
       glm::mat4 lightProj = glm::perspective(30.0f,                        // 45 degree field of view
                                              float(_winWidth) / float(_winHeight), // Ratio
                                              0.1f,                         // Near clip
                                              100.0f);                     // Far clip
       
+      //----------------------------------------
+      // Draw the occluding surface
+      //----------------------------------------
+      
+      // Set up model, view, projection matrix for occluding surface
       rot        = glm::mat4_cast(_occluderRot);
       translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
       mvp        = lightProj * lightView * translate * rot;
+      
+      // Need to keep the mvp for this surface from the light's point of view. This will be used
+      // in the render pass where the shadows are drawn
       toShadowTex0 = clipToTexture * mvp;
       
+      // Bind the flat shader program. No need for a fancy shader on this pass, just need the depth
       _flatProgram->bind();
       _flatProgram->setUniform("mvp",      mvp);
       
+      // Draw the occluding surface
       glBindVertexArray(_vao[FLAT_QUAD]);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       GL_ERR_CHECK();
       
+      // Set up modle, view, projection matrix for the receiving surface
       rot          = glm::mat4_cast(_receiverRot);
       translate    = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
       scale        = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
-      
       mvp          = lightProj * lightView * translate * rot * scale;
+
+      // Need to keep the mvp for this surface from the light's point of view. This will be used
+      // in the render pass where the shadows are drawn
       toShadowTex1 = clipToTexture * mvp;
       
       _flatProgram->setUniform("mvp",      mvp);
       
+      // Draw occluding surface. Use the same vertex array object as the previous surface - they're both
+      // the same shape, just different position, rotation and scale
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       GL_ERR_CHECK();
       
+      //----------------------------------------------------------------------------------------------------
+      // Draw depth pass from light's point of view
+      //----------------------------------------------------------------------------------------------------
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       glViewport(0, 0, _winWidth, _winHeight);
       glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
@@ -601,6 +626,7 @@ int render(double time)
       
       lightPos = view * vec4(10, 10, -10, 1);
       
+      // Set up model, view, projection matrix for occluding surface
       rot        = glm::mat4_cast(_occluderRot);
       translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
       mvp        = _projection * view * translate * rot;
@@ -608,7 +634,8 @@ int render(double time)
       
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-      
+
+      // Bind the shader program that will draw the shadows and do some simple Phong shading
       _shadowProgram->bind();
       _shadowProgram->setUniform("mvp",      mvp);
       _shadowProgram->setUniform("invTP",    invTP);
@@ -616,7 +643,8 @@ int render(double time)
       _shadowProgram->setUniform("depthMap", 0);
       _shadowProgram->setUniform("toShadowTex", toShadowTex0);
       GL_ERR_CHECK();
-      
+
+      // Draw the occluding surface
       glBindVertexArray(_vao[SHADED_QUAD]);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       GL_ERR_CHECK();
@@ -631,6 +659,7 @@ int render(double time)
       _shadowProgram->setUniform("invTP",    invTP);
       _shadowProgram->setUniform("toShadowTex", toShadowTex1);
       
+      // Draw the receiving surface d
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       GL_ERR_CHECK();
    }
