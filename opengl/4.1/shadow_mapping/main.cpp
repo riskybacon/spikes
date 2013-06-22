@@ -40,22 +40,14 @@ using std::string;
 #include "config.h"
 
 // Global variables have an underscore prefix.
-GL::Program* _shadowProgram;
-GL::Program* _flatProgram;
-GL::Program* _texProgram;
-
-glm::mat4    _projection;          //< Camera projection matrix
 
 // Array objects - quad
 enum VAO_OBJECTS
 {
    FLAT_QUAD = 0,
    SHADED_QUAD,
-   TEXTURED_QUAD,
    NUM_VAO
 };
-
-std::vector<GLuint> _vao; //< Vertex array object handles
 
 // Buffer objects - quad
 enum BUFFER_OBJECTS
@@ -75,20 +67,24 @@ enum OBJ_TO_ROTATE
 
 OBJ_TO_ROTATE _objToRotate;
 
+std::vector<GLuint> _vao; //< Vertex array object handles
+
+
+
+GL::Program* _shadowProgram;       //<
+GL::Program* _flatProgram;
+
+glm::mat4    _projection;          //< Camera projection matrix
+
 std::vector<GLuint> _buffers;
 
 // Shader file names
-std::string  _shadowVertexFile;    //< Name of the vertex shader file
-std::string  _shadowFragFile;      //< Name of the fragment shader file
-std::string  _fragDepthFile;       //< Name of the fragment shader file
+std::string  _shadowVertexFile;    //< Shadow mapping vertex shader
+std::string  _shadowFragFile;      //< Shadow mapping fragment shader
 
-std::string  _flatVertFile;        //< Vertex shader filename for flat shading
-std::string  _flatFragFile;        //< Fragment shader filename for flat shading
+std::string  _flatVertFile;        //< Flat vertex shader
+std::string  _flatFragFile;        //< Flat fragment shader
 
-std::string  _texVertFile;
-std::string  _texFragFile;
-
-bool         _running;             //< true if the program is running, false if it is time to terminate
 bool         _tracking;            //< True if mouse location is being tracked
 
 // Data for quad
@@ -116,8 +112,6 @@ GLuint       _renderbuffer;        //< Render buffer handle
 int          _fboWidth;            //< Width of the FBO textures
 int          _fboHeight;           //< Height of the FBO textures
 
-bool         _viewFromLight;
-
 // Log file
 std::ofstream _log;	//< Log file
 
@@ -127,6 +121,12 @@ enum FBOTextures
    RGBA  = 1
 };
 
+/**
+ * Log an exception to stderr and to a log file
+ * 
+ * @param exception
+ *    The exception to log
+ */
 void logException(const std::runtime_error& exception)
 {
 	std::cerr << exception.what() << std::endl;
@@ -212,7 +212,7 @@ void createFBO(void)
       _fboHeight = 256;
       glGenTextures(2, _fboTextures);
       GL_ERR_CHECK();
-
+      
       for(int i = 0; i < 2; ++i)
       {
          if(_fboTextures[i] <= 0)
@@ -231,8 +231,8 @@ void createFBO(void)
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
       GL_ERR_CHECK();
-
-
+      
+      
       //------------------------------------------------------------------------------------------
       // Set up the texture to hold depth data
       //------------------------------------------------------------------------------------------
@@ -258,9 +258,10 @@ void createFBO(void)
       // Attach depth texture to the FBO
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _fboTextures[DEPTH], 0);
       GL_ERR_CHECK();
-
+      
       fboStatus();
-
+      GL_ERR_CHECK();
+      
       // Return to default OpenGL state
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       glBindTexture(GL_TEXTURE_2D, 0);
@@ -269,7 +270,7 @@ void createFBO(void)
       // Set the reading buffer
       glReadBuffer(GL_BACK);
       GL_ERR_CHECK();
-   } 
+   }
    catch (std::runtime_error exception)
    {
       logException(exception);
@@ -279,7 +280,7 @@ void createFBO(void)
 }
 
 /**
- *  Initialize OpenGL Extension Wrangler. 
+ *  Initialize OpenGL Extension Wrangler.
  *  Does nothing under OS X
  */
 void initGLEW(void)
@@ -287,7 +288,7 @@ void initGLEW(void)
 #ifndef __APPLE__
    // GLEW has trouble supporting the core profile
    glewExperimental = GL_TRUE;
-   try 
+   try
    {
       glewInit();
       // Initializing GLEW when using a core profile will result in the GL
@@ -298,10 +299,10 @@ void initGLEW(void)
       GL_ERR_CHECK();
       if(!GLEW_ARB_vertex_array_object)
       {
-         std::cerr << "ARB_vertex_array_object not available." << std::endl; 
+         std::cerr << "ARB_vertex_array_object not available." << std::endl;
          terminate(EXIT_FAILURE);
       }
-   } 
+   }
    catch(std::runtime_error exception)
    {
 	   logException(exception);
@@ -319,7 +320,7 @@ void init(void)
    {
       initGLEW();
       createFBO();
-
+      
       _occluderRot = quat(vec3(M_PI / 2, 0, 0));
       _receiverRot = quat(vec3(M_PI / 2, 0, 0));
       
@@ -346,17 +347,13 @@ void init(void)
       _flatVertFile     = std::string(SOURCE_DIR) + "/flat_vertex.c";
       _flatFragFile     = std::string(SOURCE_DIR) + "/flat_fragment.c";
       
-      _texVertFile      = std::string(SOURCE_DIR) + "/tex_vertex.c";
-      _texFragFile      = std::string(SOURCE_DIR) + "/tex_fragment.c";
-      
       _shadowProgram = new GL::Program(_shadowVertexFile, _shadowFragFile);
       _flatProgram   = new GL::Program(_flatVertFile,     _flatFragFile);
-      _texProgram   = new GL::Program(_texVertFile,      _texFragFile);
       
       // Generate handles for vertex array objects
       _vao.resize(NUM_VAO, 0);
       glGenVertexArrays(NUM_VAO, &_vao[0]);
-
+      
       // Generate handles for buffers
       _buffers.resize(NUM_BUFFER, 0);
       glGenBuffers(NUM_BUFFER, &_buffers[0]);
@@ -366,53 +363,37 @@ void init(void)
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
       glBufferData(GL_ARRAY_BUFFER, _posQuad.size()     * sizeof(glm::vec4), &_posQuad[0],     GL_STATIC_DRAW);
       GL_ERR_CHECK();
-
+      
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
       glBufferData(GL_ARRAY_BUFFER, _normalsQuad.size() * sizeof(glm::vec4), &_normalsQuad[0], GL_STATIC_DRAW);
       GL_ERR_CHECK();
-
+      
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
       glBufferData(GL_ARRAY_BUFFER, _tcQuad.size()      * sizeof(glm::vec2), &_tcQuad[0],      GL_STATIC_DRAW);
       GL_ERR_CHECK();
-
+      
       // Set up VAO for flat shaded quads, no texture coords
       glBindVertexArray(_vao[FLAT_QUAD]);
-
+      
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
       glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
       glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
-
+      
       // Set up VAO for shaded quads, with texture coords
       glBindVertexArray(_vao[SHADED_QUAD]);
-
+      
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
       glVertexAttribPointer(_shadowProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
       glEnableVertexAttribArray(_shadowProgram->getAttribLocation("vertex"));
-
+      
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
       glVertexAttribPointer(_shadowProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
       glEnableVertexAttribArray(_shadowProgram->getAttribLocation("normal"));
-
+      
       glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
       glVertexAttribPointer(_shadowProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
       glEnableVertexAttribArray(_shadowProgram->getAttribLocation("tc"));
-
       
-      // Set up VAO for shaded quads, with texture coords
-      glBindVertexArray(_vao[TEXTURED_QUAD]);
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-      glVertexAttribPointer(_texProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_texProgram->getAttribLocation("vertex"));
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
-      glVertexAttribPointer(_texProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_texProgram->getAttribLocation("normal"));
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
-      glVertexAttribPointer(_texProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_texProgram->getAttribLocation("tc"));
-
       // Set the clear color
       glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
       
@@ -425,40 +406,14 @@ void init(void)
    }
    catch (std::runtime_error exception)
    {
-	  logException(exception);
+      logException(exception);
       terminate(EXIT_FAILURE);
    }
 }
 
 /**
- * Reload the shaders, but only if they compile
- */
-void reloadShaders(void)
-{
-   try
-   {
-      GL::Program* newProgram;
-      newProgram = new GL::Program(_flatVertFile, _flatFragFile);
-      delete _flatProgram;
-      _flatProgram = newProgram;
-
-      newProgram = new GL::Program(_shadowVertexFile, _shadowFragFile);
-      delete _shadowProgram;
-      _shadowProgram = newProgram;
-
-      newProgram = new GL::Program(_texVertFile, _texFragFile);
-      delete _shadowProgram;
-      _texProgram = newProgram;
-   }
-   catch (std::runtime_error exception)
-   {
-      std::cerr << exception.what() << std::endl;
-   }
-}
-
-/**
  * Window resize callback
- * 
+ *
  * @param width   the width of the window
  * @param height  the height of the window
  */
@@ -470,15 +425,15 @@ void resize(GLFWwindow* window, int width, int height)
       // window coordinates. In this case, (-1,1) -> (0, width) and (-1,1) -> (0, height)
       glViewport(0, 0, width, height);
       GL_ERR_CHECK();
-
+      
       _winWidth = width;
       _winHeight = height;
-   
+      
       // Projection matrix
       _projection = glm::perspective(45.0f,                        // 45 degree field of view
-                                  float(width) / float(height), // Ratio
-                                  0.1f,                         // Near clip
-                                  100.0f);                     // Far clip
+                                     float(width) / float(height), // Ratio
+                                     0.1f,                         // Near clip
+                                     100.0f);                     // Far clip
    }
    catch(std::runtime_error exception)
    {
@@ -523,7 +478,7 @@ void cursorPos(GLFWwindow* window, double x, double y)
       vec2 curPos(x,y);
       vec2 delta = curPos - _prevCurPos;
       _prevCurPos = curPos;
-
+      
       
       vec3 eulerY = vec3(0, 1, 0) * delta.x * _sensitivity;
       vec3 eulerX = vec3(1, 0, 0) * delta.y * _sensitivity;
@@ -565,19 +520,9 @@ void keypress(GLFWwindow* window, int key, int scancode, int state, int mods)
          case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GL_TRUE);
             break;
-         case 'R':
-         case 'r':
-            reloadShaders();
-            break;
          case GLFW_KEY_SPACE:
             _objToRotate = _objToRotate == ROTATE_OCCLUDER ? ROTATE_EYE : ROTATE_OCCLUDER;
             break;
-            
-         case 'L':
-         case 'l':
-            _viewFromLight = !_viewFromLight;
-            break;
-            
       }
    }
 }
@@ -599,7 +544,7 @@ int render(double time)
    try
    {
       glClearDepth(1.0f);
-
+      
       mat4 translate;
       mat4 scale;
       mat4 mvp;
@@ -610,11 +555,8 @@ int render(double time)
       mat4 toShadowTex1;
       mat4 clipToTexture = glm::scale(glm::translate(mat4(1), vec3(0.5, 0.5, 0.5)), vec3(0.5, 0.5, 0.5));
       
-      if(!_viewFromLight)
-      {
-         glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
-         glViewport(0, 0, _fboWidth, _fboHeight);
-      }
+      glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+      glViewport(0, 0, _fboWidth, _fboHeight);
       
       glClearColor(0, 0, 0, 0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -624,7 +566,7 @@ int render(double time)
                                              float(_winWidth) / float(_winHeight), // Ratio
                                              0.1f,                         // Near clip
                                              100.0f);                     // Far clip
-
+      
       rot        = glm::mat4_cast(_occluderRot);
       translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
       mvp        = lightProj * lightView * translate * rot;
@@ -640,7 +582,7 @@ int render(double time)
       rot          = glm::mat4_cast(_receiverRot);
       translate    = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
       scale        = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
-
+      
       mvp          = lightProj * lightView * translate * rot * scale;
       toShadowTex1 = clipToTexture * mvp;
       
@@ -648,72 +590,49 @@ int render(double time)
       
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       GL_ERR_CHECK();
-
-      if(!_viewFromLight)
-      {
-         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-         glViewport(0, 0, _winWidth, _winHeight);
-         glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
-         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         GL_ERR_CHECK();
-         
-         glm::mat4 view = glm::lookAt(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)) * glm::mat4_cast(_eyeRot);
-         
-         lightPos = view * vec4(10, 10, -10, 1);
-         
-         rot        = glm::mat4_cast(_occluderRot);
-         translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-         mvp        = _projection * view * translate * rot;
-         invTP      = transpose(inverse(mvp));
-         
-         glActiveTexture(GL_TEXTURE0);
-         glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-         
-         _shadowProgram->bind();
-         _shadowProgram->setUniform("mvp",      mvp);
-         _shadowProgram->setUniform("invTP",    invTP);
-         _shadowProgram->setUniform("lightPos", lightPos);
-         _shadowProgram->setUniform("depthMap", 0);
-         _shadowProgram->setUniform("toShadowTex", toShadowTex0);
-         GL_ERR_CHECK();
-         
-         glBindVertexArray(_vao[SHADED_QUAD]);
-         glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
-         GL_ERR_CHECK();
-         
-         rot        = glm::mat4_cast(_receiverRot);
-         translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-         scale      = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
-         mvp        = _projection * view * translate * rot * scale;
-         invTP      = transpose(inverse(mvp));
-         
-         _shadowProgram->setUniform("mvp",      mvp);
-         _shadowProgram->setUniform("invTP",    invTP);
-         _shadowProgram->setUniform("toShadowTex", toShadowTex1);
-         
-         glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
-         GL_ERR_CHECK();
-
-         //------------------------------------------------------------------------------------------
-         // Draw a textured quad that contains the depth texture from the FBO
-         //------------------------------------------------------------------------------------------
-         float scaleFactor = 0.2f; //6125;
-
-         mat4 depthTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-0.75,0.75,0))
-                         * glm::scale(glm::mat4(1.0f),     glm::vec3(scaleFactor, scaleFactor, 1.0f));
-         
-         glActiveTexture(GL_TEXTURE0);
-         glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-
-         _texProgram->bind();
-         _texProgram->setUniform("mvp", depthTrans);
-         _texProgram->setUniform("tex", 0);
-         
-         
-         glBindVertexArray(_vao[TEXTURED_QUAD]);
-         glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
-         GL_ERR_CHECK();
-      }
+      
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      glViewport(0, 0, _winWidth, _winHeight);
+      glClearColor(0.3f, 0.4f, 0.95f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      GL_ERR_CHECK();
+      
+      glm::mat4 view = glm::lookAt(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)) * glm::mat4_cast(_eyeRot);
+      
+      lightPos = view * vec4(10, 10, -10, 1);
+      
+      rot        = glm::mat4_cast(_occluderRot);
+      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+      mvp        = _projection * view * translate * rot;
+      invTP      = transpose(inverse(mvp));
+      
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
+      
+      _shadowProgram->bind();
+      _shadowProgram->setUniform("mvp",      mvp);
+      _shadowProgram->setUniform("invTP",    invTP);
+      _shadowProgram->setUniform("lightPos", lightPos);
+      _shadowProgram->setUniform("depthMap", 0);
+      _shadowProgram->setUniform("toShadowTex", toShadowTex0);
+      GL_ERR_CHECK();
+      
+      glBindVertexArray(_vao[SHADED_QUAD]);
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      GL_ERR_CHECK();
+      
+      rot        = glm::mat4_cast(_receiverRot);
+      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+      scale      = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
+      mvp        = _projection * view * translate * rot * scale;
+      invTP      = transpose(inverse(mvp));
+      
+      _shadowProgram->setUniform("mvp",      mvp);
+      _shadowProgram->setUniform("invTP",    invTP);
+      _shadowProgram->setUniform("toShadowTex", toShadowTex1);
+      
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      GL_ERR_CHECK();
    }
    catch (std::runtime_error exception)
    {
@@ -734,12 +653,11 @@ int main(int argc, char* argv[])
    _sensitivity = float(M_PI) / 360.0f;
    _objToRotate = ROTATE_OCCLUDER;
    _eye = vec4(0.0f, 0.0f, 2.0f, 1.0f);
-   _viewFromLight = false;
    
    // Open up the log file
    std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
    _log.open(logFile.c_str());
-
+   
    GLFWwindow* window;
    
    // Initialize GLFW
@@ -760,15 +678,15 @@ int main(int argc, char* argv[])
    
 #ifdef __APPLE__
    // This should never be needed and it is recommended to never set this bit,
-   // but OS X requires it to be set.
+   // but OS X requires it to be set to get a core profile.
    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-
+   
    // Create a windowed mode window and its OpenGL context
    window = glfwCreateWindow(1024, 768, "FBO", NULL, NULL);
-   if (!window)
+   if(!window)
    {
-      fprintf(stderr, "Failed to open GLFW window\n");
+      std::cerr << "Failed to open GLFW window" << std::endl;
       glfwTerminate();
       return EXIT_FAILURE;
    }
