@@ -41,7 +41,7 @@ using std::string;
 
 // Global variables have an underscore prefix.
 
-// Array objects - quad
+// Array objects
 enum VAO_OBJECTS
 {
    QUAD_FLAT = 0,
@@ -53,7 +53,7 @@ enum VAO_OBJECTS
    NUM_VAO_OBJECTS
 };
 
-// Buffer objects - quad
+// Buffer objects
 enum BUFFER_OBJECTS
 {
    QUAD_POS = 0,
@@ -494,7 +494,6 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
  */
 void createQuad()
 {
- 
    // Create a quad
    _posQuad.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
    _posQuad.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));

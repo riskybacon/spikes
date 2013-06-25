@@ -1,9 +1,7 @@
 #version 150
-// Shadow mapping with simple Phong shading
+// Shadow mapping with diffuse lighting
 
-in vec4 vertexNormal;
 in vec3 N;
-//in vec3 v;
 in vec2 fragTC;
 in vec4 stPos;
 in vec4 worldPos;
@@ -12,7 +10,6 @@ uniform vec4 lightPos;
 uniform sampler2DShadow depthMap;
 
 out vec4 fragColor;
-
 
 void main(void)
 {
@@ -29,25 +26,15 @@ void main(void)
    // the receiver to the light.
    attenuation = occludingDepth < (stPos.z / stPos.w) - 0.0005 ? 0.75 : attenuation;
 
-   // Phong shading
+   // Diffuse color
    vec4 diffuseMaterial = vec4(0.9, 0.6, 0.5, 1.0);
-   
-#if 0
-   vec4 specularMaterial = vec4(1, 0, 0, 1);
-   float shininess = 100;
-   
-   vec3 E = normalize(-(worldPos.xyz));
-   vec3 R = reflect(-L, N);
-   
-   float specDP = max(dot(R,E), 0);
-   vec4 specular = specularMaterial * pow(specDP, shininess);
-#endif
-   
+
+   // Vector from world position to light
    vec3 L = normalize(lightPos.xyz - worldPos.xyz);
+
+   // Diffuse color
    vec4 diffuse = diffuseMaterial * max(dot(N,L), 0);
-   
-   // Combine Phong shading and shadow mapping light attenuation factor
-   //   fragColor = clamp(attenuation * (diffuse + specular), 0, 1);
+
+   // Final fragment color
    fragColor = clamp(attenuation * diffuse, 0, 1);
-   //   fragColor = vec4(0, 0, N.b, 1);
 }
