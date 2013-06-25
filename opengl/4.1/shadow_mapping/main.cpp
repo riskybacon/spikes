@@ -350,7 +350,7 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
       
       quat rot(vec3(0.0f, t * 2 * M_PI, 0.0f));
       
-      for(int i = 0; i < circlePos.size(); i++)
+      for(unsigned int i = 0; i < circlePos.size(); i++)
       {
          float s = i / float(circlePos.size());
          
@@ -773,7 +773,6 @@ int render(double time)
       mat4 scale;
       mat4 mvp;
       mat4 rot;
-      mat4 invTP;
       vec4 lightPos = vec4(0, 10, 0, 1);
       mat4 toShadowTex0;
       mat4 toShadowTex1;
@@ -858,7 +857,6 @@ int render(double time)
       
       // Set up model, view, projection matrix for occluding surface
       mvp        = _projection * view * modelOccluder;
-      invTP      = transpose(inverse(mvp));
       
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
@@ -866,7 +864,6 @@ int render(double time)
       // Bind the shader program that will draw the shadows and do some simple shading
       _shadowProgram->bind();
       _shadowProgram->setUniform("mvp",         mvp);
-      _shadowProgram->setUniform("invTP",       invTP);
       _shadowProgram->setUniform("lightPos",    lightPos);
       _shadowProgram->setUniform("model",       modelOccluder);
       _shadowProgram->setUniform("depthMap",    0);
@@ -876,11 +873,9 @@ int render(double time)
       GL_ERR_CHECK();
       
       mvp        = _projection * view * modelReceiver;
-      invTP      = transpose(inverse(mvp));
 
       _shadowProgram->bind();
       _shadowProgram->setUniform("mvp",         mvp);
-      _shadowProgram->setUniform("invTP",       invTP);
       _shadowProgram->setUniform("model",       modelReceiver);
       _shadowProgram->setUniform("toShadowTex", toShadowTex1);
       

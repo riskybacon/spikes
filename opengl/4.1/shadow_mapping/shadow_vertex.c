@@ -9,7 +9,6 @@ in vec2 tc;
 // Transformation matrices
 uniform mat4 model;
 uniform mat4 mvp;
-uniform mat4 invTP;
 uniform mat4 toShadowTex;
 
 out vec3 N;      //< Normal transformed
