@@ -44,9 +44,13 @@ using std::string;
 // Array objects - quad
 enum VAO_OBJECTS
 {
-   FLAT_QUAD = 0,
-   SHADED_QUAD,
-   NUM_VAO
+   QUAD_FLAT = 0,
+   QUAD_SHADED,
+   TORUS_SHADED,
+   TORUS_POINTS,
+   TORUS_LINES,
+   TORUS_FLAT,
+   NUM_VAO_OBJECTS
 };
 
 // Buffer objects - quad
@@ -55,7 +59,12 @@ enum BUFFER_OBJECTS
    QUAD_POS = 0,
    QUAD_NORMAL,
    QUAD_TC,
-   NUM_BUFFER
+   TORUS_POS,
+   TORUS_NORMAL,
+   TORUS_TC,
+   TORUS_TRI_IDX,
+   TORUS_LINES_IDX,
+   NUM_BUFFER_OBJECTS
 };
 
 enum OBJ_TO_ROTATE
@@ -91,6 +100,11 @@ bool         _tracking;            //< True if mouse location is being tracked
 vector<vec4> _posQuad;             //< Position data
 vector<vec4> _normalsQuad;         //< Normal data
 vector<vec2> _tcQuad;              //< Texture coordinate data
+
+// Number of points in torus
+int          _numTorusPoints;
+int          _numTorusTriIdx;
+int          _numTorusLinesIdx;
 
 // Window size
 int          _winWidth;            //< Width of the window
@@ -140,8 +154,8 @@ void logException(const std::runtime_error& exception)
  */
 void terminate(int exitCode)
 {
-   glDeleteVertexArrays(NUM_VAO, &_vao[0]);
-   glDeleteBuffers(NUM_BUFFER, &_buffers[0]);
+   glDeleteVertexArrays(NUM_VAO_OBJECTS, &_vao[0]);
+   glDeleteBuffers(NUM_BUFFER_OBJECTS, &_buffers[0]);
    glfwTerminate();
    
    exit(exitCode);
@@ -279,6 +293,267 @@ void createFBO(void)
    GL_ERR_CHECK();
 }
 
+
+/**
+ * Create torus vertex array object
+ *
+ * A torus is a circle of circles. numt defines the number
+ * of divisions for the outer circle, numc defines the number
+ * of divisions for the inner circles
+ *
+ * @param numc
+ *   The number of circles
+  * @param numt
+ *   The number of divisions for each circle
+ */
+void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter = 2.3)
+{
+   int i, j;
+   
+   // Radius of the circles
+   double radiusMiddle = abs((radiusOuter - radiusInner) * 0.5);
+   // Distance from center of torus to the center of the circles
+   double distToMiddle = radiusInner + radiusMiddle;
+   
+   // First step is to create a single circle and translate it out along
+   // the x-axis
+   vector<vec4> circlePos;
+   circlePos.reserve(numc);
+
+   vector<vec4> circleNormal;
+   circleNormal.reserve(numc);
+   
+   for(int i = 0; i < numt; i++)
+   {
+      double theta = i * 2 * M_PI / numc;
+      double y = sin(theta) * radiusMiddle;
+      double x = cos(theta) * radiusMiddle + distToMiddle;
+      
+      vec4 pos4(x,y,0,1);
+      vec3 normal3 = normalize(vec3(x,y,0));
+      vec4 normal4(normal3.x, normal3.y, normal3.z, 0);
+      
+      circlePos.push_back(pos4);
+      circleNormal.push_back(normal4);
+   }
+
+   // After the initial circle is created, make numc copies of the circle, but
+   // rotate them about the y-axis
+   vector<vec4> pos;
+   vector<vec4> normals;
+   vector<vec2> tc;
+   pos.reserve(numc * numt);
+   normals.reserve(numc * numt);
+   tc.reserve(numc * numt);
+
+   for(int j = 0; j < numc; j++)
+   {
+      float t = j / float(numc);
+      
+      quat rot(vec3(0.0f, t * 2 * M_PI, 0.0f));
+      
+      for(int i = 0; i < circlePos.size(); i++)
+      {
+         float s = i / float(circlePos.size());
+         
+         vec4 vPos = circlePos.at(i);
+         vec4 vNormal = circleNormal.at(i);
+         
+         pos.push_back(rot * vPos);
+         normals.push_back(normalize(rot * vNormal));
+         tc.push_back(vec2(s,t));
+      }
+   }
+   
+   // Now that the points, normals and texture coordinates have been created, set up the element indices
+   // to draw the points in the proper order. There are different orders for wireframe and triangle meshes.
+   
+   vector<GLuint> triIdx;
+   vector<GLuint> linesIdx;
+   
+   for(i = 0; i < numc; i++)
+   {
+      int nextCol = i + 1;
+      if(nextCol >= numc)
+      {
+         nextCol = 0;
+      }
+
+      for(j = 0; j <= numt; j++)
+      {
+         // Need to identify the four elements / indices that make
+         // up the quad at this point
+
+         
+         int nextRow = j + 1;
+         if(nextRow >= numt)
+         {
+            nextRow = 0;
+         }
+
+         GLuint ll = numc * i       + j;       // Lower left index
+         GLuint ul = numc * i       + nextRow; // Upper left index
+         GLuint lr = numc * nextCol + j;       // Lower right index
+         GLuint ur = numc * nextCol + nextRow; // Upper right index
+         
+         triIdx.push_back(ul);
+         triIdx.push_back(ll);
+         triIdx.push_back(lr);
+         
+         triIdx.push_back(lr);
+         triIdx.push_back(ur);
+         triIdx.push_back(ul);
+         
+         
+         linesIdx.push_back(ll);
+         linesIdx.push_back(ul);
+
+         linesIdx.push_back(ul);
+         linesIdx.push_back(lr);
+
+         linesIdx.push_back(lr);
+         linesIdx.push_back(ll);
+         
+      }
+   }
+   
+   _numTorusPoints = pos.size();
+   _numTorusTriIdx = triIdx.size();
+   _numTorusLinesIdx = linesIdx.size();
+
+   //
+   // Set up torus buffers for position, normals, texture coordinates, and element array indices
+   // for wireframe and triangles
+   //
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_POS]);
+   glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(glm::vec4), &pos[0], GL_STATIC_DRAW);
+
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_NORMAL]);
+   glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec4), &normals[0], GL_STATIC_DRAW);
+
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_TC]);
+   glBufferData(GL_ARRAY_BUFFER, tc.size() * sizeof(glm::vec2), &tc[0], GL_STATIC_DRAW);
+
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_TRI_IDX]);
+   glBufferData(GL_ELEMENT_ARRAY_BUFFER, triIdx.size() * sizeof(GLuint), &triIdx[0], GL_STATIC_DRAW);
+
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_LINES_IDX]);
+   glBufferData(GL_ELEMENT_ARRAY_BUFFER, linesIdx.size() * sizeof(GLuint), &linesIdx[0], GL_STATIC_DRAW);
+
+   //
+   // Point cloud torus
+   //
+   glBindVertexArray(_vao[TORUS_POINTS]);
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_POS]);
+   glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
+
+   //
+   // Wireframe torus
+   //
+   glBindVertexArray(_vao[TORUS_LINES]);
+
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_POS]);
+   glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
+   
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_LINES_IDX]);
+   
+
+   //
+   // Shaded torus
+   //
+   glBindVertexArray(_vao[TORUS_SHADED]);
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_POS]);
+   glVertexAttribPointer(_shadowProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("vertex"));
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_NORMAL]);
+   glVertexAttribPointer(_shadowProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("normal"));
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_TC]);
+   glVertexAttribPointer(_shadowProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("tc"));
+   
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_TRI_IDX]);
+
+   //
+   // Flat shaded torus
+   //
+   glBindVertexArray(_vao[TORUS_FLAT]);
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_POS]);
+   glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
+   
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_TRI_IDX]);
+}
+
+/**
+ * Create quad / triangle strip square vertex array object
+ */
+void createQuad()
+{
+ 
+   // Create a quad
+   _posQuad.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
+   _posQuad.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
+   _posQuad.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
+   _posQuad.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
+   
+   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   
+   _tcQuad.push_back(glm::vec2(0.0f, 0.0f));
+   _tcQuad.push_back(glm::vec2(1.0f, 0.0f));
+   _tcQuad.push_back(glm::vec2(0.0f, 1.0f));
+   _tcQuad.push_back(glm::vec2(1.0f, 1.0f));
+
+   // Load buffer data for positions, normals and texture coordinates
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+   glBufferData(GL_ARRAY_BUFFER, _posQuad.size()     * sizeof(glm::vec4), &_posQuad[0],     GL_STATIC_DRAW);
+   GL_ERR_CHECK();
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
+   glBufferData(GL_ARRAY_BUFFER, _normalsQuad.size() * sizeof(glm::vec4), &_normalsQuad[0], GL_STATIC_DRAW);
+   GL_ERR_CHECK();
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
+   glBufferData(GL_ARRAY_BUFFER, _tcQuad.size()      * sizeof(glm::vec2), &_tcQuad[0],      GL_STATIC_DRAW);
+   GL_ERR_CHECK();
+
+
+   //
+   // Set up VAO for flat shaded quads, no texture coords, no normals
+   //
+   glBindVertexArray(_vao[QUAD_FLAT]);
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+   glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
+   
+   //
+   // Set up VAO for shaded quads, with texture coords and normals
+   //
+   glBindVertexArray(_vao[QUAD_SHADED]);
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+   glVertexAttribPointer(_shadowProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("vertex"));
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
+   glVertexAttribPointer(_shadowProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("normal"));
+   
+   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
+   glVertexAttribPointer(_shadowProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("tc"));
+}
+
 /**
  *  Initialize OpenGL Extension Wrangler.
  *  Does nothing under OS X
@@ -321,24 +596,8 @@ void init(void)
       initGLEW();
       createFBO();
       
-      _occluderRot = quat(vec3(M_PI / 2, 0, 0));
+      _occluderRot = quat(vec3(0, 0, 0));
       _receiverRot = quat(vec3(M_PI / 2, 0, 0));
-      
-      // Create a quad
-      _posQuad.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
-      _posQuad.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
-      _posQuad.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
-      _posQuad.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
-      
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-      _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-      
-      _tcQuad.push_back(glm::vec2(0.0f, 0.0f));
-      _tcQuad.push_back(glm::vec2(1.0f, 0.0f));
-      _tcQuad.push_back(glm::vec2(0.0f, 1.0f));
-      _tcQuad.push_back(glm::vec2(1.0f, 1.0f));
       
       // Load the shader programs
       _shadowVertexFile = std::string(SOURCE_DIR) + "/shadow_vertex.c";
@@ -351,48 +610,15 @@ void init(void)
       _flatProgram   = new GL::Program(_flatVertFile,     _flatFragFile);
       
       // Generate handles for vertex array objects
-      _vao.resize(NUM_VAO, 0);
-      glGenVertexArrays(NUM_VAO, &_vao[0]);
+      _vao.resize(NUM_VAO_OBJECTS, 0);
+      glGenVertexArrays(NUM_VAO_OBJECTS, &_vao[0]);
       
       // Generate handles for buffers
-      _buffers.resize(NUM_BUFFER, 0);
-      glGenBuffers(NUM_BUFFER, &_buffers[0]);
+      _buffers.resize(NUM_BUFFER_OBJECTS, 0);
+      glGenBuffers(NUM_BUFFER_OBJECTS, &_buffers[0]);
       
-      
-      // Load buffer data for positions, normals and texture coordinates
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-      glBufferData(GL_ARRAY_BUFFER, _posQuad.size()     * sizeof(glm::vec4), &_posQuad[0],     GL_STATIC_DRAW);
-      GL_ERR_CHECK();
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
-      glBufferData(GL_ARRAY_BUFFER, _normalsQuad.size() * sizeof(glm::vec4), &_normalsQuad[0], GL_STATIC_DRAW);
-      GL_ERR_CHECK();
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
-      glBufferData(GL_ARRAY_BUFFER, _tcQuad.size()      * sizeof(glm::vec2), &_tcQuad[0],      GL_STATIC_DRAW);
-      GL_ERR_CHECK();
-      
-      // Set up VAO for flat shaded quads, no texture coords
-      glBindVertexArray(_vao[FLAT_QUAD]);
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-      glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
-      
-      // Set up VAO for shaded quads, with texture coords
-      glBindVertexArray(_vao[SHADED_QUAD]);
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-      glVertexAttribPointer(_shadowProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_shadowProgram->getAttribLocation("vertex"));
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
-      glVertexAttribPointer(_shadowProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_shadowProgram->getAttribLocation("normal"));
-      
-      glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
-      glVertexAttribPointer(_shadowProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_shadowProgram->getAttribLocation("tc"));
+      createQuad();
+      createTorus(50,50,1, 1.5);
       
       // Set the clear color
       glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -493,15 +719,15 @@ void cursorPos(GLFWwindow* window, double x, double y)
       switch(_objToRotate)
       {
          case ROTATE_OCCLUDER:
-            yRot = glm::quat(eulerY * _eyeRot);
-            xRot = glm::quat(eulerX * _eyeRot);
-            _occluderRot = glm::normalize(yRot * xRot * _occluderRot);
+            yRot         = quat(eulerY * _eyeRot);
+            xRot         = quat(eulerX * _eyeRot);
+            _occluderRot = normalize(yRot * xRot * _occluderRot);
             break;
             
          case ROTATE_EYE:
-            yRot = glm::quat(eulerY);
-            xRot = glm::quat(eulerX);
-            _eyeRot      = glm::normalize(yRot * xRot * _eyeRot);
+            yRot    = quat(eulerY);
+            xRot    = quat(eulerX);
+            _eyeRot = normalize(yRot * xRot * _eyeRot);
          default:
             break;
       }
@@ -553,7 +779,10 @@ int render(double time)
       vec4 lightPos = vec4(0, 10, 0, 1);
       mat4 toShadowTex0;
       mat4 toShadowTex1;
+      mat4 modelOccluder;
+      mat4 modelReceiver;
       
+
       // Matrix that maps from [-1, 1] -> [0,1], which maps from clip space to texture map space
       mat4 clipToTexture = glm::scale(glm::translate(mat4(1), vec3(0.5, 0.5, 0.5)), vec3(0.5, 0.5, 0.5));
 
@@ -569,19 +798,20 @@ int render(double time)
       
       // Set up the light's view and projection matrices
       glm::mat4 lightView = glm::lookAt(vec3(lightPos.x, lightPos.y, lightPos.z), vec3(0, 0, 0), vec3(0, 0, 1));
-      glm::mat4 lightProj = glm::perspective(30.0f,                        // 45 degree field of view
+      glm::mat4 lightProj = glm::perspective(45.0f,                        // 45 degree field of view
                                              float(_winWidth) / float(_winHeight), // Ratio
                                              0.1f,                         // Near clip
-                                             100.0f);                     // Far clip
+                                             1000.0f);                     // Far clip
       
       //----------------------------------------
       // Draw the occluding surface
       //----------------------------------------
       
       // Set up model, view, projection matrix for occluding surface
-      rot        = glm::mat4_cast(_occluderRot);
-      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-      mvp        = lightProj * lightView * translate * rot;
+      rot           = glm::mat4_cast(_occluderRot);
+      translate     = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
+      modelOccluder = translate * rot;
+      mvp           = lightProj * lightView * modelOccluder;
       
       // Need to keep the mvp for this surface from the light's point of view. This will be used
       // in the render pass where the shadows are drawn
@@ -592,15 +822,17 @@ int render(double time)
       _flatProgram->setUniform("mvp",      mvp);
       
       // Draw the occluding surface
-      glBindVertexArray(_vao[FLAT_QUAD]);
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      glBindVertexArray(_vao[TORUS_FLAT]);
+      glDrawElements(GL_TRIANGLES, _numTorusTriIdx, GL_UNSIGNED_INT, NULL);
+
       GL_ERR_CHECK();
       
       // Set up modle, view, projection matrix for the receiving surface
-      rot          = glm::mat4_cast(_receiverRot);
-      translate    = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-      scale        = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
-      mvp          = lightProj * lightView * translate * rot * scale;
+      rot           = glm::mat4_cast(_receiverRot);
+      translate     = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+      scale         = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
+      modelReceiver = translate * rot * scale;
+      mvp           = lightProj * lightView * modelReceiver;
 
       // Need to keep the mvp for this surface from the light's point of view. This will be used
       // in the render pass where the shadows are drawn
@@ -611,10 +843,11 @@ int render(double time)
       // Draw occluding surface. Use the same vertex array object as the previous surface - they're both
       // the same shape, just different position, rotation and scale
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      
       GL_ERR_CHECK();
       
       //----------------------------------------------------------------------------------------------------
-      // Draw depth pass from light's point of view
+      // Draw pass from camera's point of view
       //----------------------------------------------------------------------------------------------------
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       glViewport(0, 0, _winWidth, _winHeight);
@@ -627,39 +860,36 @@ int render(double time)
       lightPos = view * vec4(10, 10, -10, 1);
       
       // Set up model, view, projection matrix for occluding surface
-      rot        = glm::mat4_cast(_occluderRot);
-      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-      mvp        = _projection * view * translate * rot;
+      mvp        = _projection * view * modelOccluder;
       invTP      = transpose(inverse(mvp));
+      
       
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-
+      
       // Bind the shader program that will draw the shadows and do some simple Phong shading
       _shadowProgram->bind();
-      _shadowProgram->setUniform("mvp",      mvp);
-      _shadowProgram->setUniform("invTP",    invTP);
-      _shadowProgram->setUniform("lightPos", lightPos);
-      _shadowProgram->setUniform("depthMap", 0);
+      _shadowProgram->setUniform("mvp",         mvp);
+      _shadowProgram->setUniform("invTP",       invTP);
+      _shadowProgram->setUniform("lightPos",    lightPos);
+      _shadowProgram->setUniform("model",       modelOccluder);
+      _shadowProgram->setUniform("depthMap",    0);
       _shadowProgram->setUniform("toShadowTex", toShadowTex0);
-      GL_ERR_CHECK();
-
-      // Draw the occluding surface
-      glBindVertexArray(_vao[SHADED_QUAD]);
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      glBindVertexArray(_vao[TORUS_SHADED]);
+      glDrawElements(GL_TRIANGLES, _numTorusTriIdx, GL_UNSIGNED_INT, NULL);
       GL_ERR_CHECK();
       
-      rot        = glm::mat4_cast(_receiverRot);
-      translate  = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-      scale      = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 1.0f));
-      mvp        = _projection * view * translate * rot * scale;
+      mvp        = _projection * view * modelReceiver;
       invTP      = transpose(inverse(mvp));
-      
-      _shadowProgram->setUniform("mvp",      mvp);
-      _shadowProgram->setUniform("invTP",    invTP);
+
+      _shadowProgram->bind();
+      _shadowProgram->setUniform("mvp",         mvp);
+      _shadowProgram->setUniform("invTP",       invTP);
+      _shadowProgram->setUniform("model",       modelReceiver);
       _shadowProgram->setUniform("toShadowTex", toShadowTex1);
       
-      // Draw the receiving surface d
+      // Draw the receiving surface
+      glBindVertexArray(_vao[QUAD_SHADED]);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
       GL_ERR_CHECK();
    }
