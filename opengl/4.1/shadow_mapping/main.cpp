@@ -78,10 +78,8 @@ OBJ_TO_ROTATE _objToRotate;
 
 std::vector<GLuint> _vao; //< Vertex array object handles
 
-
-
-GL::Program* _shadowProgram;       //<
-GL::Program* _flatProgram;
+GL::Program* _shadowProgram;       //< Shader program that performs shadow mapping
+GL::Program* _flatProgram;         //< Shader program that performs no shading - all fragment get the same color
 
 glm::mat4    _projection;          //< Camera projection matrix
 
@@ -781,13 +779,12 @@ int render(double time)
       mat4 toShadowTex1;
       mat4 modelOccluder;
       mat4 modelReceiver;
-      
 
       // Matrix that maps from [-1, 1] -> [0,1], which maps from clip space to texture map space
       mat4 clipToTexture = glm::scale(glm::translate(mat4(1), vec3(0.5, 0.5, 0.5)), vec3(0.5, 0.5, 0.5));
 
       //----------------------------------------------------------------------------------------------------
-      // Draw depth pass from light's point of view
+      // Draw depth pass from light's point of view.
       //----------------------------------------------------------------------------------------------------
       glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
       glViewport(0, 0, _fboWidth, _fboHeight);
@@ -804,7 +801,8 @@ int render(double time)
                                              1000.0f);                     // Far clip
       
       //----------------------------------------
-      // Draw the occluding surface
+      // Draw the occluding surface, flat shaded
+      // all we care about is the depth
       //----------------------------------------
       
       // Set up model, view, projection matrix for occluding surface
@@ -824,7 +822,6 @@ int render(double time)
       // Draw the occluding surface
       glBindVertexArray(_vao[TORUS_FLAT]);
       glDrawElements(GL_TRIANGLES, _numTorusTriIdx, GL_UNSIGNED_INT, NULL);
-
       GL_ERR_CHECK();
       
       // Set up modle, view, projection matrix for the receiving surface
@@ -842,8 +839,8 @@ int render(double time)
       
       // Draw occluding surface. Use the same vertex array object as the previous surface - they're both
       // the same shape, just different position, rotation and scale
+      glBindVertexArray(_vao[QUAD_FLAT]);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
-      
       GL_ERR_CHECK();
       
       //----------------------------------------------------------------------------------------------------
@@ -863,11 +860,10 @@ int render(double time)
       mvp        = _projection * view * modelOccluder;
       invTP      = transpose(inverse(mvp));
       
-      
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
       
-      // Bind the shader program that will draw the shadows and do some simple Phong shading
+      // Bind the shader program that will draw the shadows and do some simple shading
       _shadowProgram->bind();
       _shadowProgram->setUniform("mvp",         mvp);
       _shadowProgram->setUniform("invTP",       invTP);
