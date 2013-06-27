@@ -5,9 +5,6 @@
 //
 // Author: Jeff Bowles <jbowles@riskybacon.com>
 //
-// Changelog: 
-// 2011-10-03, Initial revision <jbowles@riskybacon.com>
-//
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,49 +12,81 @@
 #include <fstream>
 #include <vector>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // Include GLM
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp> // rotation, translation, scale, etc
+#include <glm/gtc/type_ptr.hpp>         // value_ptr
 
 using namespace glm;
 using std::vector;
+using std::string;
 
-// Include this file before glfw.h
-#include "platform_specific.h"
-#include <GL/glfw.h>
+// Comment this out to turn GL_ERR_CHECK into a no-op
+//#define _DEBUG
 
-// Include OBJ reader. It was called glm long before glm.g-truc.net
+#ifdef __APPLE__
+#  define GLFW_INCLUDE_GLCOREARB
+#else
+// Non-Apple platforms need the GL Extension Wrangler
+#  include <GL/glew.h>
+#  if !defined(_WIN32) && !defined(_WIN64)
+//  Assuming Unix, which needs glext.h
+#    include <GL/glext.h>
+#  endif
+#endif
+
+#include <shader.h>
+#include <GLFW/glfw3.h>
+#include "config.h"
 #include "objmodel.h"
 
-
-#include "trackball.h"
-
-#define _DEBUG
-
-#include "glslprogram.h"
+enum BUFFER_OBJECTS_ENUM
+{
+   VERTEX_BUFFER = 0,
+   NORMAL_BUFFER,
+   TEXCOORD_BUFFER,
+   BUFFER_OBJECTS_NUM
+};
 
 // Global variables have an underscore prefix.
-GL::Program* _program;        //< GLSL program
-GLuint       _vao;            //< Array object for the vertices
-GLuint       _nao;            //< Array object for the normals
-GLuint       _tao;            //< Array object for the texture coordintes
-GLuint       _vertexBuffer;   //< Buffer object for the vertices
-GLuint       _normalBuffer;   //< Buffer object for the normals
-GLuint       _tcBuffer;       //< Buffer object for the texture coordinates
-GLint        _vertexLocation; //< Location of the vertex attribute in the shader
-GLint        _normalLocation; //< Location of the normal attribute in the shader
-GLint        _tcLocation;     //< Location of the texture coordinate attribute in the shader
-bool         _running;        //< true if the program is running, false if it is time to terminate
-GLuint       _mvp;            //< Location of the model, view, projection matrix in vertex shader
-GLuint       _invTP;          //< Location of the inverse transpose of the MVP matrix
-bool         _tracking;       //< True if mouse location is being tracked
-Trackball*   _trackball;      //< Pointer to virtual trackball
-vector<vec4> _vertexData;     //< Vertex data
-vector<vec4> _normalData;     //< Normal data
-vector<vec2> _tcData;         //< Texture coordinate data
-std::string  _vertexFile;     //< Name of the vertex shader file
-std::string  _fragFile;       //< Name of the fragment shader file
+GL::Program*        _program;        //< GLSL program
+GLuint              _vao;            //< Array object for the vertices
+std::vector<GLuint> _buffer;         //< List of OpenGL buffers
+bool                _running;        //< true if the program is running, false if it is time to terminate
+bool                _tracking;       //< True if mouse location is being tracked
+vector<vec4>        _vertexData;     //< Vertex data
+vector<vec4>        _normalData;     //< Normal data
+vector<vec2>        _tcData;         //< Texture coordinate data
+std::string         _vertexFile;     //< Name of the vertex shader file
+std::string         _fragFile;       //< Name of the fragment shader file
+glm::mat4           _projection;     //< Camera projection matrix
 
+// Window size
+int                 _winWidth;       //< Width of the window
+int                 _winHeight;      //< Height of the window
+
+// Rotation
+glm::quat           _objRot;         //< Eye rotation
+glm::vec2           _prevCurPos;     //< Previous cursor pos
+float               _sensitivity;    //< Sensitivity to mouse motion
+
+// Log file
+std::ofstream       _log;            //< Log file
+
+/**
+ * Log an exception to stderr and to a log file
+ *
+ * @param exception
+ *    The exception to log
+ */
+void logException(const std::runtime_error& exception)
+{
+	std::cerr << exception.what() << std::endl;
+	_log << exception.what() << std::endl;
+}
 
 /**
  * Clean up and exit
@@ -66,12 +95,8 @@ std::string  _fragFile;       //< Name of the fragment shader file
  */
 void terminate(int exitCode)
 {
-   // Delete vertex buffer object
-   if(_vertexBuffer)
-   {
-      glDeleteBuffers(1, &_vertexBuffer);
-      _vertexBuffer = 0;
-   }
+   // Delete vertex buffer objects
+   glDeleteBuffers(_buffer.size(), &_buffer[0]);
 
    // Delete vertex array object
    if(_vao)
@@ -94,6 +119,7 @@ void initGLEW(void)
    // GLEW has trouble supporting the core profile
    glewExperimental = GL_TRUE;
    glewInit();
+   while(glGetError());
    if(!GLEW_ARB_vertex_array_object)
    {
       std::cerr << "ARB_vertex_array_object not available." << std::endl; 
@@ -111,8 +137,10 @@ void init(void)
    try {
       initGLEW();
       
-      //      std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
-      std::string objFile = std::string(SOURCE_DIR) + std::string("/nissan_micra.obj");
+      int attribLoc;
+
+      std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
+      //      std::string objFile = std::string(SOURCE_DIR) + std::string("/nissan_micra.obj");
       
       OBJModel* model = new OBJModel(objFile);
       model->unitize();
@@ -125,69 +153,72 @@ void init(void)
       
       _program = new GL::Program(_vertexFile, _fragFile);
       
-      // Get vertex and color attribute locations
-      _vertexLocation = _program->getAttribLocation("vertex");
-      _normalLocation = _program->getAttribLocation("normal");
-      _tcLocation     = _program->getAttribLocation("tc");
-      _mvp            = _program->getUniformLocation("mvp");
-      _invTP          = _program->getUniformLocation("invTP");
-      
       // Generate a single handle for a vertex array. Only one vertex
       // array is needed
       glGenVertexArrays(1, &_vao);
-      
+      _buffer.resize(BUFFER_OBJECTS_NUM);
+      glGenBuffers(BUFFER_OBJECTS_NUM, &_buffer[0]);
+
       // Bind that vertex array
       glBindVertexArray(_vao);
       
-      // Generate one handle for the vertex buffer object
-      glGenBuffers(1, &_vertexBuffer);
+      attribLoc = _program->getAttribLocation("vertex");
+      if(attribLoc >= 0)
+      {
+         // Make that vbo the current array buffer. Subsequent array buffer operations
+         // will affect this vbo
+         //
+         // It is possible to place all data into a single buffer object and use
+         // offsets to tell OpenGL where the data for a vertex array or any other
+         // attribute may reside.
+         glBindBuffer(GL_ARRAY_BUFFER, _buffer[VERTEX_BUFFER]);
+         GL_ERR_CHECK();
       
-      // Make that vbo the current array buffer. Subsequent array buffer operations
-      // will affect this vbo
-      //
-      // It is possible to place all data into a single buffer object and use
-      // offsets to tell OpenGL where the data for a vertex array or any other
-      // attribute may reside.
-      glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-      GL_ERR_CHECK();
+         // Set the data for the vbo. This will load it onto the GPU
+         glBufferData(GL_ARRAY_BUFFER, _vertexData.size() * sizeof(glm::vec4),
+                      &_vertexData[0], GL_STATIC_DRAW);
       
-      // Set the data for the vbo. This will load it onto the GPU
-      glBufferData(GL_ARRAY_BUFFER, _vertexData.size() * sizeof(glm::vec4),
-                   &_vertexData[0], GL_STATIC_DRAW);
+         // Specify the location and data format of the array of generic vertex attributes
+         glVertexAttribPointer(attribLoc,  // Attribute location in the shader program
+                               4,          // Number of components per attribute
+                               GL_FLOAT,   // Data type of attribute
+                               GL_FALSE,   // GL_TRUE / GL_FALSE: values are normalized true/false
+                               0,          // Stride
+                               0);         // Offset into currently bound array buffer for this data
       
-      // Specify the location and data format of the array of generic vertex attributes
-      glVertexAttribPointer(_vertexLocation, // Attribute location in the shader program
-                            4,               // Number of components per attribute
-                            GL_FLOAT,        // Data type of attribute
-                            GL_FALSE,        // GL_TRUE: values are normalized or
-                            // GL_FALSE: values are converted to fixed point
-                            0,               // Stride
-                            0);              // Offset into currently bound array buffer for this data
+         // Enable the generic vertex attribute array
+         glEnableVertexAttribArray(attribLoc);
+         GL_ERR_CHECK();
+      }
+
+      attribLoc = _program->getAttribLocation("normal");
+      if(attribLoc >= 0)
+      {
+         // Set up normal attribute
+         glBindBuffer(GL_ARRAY_BUFFER, _buffer[NORMAL_BUFFER]);
       
-      // Enable the generic vertex attribute array
-      glEnableVertexAttribArray(_vertexLocation);
+         glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
+                      &_normalData[0], GL_STATIC_DRAW);
       
-      // Set up normal attribute
-      glGenBuffers(1, &_nao);
-      glBindBuffer(GL_ARRAY_BUFFER, _nao);
+         glVertexAttribPointer(attribLoc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+         glEnableVertexAttribArray(attribLoc);
+         GL_ERR_CHECK();
+      }
+
+      attribLoc = _program->getAttribLocation("tc");
+      if(attribLoc >= 0)
+      {
+         // Set up texture attribute
+         glBindBuffer(GL_ARRAY_BUFFER, _buffer[TEXCOORD_BUFFER]);
       
-      glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
-                   &_normalData[0], GL_STATIC_DRAW);
+         glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
+                      &_tcData[0], GL_STATIC_DRAW);
       
-      glVertexAttribPointer(_normalLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_normalLocation);
-      
-      
-      // Set up texture attribute
-      glGenBuffers(1, &_tao);
-      glBindBuffer(GL_ARRAY_BUFFER, _tao);
-      
-      glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
-                   &_tcData[0], GL_STATIC_DRAW);
-      
-      glVertexAttribPointer(_tcLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_tcLocation);
-      
+         glVertexAttribPointer(_program->getAttribLocation("tc"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+         glEnableVertexAttribArray(_program->getAttribLocation("tc"));
+         GL_ERR_CHECK();
+      }
+
       // Set the clear color
       glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
       
@@ -197,9 +228,9 @@ void init(void)
       // Enable depth test
       glEnable(GL_DEPTH_TEST);
    } 
-   catch (GL::Exception exception)
+   catch (std::runtime_error exception)
    {
-      std::cerr << exception.what() << std::endl;
+      logException(exception);
       terminate(EXIT_FAILURE);
    }
 
@@ -214,78 +245,102 @@ void reloadShaders(void)
       _program = newProgram;
       
    }
-   catch (GL::Exception exception)
+   catch (std::runtime_error exception)
    {
-      std::cerr << exception.what() << std::endl;
+      logException(exception);
    }
 }
 /**
  * Window resize callback
- * 
+ *
  * @param width   the width of the window
  * @param height  the height of the window
  */
-void GLFWCALL resize(int width, int height)
+void resize(GLFWwindow* window, int width, int height)
 {
-   // Set the affine transform of (x,y) from normalized device coordinates to
-   // window coordinates. In this case, (-1,1) -> (0, width) and (-1,1) -> (0, height)
-   glViewport(0, 0, width, height);
-   
-   _trackball->reshape(width, height);
+   try
+   {
+      // Set the affine transform of (x,y) from normalized device coordinates to
+      // window coordinates. In this case, (-1,1) -> (0, width) and (-1,1) -> (0, height)
+      glViewport(0, 0, width, height);
+      GL_ERR_CHECK();
+      
+      _winWidth = width;
+      _winHeight = height;
+      
+      // Projection matrix
+      _projection = glm::perspective(45.0f,                        // 45 degree field of view
+                                     float(width) / float(height), // Ratio
+                                     0.1f,                         // Near clip
+                                     100.0f);                     // Far clip
+   }
+   catch(std::runtime_error exception)
+   {
+      logException(exception);
+      terminate(EXIT_FAILURE);
+   }
 }
 
 /**
  *  Mouse click callback
  *
+ *  @param window  pointer to the window being resized
  *  @param button that was clicked
  *  @param button state
  */
-void GLFWCALL mouseButton(int button, int action)
+void mouseButton(GLFWwindow* window, int button, int action, int mods)
 {
-   if(button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS)
+   if(button == GLFW_MOUSE_BUTTON_1)
    {
-      _tracking = !_tracking;
-      
-   }
-   
-   if(_tracking)
-   {
-      int x, y;
-      glfwGetMousePos(&x, &y);
-      _trackball->start(x,y);
-   }
-   else
-   {
-      _trackball->stop();
+      if(action == GLFW_PRESS)
+      {
+         _tracking = true;
+         double x, y;
+         glfwGetCursorPos(window, &x, &y);
+         _prevCurPos = vec2(x,y);
+      }
+      else
+      {
+         _tracking = false;
+      }
    }
 }
 
-void GLFWCALL mouseMove(int x, int y)
+/**
+ * Mouse movement callback
+ */
+void cursorPos(GLFWwindow* window, double x, double y)
 {
    if(_tracking)
    {
-      int width, height;
-      glfwGetWindowSize(&width, &height);
-      _trackball->motion(x, height - y);
+      // Get the change in position
+      vec2 curPos(x,y);
+      vec2 delta = curPos - _prevCurPos;
+      _prevCurPos = curPos;
+      
+      
+      vec3 eulerY = vec3(0, 1, 0) * delta.x * _sensitivity;
+      vec3 eulerX = vec3(1, 0, 0) * delta.y * _sensitivity;
+      
+      glm::quat xRot = quat(eulerX);
+      glm::quat yRot = quat(eulerY);
+
+      _objRot = normalize(yRot * xRot * _objRot);
    }
 }
+
 /**
  * Keypress callback
- */ 
-void GLFWCALL keypress(int key, int state)
+ */
+void keypress(GLFWwindow* window, int key, int scancode, int state, int mods)
 {
    if(state == GLFW_PRESS)
    {
       switch(key)
       {
-         case GLFW_KEY_ESC:
-            _running = false;
+         case GLFW_KEY_ESCAPE:
+            glfwSetWindowShouldClose(window, GL_TRUE);
             break;
-         case 'R':
-         case 'r':
-            reloadShaders();
-            break;
-            
       }
    }
 }
@@ -293,69 +348,55 @@ void GLFWCALL keypress(int key, int state)
 /**
  * Window close callback
  */
-int GLFWCALL close(void)
+void close(GLFWwindow* window)
 {
-   _running = false;
-   return GL_TRUE;
+   glfwSetWindowShouldClose(window, GL_TRUE);
 }
-
 /**
  * Main loop
  * @param time    time elapsed in seconds since the start of the program
  */
-int update(double time)
+void render(double time)
 {
-   // Clear the color and depth buffers
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   try
+   {
+      // Clear the color and depth buffers
+     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   // Get the width and height of the window
-   int width;
-   int height;
-   glfwGetWindowSize(&width, &height);
-   
-   // Projection matrix
-   glm::mat4 projection = glm::perspective(45.0f,                         // 45 degree field of view
-                                           float(width) / float(height),  // Ratio
-                                           0.1f,                          // Near clip 
-                                           4000.0f);                      // Far clip
-   // Camera matrix
-   glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (4,3,3), in world space
-                                      glm::vec3(0,0,0), // and looks at the origin
-                                      glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-                                      );
+      // Camera matrix
+     glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (4,3,3), in world space
+                                        glm::vec3(0,0,0), // and looks at the origin
+                                        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+                                       );
 
-   // Rotation axis
-   glm::vec3 axis(0.0, 1.0, 0.0);
+      // Model matrix
+      glm::mat4 model = glm::mat4_cast(_objRot);
    
-   // Rotation matrix - rotate once per second
+     // Create  model, view, projection matrix
+     glm::mat4 mvp        = _projection * view * model; // Remember, matrix multiplication is the other way around
    
-   float angle = float(time) * 90;
-   
-   glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
-   
-   // Model matrix 
-   glm::mat4 model = _trackball->getTransform();
-   
-   // Create  model, view, projection matrix
-   glm::mat4 mvp        = projection * view * model; // Remember, matrix multiplication is the other way around
-   
-   // Calculate the inverse transpose for use with normals
-   glm::mat4 invTP      = transpose(glm::inverse(mvp));
-   
-   // Use the shader program that was loaded, compiled and linked
-   _program->bind();
-   
-   // Set the MVP uniform
-   glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);
-   
-   // Set the inverse transpose uniform
-   glUniformMatrix4fv(_invTP, 1, GL_FALSE, &invTP[0][0]);
+     // Calculate the inverse transpose for use with normals
+     glm::mat4 invTP      = transpose(glm::inverse(mvp));
 
-   // Draw the triangles
-   glDrawArrays(GL_TRIANGLES, 0, _vertexData.size());
+     // Use the shader program that was loaded, compiled and linked
+     _program->bind();
+   
+     // Set the MVP uniform
+     _program->setUniform("mvp", mvp);
+   
+     // Set the inverse transpose uniform
+     _program->setUniform("invTP", invTP);
 
-   glfwSwapBuffers();
-   return GL_TRUE;
+     // Draw the triangles
+     glDrawArrays(GL_TRIANGLES, 0, _vertexData.size());
+     GL_ERR_CHECK();
+   }
+   catch(std::runtime_error err)
+   {
+      logException(err);
+      terminate(EXIT_FAILURE);
+   }
+
 }
 
 /**
@@ -365,50 +406,73 @@ int main(int argc, char* argv[])
 {
    int width = 1024; // Initial window width
    int height = 768; // Initial window height
-   _running = true;
-   _tracking = false;
-   _trackball = new Trackball(width, height);
+   _sensitivity = float(M_PI) / 360.0f;
+   
+   // Open up the log file
+   std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
+   _log.open(logFile.c_str());
+   
+   GLFWwindow* window;
+   
    // Initialize GLFW
-   glfwInit();
-
+   if(!glfwInit())
+   {
+      return EXIT_FAILURE;
+   }
+   
    // Request an OpenGL core profile context, without backwards compatibility
-   glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR,  GL_MAJOR);
-   glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR,  GL_MINOR);
-   glfwOpenWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-   glfwOpenWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
-   glfwOpenWindowHint(GLFW_FSAA_SAMPLES,          4 );
-
-   // Open a window and create its OpenGL context
-   if(!glfwOpenWindow(width, height, 0,0,0,0, 32,0, GLFW_WINDOW ))
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
+   glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
+   glfwWindowHint(GLFW_SAMPLES,               8);
+   glfwWindowHint(GLFW_RED_BITS,              32);
+   glfwWindowHint(GLFW_GREEN_BITS,            32);
+   glfwWindowHint(GLFW_BLUE_BITS,             32);
+   glfwWindowHint(GLFW_ALPHA_BITS,            32);
+   
+#ifdef __APPLE__
+   // This should never be needed and it is recommended to never set this bit,
+   // but OS X requires it to be set to get a core profile.
+   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+   
+   // Create a windowed mode window and its OpenGL context
+   window = glfwCreateWindow(1024, 768, "objreader", NULL, NULL);
+   if(!window)
    {
       std::cerr << "Failed to open GLFW window" << std::endl;
       glfwTerminate();
-      return -1;
+      return EXIT_FAILURE;
    }
-
-   glfwSetWindowSizeCallback(resize);
-   glfwSetKeyCallback(keypress);
-   glfwSetWindowCloseCallback(close);
-   glfwSetMouseButtonCallback(mouseButton);
-   glfwSetMousePosCallback(mouseMove);
    
-   std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
-
-   std::string line("v 1.000000 -1.000000 -1.000000");
+   glfwSetKeyCallback(window,         keypress);
+   glfwSetMouseButtonCallback(window, mouseButton);
+   glfwSetWindowSizeCallback(window,  resize);
+   glfwSetWindowCloseCallback(window, close);
+   glfwSetCursorPosCallback(window,   cursorPos);
    
-   if("v" == line)
-   {
-      std::cout << "line: " << line << std::endl;
-      
-   }
+   // Make the window's context current
+   glfwMakeContextCurrent(window);
+   
+   printf("GL Version: %s\n", glGetString(GL_VERSION));
+   
    init();
-   resize(width, height);
-  
-   // Main loop. Run until ESC key is pressed or the window is closed
-   while(_running)
+   resize(window, width, height);
+   
+   // Loop until the user closes the window
+   while(!glfwWindowShouldClose(window))
    {
-      update(glfwGetTime());
+      // Render scene
+      render(glfwGetTime());
+      
+      // Swap front and back buffers
+      glfwSwapBuffers(window);
+      
+      // Poll for and process events
+      glfwPollEvents();
    }
-
+   
+   glfwTerminate();
+   
    terminate(EXIT_SUCCESS);
 }

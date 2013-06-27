@@ -17,7 +17,8 @@
 #if defined(__APPLE__) || defined(MACOSX)
 #include <OpenGL/gl3.h>
 #else
-#include <gl/gl.h>
+#include <GL/glew.h>
+#include <GL/gl.h>
 #endif
 
 

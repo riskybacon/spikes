@@ -244,7 +244,6 @@ void createFBO(void)
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
       GL_ERR_CHECK();
       
-      
       //------------------------------------------------------------------------------------------
       // Set up the texture to hold depth data
       //------------------------------------------------------------------------------------------
@@ -522,7 +521,6 @@ void createQuad()
    glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
    glBufferData(GL_ARRAY_BUFFER, _tcQuad.size()      * sizeof(glm::vec2), &_tcQuad[0],      GL_STATIC_DRAW);
    GL_ERR_CHECK();
-
 
    //
    // Set up VAO for flat shaded quads, no texture coords, no normals
