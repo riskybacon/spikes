@@ -595,11 +595,11 @@ void init(void)
       _receiverRot = quat(vec3(M_PI / 2, 0, 0));
       
       // Load the shader programs
-      _shadowVertexFile = std::string(SOURCE_DIR) + "/shadow_vertex.c";
-      _shadowFragFile   = std::string(SOURCE_DIR) + "/shadow_fragment.c";
+      _shadowVertexFile = std::string(SOURCE_DIR) + "/shadow.vsh";
+      _shadowFragFile   = std::string(SOURCE_DIR) + "/shadow.fsh";
       
-      _flatVertFile     = std::string(SOURCE_DIR) + "/flat_vertex.c";
-      _flatFragFile     = std::string(SOURCE_DIR) + "/flat_fragment.c";
+      _flatVertFile     = std::string(SOURCE_DIR) + "/flat.vsh";
+      _flatFragFile     = std::string(SOURCE_DIR) + "/flat.fsh";
       
       _shadowProgram = new GL::Program(_shadowVertexFile, _shadowFragFile);
       _flatProgram   = new GL::Program(_flatVertFile,     _flatFragFile);
@@ -850,7 +850,7 @@ int render(double time)
       
       glm::mat4 view = glm::lookAt(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)) * glm::mat4_cast(_eyeRot);
       
-      lightPos = view * vec4(10, 10, -10, 1);
+      lightPos = vec4(10, 10, -10, 1);
       
       // Set up model, view, projection matrix for occluding surface
       mvp        = _projection * view * modelOccluder;
@@ -860,11 +860,12 @@ int render(double time)
       
       // Bind the shader program that will draw the shadows and do some simple shading
       _shadowProgram->bind();
-      _shadowProgram->setUniform("mvp",         mvp);
-      _shadowProgram->setUniform("lightPos",    lightPos);
-      _shadowProgram->setUniform("model",       modelOccluder);
-      _shadowProgram->setUniform("depthMap",    0);
-      _shadowProgram->setUniform("toShadowTex", toShadowTex0);
+      _shadowProgram->setUniform("mvp",           mvp);
+      _shadowProgram->setUniform("worldLightPos", lightPos);
+      _shadowProgram->setUniform("view",          view);
+      _shadowProgram->setUniform("model",         modelOccluder);
+      _shadowProgram->setUniform("depthMap",      0);
+      _shadowProgram->setUniform("toShadowTex",   toShadowTex0);
       glBindVertexArray(_vao[TORUS_SHADED]);
       glDrawElements(GL_TRIANGLES, _numTorusTriIdx, GL_UNSIGNED_INT, NULL);
       GL_ERR_CHECK();

@@ -3,10 +3,7 @@
 //
 // GLSL Shader management
 //
-// CS 523 Spring 2013
-// Project 3
-//
-// Authors: Jeff Bowles, Zhenjie Chen, Steven Garcia
+// Authors: Jeff Bowles <jbowles@cs.unm.edu>
 //--------------------------------------------------------------------------------
 #include <iostream>
 #include <fstream>

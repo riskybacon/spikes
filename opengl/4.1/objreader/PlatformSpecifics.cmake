@@ -78,16 +78,22 @@ find_path(GLFW_INCLUDE_DIR GLFW/glfw3.h ${HEADER_SEARCH_PATH})
 # Find glfw library
 find_library(GLFW_LIBRARIES glfw3 ${LIBRARY_SEARCH_PATH})
 
+# Find assimp library
+find_path(ASSIMP_INCLUDE_DIR assimp/config.h ${HEADER_SEARCH_PATH})
+find_library(ASSIMP_LIBRARIES assimp ${LIBRARY_SEARCH_PATH})
+
 # Include directories for this project
 set(INCLUDE_PATH
   ${OPENGL_INCLUDE_DIR}
   ${GLFW_INCLUDE_DIR}
+  ${ASSIMP_INCLUDE_DIR}
 )
 
 # Libraries needed on all platforms for this project
 set(LIBRARIES
   ${OPENGL_LIBRARIES}
   ${GLFW_LIBRARIES}
+  ${ASSIMP_LIBRARIES}
 )
 
 # Platform specific libraries and header directories

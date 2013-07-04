@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <utility>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -19,6 +20,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> // rotation, translation, scale, etc
 #include <glm/gtc/type_ptr.hpp>         // value_ptr
+
+// assimp include files
+#include <assimp/cimport.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 using namespace glm;
 using std::vector;
@@ -76,6 +82,9 @@ float               _sensitivity;    //< Sensitivity to mouse motion
 // Log file
 std::ofstream       _log;            //< Log file
 
+// the global Assimp scene object
+const aiScene*            _aiScene;
+
 /**
  * Log an exception to stderr and to a log file
  *
@@ -128,6 +137,86 @@ void initGLEW(void)
 #endif
 }
 
+std::vector<aiVector3D> _objPos;
+std::vector<aiVector3D> _objNormals;
+std::pair<aiVector3D, aiVector3D> _objBoundingBox;
+void addObjVertices(const aiScene* scene, const aiNode* node)
+{
+   for(int m = 0; m < node->mNumMeshes; m++)
+   {
+      const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
+      
+      for(int f = 0; f < mesh->mNumFaces; f++)
+      {
+         const aiFace* face = &mesh->mFaces[f];
+         for(int i = 0; i < face->mNumIndices; i++)
+         {
+            int index = face->mIndices[i];
+            const aiVector3D& pos = mesh->mVertices[index];
+            const aiVector3D& normal = mesh->mNormals[index];
+            _objPos.push_back(pos);
+            _objNormals.push_back(normal);
+            
+            if(_objPos.size() == 1)
+            {
+               _objBoundingBox.first = pos;
+               _objBoundingBox.second = pos;
+            }
+            else
+            {
+               _objBoundingBox.first.x = _objBoundingBox.first.x > pos.x ? pos.x : _objBoundingBox.first.x;
+               _objBoundingBox.first.y = _objBoundingBox.first.y > pos.y ? pos.y : _objBoundingBox.first.y;
+               _objBoundingBox.first.z = _objBoundingBox.first.z > pos.z ? pos.z : _objBoundingBox.first.z;
+
+               _objBoundingBox.second.x = _objBoundingBox.second.x < pos.x ? pos.x : _objBoundingBox.second.x;
+               _objBoundingBox.second.y = _objBoundingBox.second.y < pos.y ? pos.y : _objBoundingBox.second.y;
+               _objBoundingBox.second.z = _objBoundingBox.second.z < pos.z ? pos.z : _objBoundingBox.second.z;
+            }
+         }
+      }
+   }
+   
+   for(int n = 0; n < node->mNumChildren; n++)
+   {
+      addObjVertices(scene, node->mChildren[n]);
+   }
+}
+
+aiNode
+void readObj(const std::string& filename)
+{
+   _aiScene = aiImportFile(filename.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
+
+   if(_aiScene == NULL)
+   {
+      std::cerr << "assimp fail" << std::endl;
+   }
+   
+
+   const aiNode* rootNode = _aiScene->mRootNode;
+   
+   std::cout << "Num meshes: " << rootNode->mNumMeshes << std::endl;
+   std::cout << "Num children: " << rootNode->mNumChildren << std::endl;
+   
+   addObjVertices(_aiScene, rootNode);
+   
+   float sizeX = _objBoundingBox.second.x - _objBoundingBox.first.x;
+   float sizeY = _objBoundingBox.second.y - _objBoundingBox.first.y;
+   float sizeZ = _objBoundingBox.second.z - _objBoundingBox.first.z;
+   
+   float scale = sizeX;
+   
+   scale = sizeX > sizeY ? sizeX : sizeY;
+   scale = sizeZ > scale ? sizeZ : scale;
+   
+   scale = 1.0f / scale;
+   
+   for(int i = 0; i < _objPos.size(); i++)
+   {
+      _objPos[i] *= scale;
+   }
+}
+
 /**
  * Initialize vertex array objects, vertex buffer objects,
  * clear color and depth clear value
@@ -139,11 +228,15 @@ void init(void)
       
       int attribLoc;
 
+      
       std::string objFile = std::string(SOURCE_DIR) + std::string("/frank_mesh_smooth.obj");
-      //      std::string objFile = std::string(SOURCE_DIR) + std::string("/nissan_micra.obj");
+      //std::string objFile = std::string(SOURCE_DIR) + std::string("/teapot.obj");
       
       OBJModel* model = new OBJModel(objFile);
       model->unitize();
+      
+      readObj(objFile);
+      
       
       GLuint mode = GLM_SMOOTH | GLM_TEXTURE;
       
@@ -178,9 +271,11 @@ void init(void)
          glBufferData(GL_ARRAY_BUFFER, _vertexData.size() * sizeof(glm::vec4),
                       &_vertexData[0], GL_STATIC_DRAW);
       
+         glBufferData(GL_ARRAY_BUFFER, _objPos.size() * sizeof(aiVector3D), &_objPos[0], GL_STATIC_DRAW);
+         
          // Specify the location and data format of the array of generic vertex attributes
          glVertexAttribPointer(attribLoc,  // Attribute location in the shader program
-                               4,          // Number of components per attribute
+                               3,          // Number of components per attribute
                                GL_FLOAT,   // Data type of attribute
                                GL_FALSE,   // GL_TRUE / GL_FALSE: values are normalized true/false
                                0,          // Stride
@@ -200,7 +295,8 @@ void init(void)
          glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
                       &_normalData[0], GL_STATIC_DRAW);
       
-         glVertexAttribPointer(attribLoc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+         glBufferData(GL_ARRAY_BUFFER, _objNormals.size() * sizeof(aiVector3D), &_objNormals[0], GL_STATIC_DRAW);
+         glVertexAttribPointer(attribLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
          glEnableVertexAttribArray(attribLoc);
          GL_ERR_CHECK();
       }
@@ -214,7 +310,7 @@ void init(void)
          glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
                       &_tcData[0], GL_STATIC_DRAW);
       
-         glVertexAttribPointer(_program->getAttribLocation("tc"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+         glVertexAttribPointer(_program->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
          glEnableVertexAttribArray(_program->getAttribLocation("tc"));
          GL_ERR_CHECK();
       }
@@ -364,7 +460,7 @@ void render(double time)
      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       // Camera matrix
-     glm::mat4 view       = glm::lookAt(glm::vec3(0,0,2), // Camera position is at (4,3,3), in world space
+     glm::mat4 view       = glm::lookAt(glm::vec3(0,0,5), // Camera position is at (4,3,3), in world space
                                         glm::vec3(0,0,0), // and looks at the origin
                                         glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
                                        );
@@ -388,7 +484,9 @@ void render(double time)
      _program->setUniform("invTP", invTP);
 
      // Draw the triangles
-     glDrawArrays(GL_TRIANGLES, 0, _vertexData.size());
+      //     glDrawArrays(GL_TRIANGLES, 0, _vertexData.size());
+     glDrawArrays(GL_POINTS, 0, _objPos.size());
+      
      GL_ERR_CHECK();
    }
    catch(std::runtime_error err)

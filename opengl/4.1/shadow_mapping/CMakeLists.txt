@@ -38,10 +38,19 @@ set(HEADER_FILES
   ${SHADER_SOURCE_DIR}/shader.h
 )
 
+set(SHADER_FILES
+  flat.vsh
+  flat.fsh
+  shadow.vsh
+  shadow.fsh
+)
+
+
 # Add a target executable
 add_executable(${PROJ_NAME}
   ${SOURCE_FILES}
   ${HEADER_FILES}
+  ${SHADER_FILES}
 )
 
 # Libraries to be linked
