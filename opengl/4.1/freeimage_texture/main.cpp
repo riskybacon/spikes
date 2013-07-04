@@ -9,6 +9,9 @@
 #include <sstream>
 #include <vector>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -19,8 +22,6 @@
 
 using namespace glm;
 using std::vector;
-
-#define _DEBUG
 
 #ifdef __APPLE__
 #  define GLFW_INCLUDE_GLCOREARB
@@ -631,9 +632,6 @@ int render(double time)
       // Create  model, view, projection matrix
       glm::mat4 mvp   = projection * view * translate * model;
       
-      // Calculate the inverse transpose for use with normals
-      glm::mat4 invTP = transpose(glm::inverse(mvp));
-      
       // Use the shader program that was loaded, compiled and linked
       _program->bind();
       GL_ERR_CHECK();
@@ -641,11 +639,7 @@ int render(double time)
       // Set the MVP uniform
       _program->setUniform("mvp", mvp);
       GL_ERR_CHECK();
-      
-      // Set the inverse transpose uniform
-      _program->setUniform("invTP", invTP);
-      GL_ERR_CHECK();
-      
+ 
       // Draw the triangles
       glBindVertexArray(_vao);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, _vertexData.size());
@@ -676,7 +670,7 @@ int main(int argc, char* argv[])
 {
    int width = 1024; // Initial window width
    int height = 768; // Initial window height
-   _sensitivity = M_PI / 360.0f;
+   _sensitivity = float(M_PI) / 360.0f;
    
    // Open up the log file
    std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
