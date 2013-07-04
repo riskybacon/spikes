@@ -79,8 +79,8 @@ find_path(GLFW_INCLUDE_DIR GLFW/glfw3.h ${HEADER_SEARCH_PATH})
 find_library(GLFW_LIBRARIES glfw3 ${LIBRARY_SEARCH_PATH})
 
 # Find FreeImage
-find_path(   FREEIMAGE_INCLUDE_DIR FreeImagePlus.h ${HEADER_SEARCH_PATH})
-find_library(FREEIMAGE_LIBRARIES   freeimageplus   ${LIBRARY_SEARCH_PATH})
+find_path(   FREEIMAGE_INCLUDE_DIR FreeImage.h ${HEADER_SEARCH_PATH})
+find_library(FREEIMAGE_LIBRARIES   freeimage   ${LIBRARY_SEARCH_PATH})
 
 # Include directories for this project
 set(INCLUDE_PATH
