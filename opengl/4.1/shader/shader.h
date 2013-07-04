@@ -18,6 +18,7 @@
 #if defined(__APPLE_CC__)
 #include <OpenGL/gl3.h>
 #else
+#include <GL/glew.h>
 #include <GL/gl.h>
 #endif
 

@@ -331,7 +331,7 @@ namespace GL
    {
       int total = -1;
       glGetProgramiv(_handle, GL_ACTIVE_ATTRIBUTES, &total);
-      for(GLuint i = 0; i < total; ++i)
+      for(int i = 0; i < total; ++i)
       {
          int name_len=-1, num=-1;
          GLenum type = GL_ZERO;
