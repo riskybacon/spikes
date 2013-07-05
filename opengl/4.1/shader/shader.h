@@ -471,7 +471,6 @@ namespace GL
 
       //@}
       
-#if 0
       void setUniform(const std::string& name, GLfloat v0, GLfloat v1)
       {
          glUniform2f(_uniform[name], v0, v1);
@@ -538,7 +537,6 @@ namespace GL
       {
          glUniform1uiv(id, length, data);
       }
-#endif
 
       void setUniform(const std::string& name, const std::vector<int>& data) {
          glUniform1iv(_uniform[name], data.size(), &data[0]);
