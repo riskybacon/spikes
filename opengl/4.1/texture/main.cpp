@@ -42,13 +42,7 @@ GLuint       _tcBuffer;        //< Buffer object for the texture coordinates
 GLuint       _texture;         //< Texture object
 int          _texWidth;        //< Width of the texture
 int          _texHeight;       //< Height of the texture
-GLint        _vertexLocation;  //< Location of the vertex attribute in the shader
-GLint        _normalLocation;  //< Location of the normal attribute in the shader
-GLint        _tcLocation;      //< Location of the texture coordinate attribute in the shader
-GLint        _samplerLocation; //< Location of the texture sampler in the fragment program
 bool         _running;         //< true if the program is running, false if it is time to terminate
-GLuint       _mvp;             //< Location of the model, view, projection matrix in vertex shader
-GLuint       _invTP;           //< Location of the inverse transpose of the MVP matrix
 bool         _tracking;        //< True if mouse location is being tracked
 vector<vec4> _vertexData;      //< Vertex data
 vector<vec4> _normalData;      //< Normal data
@@ -118,66 +112,53 @@ void initGLEW(void)
 }
 
 /**
- * Get locations of attributes
+ * Load checkerboard texture map
  */
-
-void getAttribLocations(void)
+void loadTexture()
 {
-   try 
+   // Create a checkerboard pattern
+   _texWidth = 256;
+   _texHeight = 256;
+   
+   vector<vec4> texels;
+   texels.resize(_texWidth * _texHeight);
+   for(int i = 0; i < _texWidth; i++ )
    {
-      _vertexLocation  = _program->getAttribLocation("vertex");
-      _normalLocation  = _program->getAttribLocation("normal");
-      _tcLocation      = _program->getAttribLocation("tc");
-      _mvp             = _program->getUniformLocation("mvp");
-      _invTP           = _program->getUniformLocation("invTP");
-      _samplerLocation = _program->getUniformLocation("tex");
-      GL_ERR_CHECK();
+      for(int j = 0; j < _texHeight; j++ )
+      {
+         GLubyte c = (((i & 0x8) == 0) ^ ((j & 0x8)  == 0)) * 255;
+         int idx = j * _texWidth + i;
+         texels.at(idx).r = c / (255.0f * 1.5f);
+         texels.at(idx).g = 0;
+         texels.at(idx).b = c / 255.0f;
+         texels.at(idx).a = 1.0f;
+      }
    }
-   catch (std::runtime_error exception)
-   {
-      logException(exception);
-      terminate(EXIT_FAILURE);
-   }
+   
+   // Set up the texture
+   glGenTextures(1, &_texture);
+   glBindTexture(GL_TEXTURE_2D, _texture);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_FLOAT, &texels[0]);
+   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+   glActiveTexture(GL_TEXTURE0);
+   GL_ERR_CHECK();
 }
+
 /**
  * Initialize vertex array objects, vertex buffer objects,
  * clear color and depth clear value
  */
 void init(void)
 {
+   GLint attribLoc;
+   
    try
    {
       initGLEW();
-      
-      // Create a checkerboard pattern
-      _texWidth = 256;
-      _texHeight = 256;
-      
-      vector<vec4> texels;
-      texels.resize(_texWidth * _texHeight);
-      for(int i = 0; i < _texWidth; i++ )
-      {
-         for(int j = 0; j < _texHeight; j++ )
-         {
-            GLubyte c = (((i & 0x8) == 0) ^ ((j & 0x8)  == 0)) * 255;
-            int idx = j * _texWidth + i;
-            texels.at(idx).r = c / (255.0f * 1.5f);
-            texels.at(idx).g = 0;
-            texels.at(idx).b = c / 255.0f;
-            texels.at(idx).a = 1.0f;
-         }
-      }
-
-      // Set up the texture
-      glGenTextures(1, &_texture);
-      glBindTexture(GL_TEXTURE_2D, _texture);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_FLOAT, &texels[0]);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-      glActiveTexture(GL_TEXTURE0);
-      GL_ERR_CHECK();
+      loadTexture();
       
       _vertexData.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
       _vertexData.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
@@ -194,14 +175,11 @@ void init(void)
       _tcData.push_back(glm::vec2(0.0f, 1.0f));
       _tcData.push_back(glm::vec2(1.0f, 1.0f));
                         
-      _vertexFile = std::string(SOURCE_DIR) + "/vertex.c";
-      _fragFile   = std::string(SOURCE_DIR) + "/fragment.c";
+      _vertexFile = std::string(SOURCE_DIR) + "/texture.vsh";
+      _fragFile   = std::string(SOURCE_DIR) + "/texture.fsh";
       
       _program = new GL::Program(_vertexFile, _fragFile);
       
-      // Get vertex and color attribute locations
-      getAttribLocations();
-
       // Generate a single handle for a vertex array. Only one vertex
       // array is needed
       glGenVertexArrays(1, &_vao);
@@ -209,53 +187,65 @@ void init(void)
       // Bind that vertex array
       glBindVertexArray(_vao);
       
-      // Generate one handle for the vertex buffer object
-      glGenBuffers(1, &_vertexBuffer);
+      attribLoc = _program->getAttribLocation("vertex");
+      if(attribLoc >= 0)
+      {
+         // Generate one handle for the vertex buffer object
+         glGenBuffers(1, &_vertexBuffer);
+         
+         // Make that vbo the current array buffer. Subsequent array buffer operations
+         // will affect this vbo
+         //
+         // It is possible to place all data into a single buffer object and use
+         // offsets to tell OpenGL where the data for a vertex array or any other
+         // attribute may reside.
+         glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+         GL_ERR_CHECK();
+         
+         // Set the data for the vbo. This will load it onto the GPU
+         glBufferData(GL_ARRAY_BUFFER, _vertexData.size() * sizeof(glm::vec4),
+                      &_vertexData[0], GL_STATIC_DRAW);
+         
+         // Specify the location and data format of the array of generic vertex attributes
+         glVertexAttribPointer(attribLoc,       // Attribute location in the shader program
+                               4,               // Number of components per attribute
+                               GL_FLOAT,        // Data type of attribute
+                               GL_FALSE,        // GL_TRUE: values are normalized or
+                               0,               // Stride
+                               0);              // Offset into currently bound array buffer for this data
+         
+         // Enable the generic vertex attribute array
+         glEnableVertexAttribArray(attribLoc);
+      }
       
-      // Make that vbo the current array buffer. Subsequent array buffer operations
-      // will affect this vbo
-      //
-      // It is possible to place all data into a single buffer object and use
-      // offsets to tell OpenGL where the data for a vertex array or any other
-      // attribute may reside.
-      glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-      GL_ERR_CHECK();
-      
-      // Set the data for the vbo. This will load it onto the GPU
-      glBufferData(GL_ARRAY_BUFFER, _vertexData.size() * sizeof(glm::vec4),
-                   &_vertexData[0], GL_STATIC_DRAW);
-      
-      // Specify the location and data format of the array of generic vertex attributes
-      glVertexAttribPointer(_vertexLocation, // Attribute location in the shader program
-                            4,               // Number of components per attribute
-                            GL_FLOAT,        // Data type of attribute
-                            GL_FALSE,        // GL_TRUE: values are normalized or
-                            0,               // Stride
-                            0);              // Offset into currently bound array buffer for this data
-      
-      // Enable the generic vertex attribute array
-      glEnableVertexAttribArray(_vertexLocation);
-      
-      // Set up normal attribute
-      glGenBuffers(1, &_normalBuffer);
-      glBindBuffer(GL_ARRAY_BUFFER, _normalBuffer);
-      
-      glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
-                   &_normalData[0], GL_STATIC_DRAW);
-      
-      glVertexAttribPointer(_normalLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_normalLocation);
+      attribLoc = _program->getAttribLocation("normal");
+      if(attribLoc >= 0)
+      {
+         // Set up normal attribute
+         glGenBuffers(1, &_normalBuffer);
+         glBindBuffer(GL_ARRAY_BUFFER, _normalBuffer);
+         
+         glBufferData(GL_ARRAY_BUFFER, _normalData.size() * sizeof(glm::vec4),
+                      &_normalData[0], GL_STATIC_DRAW);
+         
+         glVertexAttribPointer(attribLoc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+         glEnableVertexAttribArray(attribLoc);
+      }
       
       
-      // Set up texture attribute
-      glGenBuffers(1, &_tcBuffer);
-      glBindBuffer(GL_ARRAY_BUFFER, _tcBuffer);
-      
-      glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
-                   &_tcData[0], GL_STATIC_DRAW);
-      
-      glVertexAttribPointer(_tcLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(_tcLocation);
+      attribLoc = _program->getAttribLocation("tc");
+      if(attribLoc >= 0)
+      {
+         // Set up texture attribute
+         glGenBuffers(1, &_tcBuffer);
+         glBindBuffer(GL_ARRAY_BUFFER, _tcBuffer);
+         
+         glBufferData(GL_ARRAY_BUFFER, _tcData.size() * sizeof(glm::vec2),
+                      &_tcData[0], GL_STATIC_DRAW);
+         
+         glVertexAttribPointer(attribLoc, 2, GL_FLOAT, GL_FALSE, 0, 0);
+         glEnableVertexAttribArray(attribLoc);
+      }
       
       // Set the clear color
       glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -393,9 +383,6 @@ int render(double time)
       
       glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
       
-      
-      // Get vertex and color attribute locations
-      getAttribLocations();
 
       // Model matrix 
       glm::mat4 model = glm::mat4_cast(_objRot);
@@ -403,19 +390,12 @@ int render(double time)
       // Create  model, view, projection matrix
       glm::mat4 mvp   = projection * view * translate * model; // Remember, matrix multiplication is the other way around
       
-      // Calculate the inverse transpose for use with normals
-      glm::mat4 invTP = transpose(glm::inverse(mvp));
-      
       // Use the shader program that was loaded, compiled and linked
       _program->bind();
       GL_ERR_CHECK();
       
       // Set the MVP uniform
-      glUniformMatrix4fv(_mvp, 1, GL_FALSE, &mvp[0][0]);
-      GL_ERR_CHECK();
-      
-      // Set the inverse transpose uniform
-      glUniformMatrix4fv(_invTP, 1, GL_FALSE, &invTP[0][0]);
+      _program->setUniform("mvp", mvp);
       GL_ERR_CHECK();
       
       // Draw the triangles
