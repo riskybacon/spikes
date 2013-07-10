@@ -1,5 +1,5 @@
 //
-// OpenGL 3.2 Texture Mapping example
+// OpenGL 3.2 Font rendering with CoreText / Objective C++
 //
 // Author: Jeff Bowles <jbowles@riskybacon.com>
 //
@@ -7,13 +7,15 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include "TextRender.h"
+#include <sstream>
+#include <iomanip>
 
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "font_texture.h"
 using namespace glm;
 using std::vector;
 
@@ -33,7 +35,6 @@ using std::vector;
 #include <shader.h>
 #include <GLFW/glfw3.h>
 #include "config.h"
-#include "font_texture.h"
 #include "OpenGLTexture.h"
 
 // Global variables have an underscore prefix.
@@ -42,9 +43,6 @@ GLuint       _vao;             //< Array object for the vertices
 GLuint       _vertexBuffer;    //< Buffer object for the vertices
 GLuint       _normalBuffer;    //< Buffer object for the normals
 GLuint       _tcBuffer;        //< Buffer object for the texture coordinates
-GLuint       _texture;         //< Texture object
-int          _texWidth;        //< Width of the texture
-int          _texHeight;       //< Height of the texture
 bool         _running;         //< true if the program is running, false if it is time to terminate
 bool         _tracking;        //< True if mouse location is being tracked
 vector<vec4> _vertexData;      //< Vertex data
@@ -57,9 +55,8 @@ int          _winHeight;       //< Height of the window
 quat         _objRot;          //< Quaternion that describes the rotation of the object
 vec2         _prevCurPos;      //< Previous cursor pos
 float        _sensitivity;     //< Sensitivity to mouse motion
-Font*        _font;
 FontTexture* _fontTexture;
-TextRender   _textRender;
+FontTexture::TextAlign _align;
 
 // Log file
 std::ofstream _log;	//< Log file
@@ -120,46 +117,15 @@ void initGLEW(void)
 /**
  * Load checkerboard texture map
  */
-void loadTexture(Font* font, const std::string& text)
+void loadTexture()
 {
-   // Create a checkerboard pattern
-   _texWidth = 256;
-   _texHeight = 256;
-   
-   
-   // Create the texture map / bitmap
-   font->createBitmap(text);
-      
-   
-   _texWidth = font->bitmapWidth();
-   _texHeight = font->bitmapHeight();
-
-      // Create the texture map
-   glGenTextures(1, &_texture);
-   GL_ERR_CHECK();
-   glBindTexture(GL_TEXTURE_2D, _texture);
-   GL_ERR_CHECK();
-   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   GL_ERR_CHECK();
-   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   GL_ERR_CHECK();
-   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-   GL_ERR_CHECK();
-   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-   GL_ERR_CHECK();
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _texWidth, _texHeight, 0, GL_RED, GL_UNSIGNED_BYTE, font->data());
-   GL_ERR_CHECK();
-   glGenerateMipmap(GL_TEXTURE_2D);
-   GL_ERR_CHECK();
-   
-   const char textString[] = "ObjC\nTest\n3rd line\n4th line";
-   const char fontString[] = "Menlo";
-   float fontSize = 120.0f;
-   TextAlignment align = LEFT;
-   vec4 color(1, 1, 1, 1);
-   vec2 size;
-   
-   _texture = GLTexture2DCreateFromString(textString, fontString, fontSize, align, color, size);
+   std::string font = "Apple Color Emoji";
+   std::string text = "Some text";
+   float pointSize = 20.0f;
+   vec4 fgColor(1,1,0,1);
+   vec4 bgColor(0,0,0,0);
+   _align = FontTexture::TEXT_ALIGN_LEFT;
+   _fontTexture = new FontTexture(font, text, pointSize, fgColor, bgColor, _align);
 }
 
 /**
@@ -174,12 +140,7 @@ void init(void)
    {
       initGLEW();
       
-      std::string fontFile = std::string(SOURCE_DIR) + "/HelveticaLight.ttf";
-      std::string text = "Test text";
-      
-      _font = new Font(fontFile, 20.0f);
-
-      loadTexture(_font, text);
+      loadTexture();
 
       GL_ERR_CHECK();
       
@@ -390,6 +351,19 @@ int render(double time)
 {
    try
    {
+      std::stringstream ss;
+      int precision = time;
+      
+      std::stringstream wholeDigits;
+      wholeDigits << (int) time;
+      
+      precision = wholeDigits.str().length() + 2;
+      
+      ss << "Time: " << std::setprecision(precision) << time;
+
+      _fontTexture->setText(ss.str());
+      _fontTexture->update();
+      
       // Clear the color and depth buffers
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
@@ -407,11 +381,40 @@ int render(double time)
       glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
       
 
+      
       // Model matrix 
       glm::mat4 model = glm::mat4_cast(_objRot);
       
       // Create  model, view, projection matrix
       glm::mat4 mvp   = projection * view * translate * model; // Remember, matrix multiplication is the other way around
+      mvp = mat4();
+      // The texture size in terms of a percentage of window width and height
+      glm::vec2 texSize = vec2(_fontTexture->getSize().x / _winWidth, _fontTexture->getSize().y / _winHeight);
+
+      // Half of the texture size - needed if text is centered
+      glm::vec2 texSizeHalf = texSize * 0.5f;
+      glm::vec2 lowerLeft;
+      
+      switch(_align)
+      {
+         case FontTexture::TEXT_ALIGN_CENTER:
+            lowerLeft = texSizeHalf - 0.85f;
+            break;
+            
+         case FontTexture::TEXT_ALIGN_LEFT:
+            lowerLeft = vec2(-0.85, -0.85);
+            break;
+            
+         default:
+            lowerLeft = vec2(0,0);
+            break;
+      }
+      
+      
+      mvp = glm::translate(glm::mat4(), vec3(lowerLeft,0)) *
+           glm::scale(glm::mat4(), vec3(texSize.x, texSize.y, 1));
+
+      mvp = mat4();
       
       // Use the shader program that was loaded, compiled and linked
       _program->bind();
@@ -422,7 +425,7 @@ int render(double time)
       _program->setUniform("tex", 0);
       
       glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, _texture);
+      glBindTexture(GL_TEXTURE_2D, _fontTexture->getID());
       
       GL_ERR_CHECK();
       
@@ -454,9 +457,8 @@ void close(GLFWwindow* window)
  */
 int main(int argc, char* argv[])
 {
-   _textRender.reticulate();
    int width = 1024; // Initial window width
-   int height = 768; // Initial window height
+   int height = 1024; // Initial window height
    _sensitivity = M_PI / 360.0f;
    
    // Open up the log file
@@ -480,7 +482,7 @@ int main(int argc, char* argv[])
    glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
    
    // Create a windowed mode window and its OpenGL context
-   window = glfwCreateWindow(1024, 768, "Triangle", NULL, NULL);
+   window = glfwCreateWindow(width, height, "Text Rendering with CoreText", NULL, NULL);
    if (!window)
    {
       fprintf(stderr, "Failed to open GLFW window\n");

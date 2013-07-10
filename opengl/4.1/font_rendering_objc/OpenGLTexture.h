@@ -54,27 +54,22 @@
 
 // Mac OS X frameworks
 
-#include <OpenGL/gl3.h>
+#include <OpenGL/OpenGL.h>
+#include <string>
 #include <glm/glm.hpp>
-
-// OpenGL container types
-//#import "OpenGLContainers.h"
+#include "font_texture.h"
 
 #ifdef __cplusplus
 
-enum TextAlignment {
-   CENTER,
-   LEFT,
-   RIGHT
-};
 
-GLuint GLTexture2DCreateFromString(const char* pString,
-                                   const char* pFontName,
-                                   const float nFontSize,
-                                   TextAlignment nAlignment,
-                                   const glm::vec4& color,
-                                   glm::vec2& size
-                                   );
+void GLTexture2DString(GLuint texID,
+                       const std::string& font,
+                       const std::string& text,
+                       const float nFontSize,
+                       FontTexture::TextAlign nAlignment,
+                       const glm::vec4& color,
+                       glm::vec2& size
+                      );
 
 
 

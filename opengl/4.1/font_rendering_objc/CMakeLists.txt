@@ -11,11 +11,11 @@ project(${PROJ_NAME})
 # INCLUDE_PATH	Path to the include files
 include(${CMAKE_SOURCE_DIR}/PlatformSpecifics.cmake)
 
-set(SHADER_SOURCE_DIR
-  ${CMAKE_SOURCE_DIR}/../shader
+set(OPENGL_COMMON_DIR
+  ${CMAKE_SOURCE_DIR}/../common
 )
 
-set(INCLUDE_PATH ${INCLUDE_PATH} ${SHADER_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+set(INCLUDE_PATH ${INCLUDE_PATH} ${OPENGL_COMMON_DIR} ${PROJECT_BINARY_DIR})
 
 # Set the include directories
 include_directories(${INCLUDE_PATH})
@@ -31,19 +31,16 @@ configure_file (
 
 set(SOURCE_FILES
   main.cpp
-  font.cpp
-  TextRenderObjC.m
-  TextRender.mm
+  font_texture.cpp
   OpenGLTexture.mm
-  ${SHADER_SOURCE_DIR}/shader.cpp
+  ${OPENGL_COMMON_DIR}/shader.cpp
 )
 
 set(HEADER_FILES
-  font.h
-  TextRenderObjC.h
-  TextRender.h
+  font_texture.h
   OpenGLTexture.h
-  ${SHADER_SOURCE_DIR}/shader.h
+  ${OPENGL_COMMON_DIR}/opengl.h
+  ${OPENGL_COMMON_DIR}/shader.h
 )
 
 set(SHADER_FILES

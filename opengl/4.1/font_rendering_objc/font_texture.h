@@ -1,119 +1,117 @@
-#pragma once
+#ifndef _FONT_TEXTURE_H
+#define _FONT_TEXTURE_H
 
-#include "font.h"
-#include <shader.h>
+#include <string>
+#include <glm/glm.hpp>
+#include "opengl.h"
 
 /**
- * Creates a texture map for a string
- * of characters
+ * Renders a string of text into an OpenGL texture map
  */
-class FontTexture {
+class FontTexture
+{
 public:
-  /**
-   * Constructor
-   * @param font
-   *   Pointer to the font object used to render the text
-   * @param text
-   *   The string to render
-   */
-  FontTexture(Font* font, const std::string& text);
+   enum TextAlign
+   {
+      TEXT_ALIGN_LEFT,
+      TEXT_ALIGN_CENTER,
+      TEXT_ALIGN_RIGHT,
+      TEXT_ALIGN_JUSTIFIED,
+   };
+   
+   /**
+    * Constructor. This should be called after OpenGL has been initialized. The text
+    * will be rendered to a bitmap, and an OpenGL texture map will be created and initialized.
+    *
+    * @param font
+    *    Name of the font to use
+    *
+    * @param text
+    *    The text to render
+    *
+    * @param pointSize
+    *    The point size of the font to use
+    *
+    * @param fgColor
+    *    Foreground color of the text
+    *
+    * @param bgColor
+    *    Background color of the text
+    *
+    * @param alignment
+    *
+    */
+   FontTexture(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, const glm::vec4& bgColor, TextAlign align = TEXT_ALIGN_CENTER);
 
-  /**
-   * OpenGL specific initialization
-   */
-  void initGL(void);
-  
-  /**
-   * Get the texture ID
-   */
-  GLuint texID(void) const {
-    return mTexID;
-  }
+   /**
+    * Destructor
+    */
+   ~FontTexture();
+   
+   /**
+    * Sets the text to be rendered. This does not trigger an update of the texture map
+    *
+    * @param text
+    *    The text to be rendered
+    */
+   void setText(const std::string& text)
+   {
+      _text = text;
+      _needsRefresh = true;
+   }
 
-  /**
-   * @return the texel width of the bitmap. This is the next
-   *  power of 2 greater than the bounding box width
-   */
-  unsigned int const textureWidth(void) const {
-    return mTexWidth;
-  }
-  
-  /**
-   * @return the texel height of the bitmap. This is the next
-   *  power of 2 greater than the bounding box height
-   */
-  unsigned int const textureHeight(void) const {
-    return mTexHeight;
-  }
-  
-  /**
-   * @return the texel height of the bounding box for the
-   *  rendered font string. The bitmap height is the
-   *  next power of 2 greater than this number.
-   */
-  unsigned int const boundingBoxHeight(void) const {
-    return mBBoxHeight;
-  }
-  
-  /**
-   * @return the texel width of the bounding box for the
-   *  rendered font string. The bitmap width is the
-   *  next power of 2 greater than this number.
-   */
-  unsigned int const boundingBoxWidth(void) const {
-    return mBBoxWidth;
-  }
-  
-#if 0
-  /** 
-   * @return the maximum S texture coordinate. This
-   *  is very similar to boundingBoxWidth(), except
-   *  the value is in the (0,1) range, where a 1 would 
-   *  be the same as bitmapWidth()
-   */
-  float const maxTexCoordS(void) const {
-    return mMaxTexCoordS;
-  }
-  
-  /** 
-   * @return the maximum T texture coordinate. This
-   *  is very similar to boundingBoxHeight(), except
-   *  the value is in the (0,1) range, where a 1 would 
-   *  be the same as bitmapHeight()
-   */
-  float const maxTexCoordT(void) const {
-    return mMaxTexCoordT;
-  }
-  
-  /**
-   * @return the width of the quad needed to render this texture.
-   *   This should probably be up higher in the code
-   */ 
-  float const quadWidth(void) const {
-    return mQuadWidth;
-  }
-
-  /**
-   * @return the height of the quad needed to render this texture.
-   *   This should probably be up higher in the code
-   */ 
-  float const quadHeight(void) const {
-    return mQuadHeight;
-  }
-#endif
-  
+   /**
+    * Set the font to use for the text
+    */
+   void setFont(const std::string& font)
+   {
+      _font = font;
+      _needsRefresh = true;
+   }
+   
+   /**
+    * Update the texture map
+    */
+   void update();
+   
+   /**
+    * @return the OpenGL texture handle
+    */
+   GLuint getID() const
+   {
+      return _id;
+   }
+   
+   /**
+    * @return size of texture map
+    */
+   glm::vec2 getSize() const
+   {
+      return _texSize;
+   }
+   
 private:
-  GLuint       mTexID;        //< OpenGL texture map handle
-  Font*        mFont;         //< Pointer to a font object for creating the texture map
-  std::string  mText;         //< Text to render into the texture map
-  unsigned int mBBoxWidth;    //< Bounding box width in texels
-  unsigned int mBBoxHeight;   //< Bounding box height in texels
-  unsigned int mTexWidth;     //< Texture width
-  unsigned int mTexHeight;    //< Texture height
-#if 0
-  float        mQuadWidth;    //< Quad width
-  float        mQuadHeight;   //< Quad height
-  float        mMaxTexCoordS; //< Maximum S texture coord to use when rendering
-  float        mMaxTexCoordT; //< Maximum S texture coord to use when rendering
-#endif
+   /**
+    * Initialize OpenGL resources
+    */
+   void initGL();
+   
+   /**
+    * Free OpenGL resources
+    */
+   void freeGL();
+   
+   
+private:
+   GLuint      _id;           //< Texture ID handle
+   std::string _font;         //< Name of the font
+   std::string _text;         //< Texture to render
+   float       _pointSize;    //< Point size for the font
+   glm::vec4   _fgColor;      //< Foreground color
+   glm::vec4   _bgColor;      //< Background color
+   glm::vec2   _texSize;      //< Size of texture in texels
+   TextAlign   _align;        //< Text alignment method
+   bool        _needsRefresh; //< true if the texture map need to be refreshed?
 };
+
+#endif

@@ -1,40 +1,86 @@
 #include "font_texture.h"
+#include "OpenGLTexture.h"
 
-FontTexture::FontTexture(Font* font, const std::string& text)
-: mTexID  (0)
-, mFont   (font)
-, mText   (text) 
+/**
+ * Constructor. This should be called after OpenGL has been initialized. The text
+ * will be rendered to a bitmap, and an OpenGL texture map will be created and initialized.
+ *
+ * @param font
+ *    Name of the font to use
+ *
+ * @param text
+ *    The text to render
+ *
+ * @param pointSize
+ *    The point size of the font to use
+ *
+ * @param fgColor
+ *    Foreground color of the text
+ *
+ * @param bgColor
+ *    Background color of the text
+ *
+ * @param alignment
+ *
+ */
+FontTexture::FontTexture(const std::string& font, const std::string& text, float pointSize,
+                         const glm::vec4& fgColor, const glm::vec4& bgColor,
+                         FontTexture::TextAlign align)
+: _font(font)
+, _text(text)
+, _pointSize(pointSize)
+, _fgColor(fgColor)
+, _bgColor(bgColor)
+, _align(align)
+, _needsRefresh(true)
 {
+   initGL();
+   update();
+   
 }
 
-void FontTexture::initGL(void)
+/**
+ * Destructor
+ */
+FontTexture::~FontTexture()
 {
-  // Create the texture map / bitmap
-  mFont->createBitmap(mText);
-  
-  // Get metrics - these change with every call to createBitmap,
-  // so we'll need to remember them
-  mBBoxWidth = mFont->boundingBoxWidth();
-  mBBoxHeight = mFont->boundingBoxHeight();
-  
-  mTexWidth = mFont->bitmapWidth();
-  mTexHeight = mFont->bitmapHeight();
-
-  // Create the texture map
-  glGenTextures(1, &mTexID);
-  GL_ERR_CHECK();
-  glBindTexture(GL_TEXTURE_2D, mTexID);
-  GL_ERR_CHECK();
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  GL_ERR_CHECK();
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  GL_ERR_CHECK();
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-  GL_ERR_CHECK();
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-  GL_ERR_CHECK();
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mTexWidth, mTexHeight, 0, GL_RED, GL_UNSIGNED_BYTE, mFont->data());
-  GL_ERR_CHECK();
-  glGenerateMipmap(GL_TEXTURE_2D);
-  glActiveTexture(GL_TEXTURE0);
+   freeGL();
 }
+
+/**
+ * Initialize OpenGL resources
+ */
+void FontTexture::initGL()
+{
+   glGenTextures(1, &_id);
+
+   glBindTexture(GL_TEXTURE_2D, _id);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   GL_ERR_CHECK();
+}
+
+/**
+ * Free OpenGL resources
+ */
+void FontTexture::freeGL()
+{
+   glDeleteTextures(1, &_id);
+}
+
+/**
+ * Updates the texture map
+ */
+void FontTexture::update()
+{
+   GLTexture2DString(_id, _text, _font, _pointSize, _align, _fgColor, _texSize);
+   // The texture is bound upon return from the function
+   glGenerateMipmap(GL_TEXTURE_2D);
+   _needsRefresh = false;
+}
+
+
+

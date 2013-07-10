@@ -302,74 +302,26 @@ static CGContextRef CGContextCreateFromString(CFStringRef pString,
     return pContext;
 } // CGContextCreateFromString
 
-// Create a bitmap context from a c-string, font, justification, and font size
-static CGContextRef CGContextCreateFromString(const GLchar * const pString,
-											  const GLchar * const pFontName,
-											  const CGFloat nFontSize,
-											  const CTTextAlignment nAlignment,
-											  const CGFloat * const pComponents,
-											  NSSize &rSize)
-{
-	CGContextRef pContext = NULL;
-	
-	if( pString != NULL )
-	{
-		CFStringRef pCFString = CFStringCreateWithCString(kCFAllocatorDefault,
-														  pString,
-														  kCFStringEncodingASCII);
-		
-		if( pCFString != NULL )
-		{
-			const GLchar *pFontString = (pFontName) ? pFontName : "Helvetica";
-			
-			CFStringRef pFontCFString = CFStringCreateWithCString(kCFAllocatorDefault,
-																  pFontString,
-																  kCFStringEncodingASCII);
-			
-			if( pFontCFString != NULL )
-			{
-				pContext = CGContextCreateFromString(pCFString,
-													 pFontCFString,
-													 nFontSize,
-													 nAlignment,
-													 pComponents,
-													 rSize);
-				
-				CFRelease(pFontCFString);
-			} // if
-			
-			CFRelease(pCFString);
-		} // if
-	} // if
-	
-    return pContext;
-} // CGContextCreateFromString
-
 #pragma mark -
 #pragma mark Private - Utilities - OpenGL - Textures
 
 // Create a 2D texture
-static GLuint GLTexture2DCreate(const GLuint nWidth,
-                                const GLuint nHeight,
-                                const GLvoid * const pPixels)
+static void GLTexture2DCreate(const GLuint texID,
+                              const GLuint nWidth,
+                              const GLuint nHeight,
+                              const GLvoid * const pPixels)
 {
-    GLuint nTID = 0;
-    
-    // Greate a texture
-    glGenTextures(1, &nTID);
-    
-    if( nTID )
+    if( texID )
     {
 		// Bind a texture with ID
-        glBindTexture(GL_TEXTURE_2D, nTID);
-        
-        // Set texture properties (including linear mipmap)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        
+        glBindTexture(GL_TEXTURE_2D, texID);
+       
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+       
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
         // Initialize the texture
         glTexImage2D(GL_TEXTURE_2D,
                      0,
@@ -380,22 +332,12 @@ static GLuint GLTexture2DCreate(const GLuint nWidth,
                      GL_RGBA,
                      GL_UNSIGNED_INT_8_8_8_8_REV,
                      pPixels);
-		
-		// Generate mipmaps
-		glGenerateMipmap(GL_TEXTURE_2D);
-		
-        // Discard
-        glBindTexture(GL_TEXTURE_2D, 0);
     } // if
-    
-    return nTID;
 } // GLTexture2DCreate
 
 // Create a texture from a bitmap context
-static GLuint GLTexture2DCreateFromContext(CGContextRef pContext)
+static void GLTexture2DCreateFromContext(GLuint texID, CGContextRef pContext)
 {
-    GLuint nTID = 0;
-    
     if( pContext != NULL )
     {
         GLuint nWidth  = GLuint(CGBitmapContextGetWidth(pContext));
@@ -403,7 +345,7 @@ static GLuint GLTexture2DCreateFromContext(CGContextRef pContext)
         
         const GLvoid *pPixels = CGBitmapContextGetData(pContext);
         
-        nTID = GLTexture2DCreate(nWidth, nHeight, pPixels);
+        GLTexture2DCreate(texID, nWidth, nHeight, pPixels);
         
         // Was there a GL error?
         GLenum nErr = glGetError();
@@ -412,30 +354,25 @@ static GLuint GLTexture2DCreateFromContext(CGContextRef pContext)
         {
             NSLog(@">> OpenGL Error: %04x caught at %s:%u", nErr, __FILE__, __LINE__);
 			
-			glDeleteTextures(1, &nTID);
-			
-			nTID = 0;
         } // if
     } // if
     
-    return nTID;
 } // GLTexture2DCreateFromContext
 
 #pragma mark -
 #pragma mark Public - Constructors
-
 // Generate a texture from a core foundation string, using a font, at a size,
 // with alignment and color
-static GLuint GLTexture2DCreateFromString(CFStringRef pString,
-								   CFStringRef pFontName,
-								   const CGFloat nFontSize,
-								   const CTTextAlignment nAlignment,
-								   const CGFloat * const pColor,
-								   NSSize &rSize)
+static void GLTexture2DCreateFromString(GLuint texID,
+                                        CFStringRef pString,
+                                        CFStringRef pFontName,
+                                        const CGFloat nFontSize,
+                                        const CTTextAlignment nAlignment,
+                                        const CGFloat * const pColor,
+                                        NSSize &rSize)
 {
-    GLuint nTID = 0;
-    
-    CGContextRef pCtx = CGContextCreateFromString(pString,
+    CGContextRef pCtx = CGContextCreateFromString(
+                                      pString,
 												  pFontName,
 												  nFontSize,
 												  nAlignment,
@@ -444,33 +381,31 @@ static GLuint GLTexture2DCreateFromString(CFStringRef pString,
     
     if( pCtx != NULL )
     {
-        nTID = GLTexture2DCreateFromContext(pCtx);
+        GLTexture2DCreateFromContext(texID, pCtx);
         
         CGContextRelease(pCtx);
     } // if
     
-    return nTID;
 } // GLTexture2DCreateFromString
 
-GLuint GLTexture2DCreateFromString(const char* pString,
-                                   const char* pFontName,
-                                   const float nFontSize,
-                                   TextAlignment nAlignment,
-                                   const glm::vec4& color,
-                                   glm::vec2& size
-                                   )
+void GLTexture2DString(GLuint      texID,
+                       const std::string& font,
+                       const std::string& text,
+                       const float nFontSize,
+                       FontTexture::TextAlign nAlignment,
+                       const glm::vec4& color,
+                       glm::vec2& size
+                      )
 {
    NSSize rSize;
    CTTextAlignment ctalign;
    
    CFStringRef pCFString = CFStringCreateWithCString(kCFAllocatorDefault,
-                                                     pString,
+                                                     font.c_str(),
                                                      kCFStringEncodingASCII);
-
-   const GLchar *pFontString = (pFontName) ? pFontName : "Helvetica";
    
    CFStringRef pFontCFString = CFStringCreateWithCString(kCFAllocatorDefault,
-                                                         pFontString,
+                                                         text.c_str(),
                                                          kCFStringEncodingASCII);
 
    CGFloat pColor[4];
@@ -481,16 +416,20 @@ GLuint GLTexture2DCreateFromString(const char* pString,
    
    switch (nAlignment)
    {
-      case CENTER:
+      case FontTexture::TEXT_ALIGN_CENTER:
          ctalign = kCTTextAlignmentCenter;
          break;
 
-      case LEFT:
+      case FontTexture::TEXT_ALIGN_LEFT:
          ctalign = kCTTextAlignmentLeft;
          break;
 
-      case RIGHT:
+      case FontTexture::TEXT_ALIGN_RIGHT:
          ctalign = kCTTextAlignmentRight;
+         break;
+
+      case FontTexture::TEXT_ALIGN_JUSTIFIED:
+         ctalign = kCTTextAlignmentJustified;
          break;
 
       default:
@@ -498,28 +437,8 @@ GLuint GLTexture2DCreateFromString(const char* pString,
          break;
    }
    
-   GLuint id = GLTexture2DCreateFromString(pCFString, pFontCFString, nFontSize, ctalign, pColor, rSize);
+   GLTexture2DCreateFromString(texID, pCFString, pFontCFString, nFontSize, ctalign, pColor, rSize);
    
    size.x = rSize.width;
    size.y = rSize.height;
-   return id;
 }
-
-#if 0
-// Generate a texture from a stl string, using a font, at a size,
-// with an alignment and a color
-GLuint GLTexture2DCreateFromString(const GLstring &rString,
-								   const GLstring &rFontName,
-								   const CGFloat nFontSize,
-								   const CTTextAlignment nAlignment,
-								   const CGFloat * const pColor,
-								   NSSize &rSize)
-{
-    return GLTexture2DCreateFromString(rString.c_str(),
-                                       rFontName.c_str(),
-                                       nFontSize,
-                                       nAlignment,
-                                       pColor,
-                                       rSize);
-} // GLTexture2DCreateFromString
-#endif
