@@ -305,8 +305,7 @@ void FontTextureOSX::createAttributedString()
    }
 }
 
-void FontTextureOSX::createAttributedString(CFStringRef pString,
-                                            CTFontRef font,
+void FontTextureOSX::createAttributedString(CTFontRef font,
                                             CGColorRef pForegroundColor,
                                             const CTTextAlignment nAlignment,
                                             CFRange *pRange)
@@ -318,7 +317,7 @@ void FontTextureOSX::createAttributedString(CFStringRef pString,
 
    _attrString = NULL;
 	
-	if( pString != NULL )
+	if( _text != NULL )
 	{
 		// Paragraph style setting structure
 		const GLuint nCntStyle = 2;
@@ -379,7 +378,7 @@ void FontTextureOSX::createAttributedString(CFStringRef pString,
             if( _attrString != NULL )
             {
                // Set a mutable attributed string with the input string
-               CFAttributedStringReplaceString(_attrString, CFRangeMake(0, 0), pString);
+               CFAttributedStringReplaceString(_attrString, CFRangeMake(0, 0), _text);
                
                // Compute the mutable attributed string range
                *pRange = CFRangeMake(0, CFAttributedStringGetLength(_attrString));
@@ -403,9 +402,7 @@ void FontTextureOSX::createAttributedString(CFStringRef pString,
  */
 void FontTextureOSX::update()
 {
-   GLTexture2DStringFontRef(_id, _font, _text, _align, _fgColor, _texSize);
-
-   createAttributedString(_text, _font, _fgColor, _align, &_attrRange);
+   createAttributedString(_font, _fgColor, _align, &_attrRange);
    GLTexture2DAttrString(_id, _attrString, _attrRange, _texSize);
    
 #if 0
