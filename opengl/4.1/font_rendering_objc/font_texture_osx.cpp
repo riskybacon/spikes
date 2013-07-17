@@ -39,7 +39,7 @@ FontTextureOSX::FontTextureOSX(GLuint id, const std::string& font, const std::st
 , _text(NULL)
 , _ctx(NULL)
 {
-   GLTexture2DString(id, font, text, pointSize, align, fgColor, _texSize);
+   //   GLTexture2DString(id, font, text, pointSize, align, fgColor, _texSize);
 
    _linearRGBColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
    assert(_linearRGBColorspace != NULL);
@@ -49,9 +49,7 @@ FontTextureOSX::FontTextureOSX(GLuint id, const std::string& font, const std::st
    setForegroundColor(fgColor);
    setAlign(align);
    setLineSpacing(1.0f);
-#if 0
    update();
-#endif
 }
 
 /*
@@ -348,109 +346,6 @@ void FontTextureOSX::update()
 #endif
 }
 
-#if 1
-
-// Create an attributed string from a CF string, font, justification, and font size
-static CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
-                                                                    CFStringRef pFontNameSrc,
-                                                                    CGColorRef pForegroundColor,
-                                                                    const CGFloat nFontSize,
-                                                                    const CTTextAlignment nAlignment,
-                                                                    CFRange *pRange)
-{
-	CFMutableAttributedStringRef pAttrString = NULL;
-	
-	if( pString != NULL )
-	{
-		// Paragraph style setting structure
-		const GLuint nCntStyle = 2;
-		
-		// For single spacing between the lines
-		const CGFloat nLineHeightMultiple = 1.0f;
-		
-		// Paragraph settings with alignment and style
-		CTParagraphStyleSetting settings[nCntStyle] =
-		{
-			{
-				kCTParagraphStyleSpecifierAlignment,
-				sizeof(nAlignment),
-				&nAlignment
-			},
-			{
-				kCTParagraphStyleSpecifierLineHeightMultiple,
-				sizeof(CGFloat),
-				&nLineHeightMultiple
-			}
-		};
-		
-		// Create a paragraph style
-		CTParagraphStyleRef pStyle = CTParagraphStyleCreate(settings, nCntStyle);
-		
-		if( pStyle != NULL )
-		{
-			// If the font name is null default to Helvetica
-			CFStringRef pFontNameDst = (pFontNameSrc) ? pFontNameSrc : CFSTR("Helvetica");
-			
-			// Prepare font
-			CTFontRef pFont = CTFontCreateWithName(pFontNameDst, nFontSize, NULL);
-			
-			if( pFont != NULL )
-			{
-				// Set attributed string properties
-				const GLuint nCntDict = 3;
-				
-				CFStringRef keys[nCntDict] =
-				{
-					kCTParagraphStyleAttributeName,
-					kCTFontAttributeName,
-					kCTForegroundColorAttributeName,
-				};
-				
-				CFTypeRef values[nCntDict] =
-				{
-					pStyle,
-					pFont,
-					pForegroundColor
-				};
-				
-				// Create a dictionary of attributes for our string
-				CFDictionaryRef pAttributes = CFDictionaryCreate(NULL,
-																 (const void **)&keys,
-																 (const void **)&values,
-																 nCntDict,
-																 &kCFTypeDictionaryKeyCallBacks,
-																 &kCFTypeDictionaryValueCallBacks);
-				
-				if( pAttributes != NULL )
-				{
-					// Creating a mutable attributed string
-					pAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
-					
-					if( pAttrString != NULL )
-					{
-						// Set a mutable attributed string with the input string
-						CFAttributedStringReplaceString(pAttrString, CFRangeMake(0, 0), pString);
-						
-						// Compute the mutable attributed string range
-						*pRange = CFRangeMake(0, CFAttributedStringGetLength(pAttrString));
-						
-						// Set the attributes
-						CFAttributedStringSetAttributes(pAttrString, *pRange, pAttributes, NO);
-					} // if
-					
-					CFRelease(pAttributes);
-				} // if
-				
-				CFRelease(pFont);
-			} // if
-			
-			CFRelease(pStyle);
-		} // if
-	} // if
-    
-    return pAttrString;
-} // CFMutableAttributedStringCreate
-
 // Create an attributed string from a CF string, font, justification, and font size
 static CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
                                                                     CTFontRef font,
@@ -635,60 +530,6 @@ static CGContextRef CGContextCreateFromAttributedString(CFAttributedStringRef pA
 // Create a bitmap context from a core foundation string, font,
 // justification, and font size
 static CGContextRef CGContextCreateFromString(CFStringRef pString,
-											  CFStringRef pFontName,
-											  const CGFloat nFontSize,
-											  const CTTextAlignment nAlignment,
-											  const CGFloat * const pForegroundColor,
-											  CGSize &rSize)
-{
-	CGContextRef pContext = NULL;
-	
-	if( pString != NULL )
-	{
-		// Get a generic linear RGB color space
-		CGColorSpaceRef pColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
-		
-		if( pColorspace != NULL )
-		{
-			// Create a white color reference
-			CGColorRef pColor = CGColorCreate(pColorspace, pForegroundColor);
-			
-			if( pColor != NULL )
-			{
-				// Creating a mutable attributed string
-				CFRange range;
-				
-				CFMutableAttributedStringRef pAttrString = CFMutableAttributedStringCreate(pString,
-																						   pFontName,
-																						   pColor,
-																						   nFontSize,
-																						   nAlignment,
-																						   &range);
-				
-				if( pAttrString != NULL )
-				{
-					// Create a context from our attributed string
-					pContext = CGContextCreateFromAttributedString(pAttrString,
-																   range,
-																   pColorspace,
-																   rSize);
-					
-					CFRelease(pAttrString);
-				} // if
-				
-				CFRelease(pColor);
-			} // if
-			
-			CFRelease(pColorspace);
-		} // if
-	} // if
-	
-    return pContext;
-} // CGContextCreateFromString
-
-// Create a bitmap context from a core foundation string, font,
-// justification, and font size
-static CGContextRef CGContextCreateFromString(CFStringRef pString,
                                               CTFontRef font,
                                               const CTTextAlignment nAlignment,
                                               CGColorRef fgColor,
@@ -773,35 +614,6 @@ static void GLTexture2DCreateFromContext(GLuint texID, CGContextRef pContext)
     
 } // GLTexture2DCreateFromContext
 
-#pragma mark -
-#pragma mark Public - Constructors
-// Generate a texture from a core foundation string, using a font, at a size,
-// with alignment and color
-static void GLTexture2DCreateFromString(GLuint texID,
-                                        CFStringRef pString,
-                                        CFStringRef pFontName,
-                                        const CGFloat nFontSize,
-                                        const CTTextAlignment nAlignment,
-                                        const CGFloat * const pColor,
-                                        CGSize &rSize)
-{
-    CGContextRef pCtx = CGContextCreateFromString(
-                                      pString,
-												  pFontName,
-												  nFontSize,
-												  nAlignment,
-												  pColor,
-												  rSize);
-    
-    if( pCtx != NULL )
-    {
-        GLTexture2DCreateFromContext(texID, pCtx);
-        
-        CGContextRelease(pCtx);
-    } // if
-    
-} // GLTexture2DCreateFromString
-
 void GLTexture2DCreateFromStringFontRef(GLuint texID,
                                  CTFontRef font,
                                  CFStringRef text,
@@ -825,62 +637,6 @@ void GLTexture2DCreateFromStringFontRef(GLuint texID,
 } // GLTexture2DCreateFromString
 
 
-void GLTexture2DString(GLuint      texID,
-                       const std::string& font,
-                       const std::string& text,
-                       const float nFontSize,
-                       TextAlign nAlignment,
-                       const glm::vec4& color,
-                       glm::vec2& size
-                      )
-{
-   CGSize rSize;
-   CTTextAlignment ctalign;
-   
-   CFStringRef pCFString = CFStringCreateWithCString(kCFAllocatorDefault,
-                                                     font.c_str(),
-                                                     kCFStringEncodingASCII);
-   
-   CFStringRef pFontCFString = CFStringCreateWithCString(kCFAllocatorDefault,
-                                                         text.c_str(),
-                                                         kCFStringEncodingASCII);
-
-   CGFloat pColor[4];
-   pColor[0] = color.r;
-   pColor[1] = color.g;
-   pColor[2] = color.b;
-   pColor[3] = color.a;
-   
-   switch (nAlignment)
-   {
-      case TEXT_ALIGN_CENTER:
-         ctalign = kCTTextAlignmentCenter;
-         break;
-
-      case TEXT_ALIGN_LEFT:
-         ctalign = kCTTextAlignmentLeft;
-         break;
-
-      case TEXT_ALIGN_RIGHT:
-         ctalign = kCTTextAlignmentRight;
-         break;
-
-      case TEXT_ALIGN_JUSTIFIED:
-         ctalign = kCTTextAlignmentJustified;
-         break;
-
-      default:
-         ctalign = kCTTextAlignmentLeft;
-         break;
-   }
-   
-   
-   GLTexture2DCreateFromString(texID, pCFString, pFontCFString, nFontSize, ctalign, pColor, rSize);
-   
-   size.x = rSize.width;
-   size.y = rSize.height;
-}
-
 void GLTexture2DStringFontRef(GLuint texID,
                        CTFontRef font,
                        CFStringRef text,
@@ -896,5 +652,3 @@ void GLTexture2DStringFontRef(GLuint texID,
    size.x = cgSize.width;
    size.y = cgSize.height;
 }
-
-#endif
