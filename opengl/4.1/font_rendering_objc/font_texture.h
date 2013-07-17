@@ -5,19 +5,22 @@
 #include <glm/glm.hpp>
 #include "opengl.h"
 
+class FontTextureOSX;
+
+enum TextAlign
+{
+   TEXT_ALIGN_LEFT,
+   TEXT_ALIGN_CENTER,
+   TEXT_ALIGN_RIGHT,
+   TEXT_ALIGN_JUSTIFIED
+};
+
 /**
  * Renders a string of text into an OpenGL texture map
  */
 class FontTexture
 {
 public:
-   enum TextAlign
-   {
-      TEXT_ALIGN_LEFT,
-      TEXT_ALIGN_CENTER,
-      TEXT_ALIGN_RIGHT,
-      TEXT_ALIGN_JUSTIFIED,
-   };
    
    /**
     * Constructor. This should be called after OpenGL has been initialized. The text
@@ -54,20 +57,12 @@ public:
     * @param text
     *    The text to be rendered
     */
-   void setText(const std::string& text)
-   {
-      _text = text;
-      _needsRefresh = true;
-   }
+   void setText(const std::string& text);
 
    /**
     * Set the font to use for the text
     */
-   void setFont(const std::string& font)
-   {
-      _font = font;
-      _needsRefresh = true;
-   }
+   void setFont(const std::string& font);
    
    /**
     * Update the texture map
@@ -85,10 +80,7 @@ public:
    /**
     * @return size of texture map
     */
-   glm::vec2 getSize() const
-   {
-      return _texSize;
-   }
+   glm::vec2 getSize() const;
    
 private:
    /**
@@ -100,18 +92,23 @@ private:
     * Free OpenGL resources
     */
    void freeGL();
-   
+
+   /**
+    * Initialize implementation specific objects
+    */
+   void initImpl();
    
 private:
-   GLuint      _id;           //< Texture ID handle
-   std::string _font;         //< Name of the font
-   std::string _text;         //< Texture to render
-   float       _pointSize;    //< Point size for the font
-   glm::vec4   _fgColor;      //< Foreground color
-   glm::vec4   _bgColor;      //< Background color
-   glm::vec2   _texSize;      //< Size of texture in texels
-   TextAlign   _align;        //< Text alignment method
-   bool        _needsRefresh; //< true if the texture map need to be refreshed?
+   GLuint          _id;           //< Texture ID handle
+   std::string     _font;         //< Name of the font
+   std::string     _text;         //< Texture to render
+   float           _pointSize;    //< Point size for the font
+   glm::vec4       _fgColor;      //< Foreground color
+   glm::vec4       _bgColor;      //< Background color
+   glm::vec2       _texSize;      //< Size of texture in texels
+   TextAlign       _align;        //< Text alignment method
+   bool            _needsRefresh; //< true if the texture map need to be refreshed?
+   FontTextureOSX* _impl;
 };
 
 #endif

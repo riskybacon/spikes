@@ -9,6 +9,9 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <CoreFoundation/CoreFoundation.h>
+
+CFStringRef ref;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -34,8 +37,8 @@ using std::vector;
 
 #include <shader.h>
 #include <GLFW/glfw3.h>
-#include "config.h"
-#include "OpenGLTexture.h"
+#include <config.h>
+#include "font_texture.h"
 
 // Global variables have an underscore prefix.
 GL::Program* _program;         //< GLSL program
@@ -56,7 +59,7 @@ quat         _objRot;          //< Quaternion that describes the rotation of the
 vec2         _prevCurPos;      //< Previous cursor pos
 float        _sensitivity;     //< Sensitivity to mouse motion
 FontTexture* _fontTexture;
-FontTexture::TextAlign _align;
+TextAlign    _align;
 
 // Log file
 std::ofstream _log;	//< Log file
@@ -119,12 +122,12 @@ void initGLEW(void)
  */
 void loadTexture()
 {
-   std::string font = "Apple Color Emoji";
-   std::string text = "Some text";
-   float pointSize = 20.0f;
+   std::string font = "Menlo";
+   std::string text = "Time:";
+   float pointSize = 17.0f;
    vec4 fgColor(1,1,0,1);
    vec4 bgColor(0,0,0,0);
-   _align = FontTexture::TEXT_ALIGN_LEFT;
+   _align = TEXT_ALIGN_CENTER;
    _fontTexture = new FontTexture(font, text, pointSize, fgColor, bgColor, _align);
 }
 
@@ -148,7 +151,7 @@ void init(void)
       _vertexData.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
       _vertexData.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
       _vertexData.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
-      
+
       _normalData.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalData.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
       _normalData.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
@@ -232,7 +235,7 @@ void init(void)
       }
       
       // Set the clear color
-      glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+      glClearColor(0.3f, 0.1f, 0.1f, 0.0f);
       
       // Set the depth clearing value
       glClearDepth(1.0f);
@@ -353,14 +356,23 @@ int render(double time)
    {
       std::stringstream ss;
       int precision = time;
+
       
       std::stringstream wholeDigits;
       wholeDigits << (int) time;
       
-      precision = wholeDigits.str().length() + 2;
-      
-      ss << "Time: " << std::setprecision(precision) << time;
+      precision = wholeDigits.str().length() + 1;
 
+      ss << "Time: " << std::setprecision(precision) << " " << time;
+      
+      int len = ss.str().length();
+      
+      if(ss.str()[len - 2] != '.')
+      {
+         ss << ".0";
+      }
+      
+      //      std::cout << ss.str() << std::endl;
       _fontTexture->setText(ss.str());
       _fontTexture->update();
       
@@ -387,7 +399,6 @@ int render(double time)
       
       // Create  model, view, projection matrix
       glm::mat4 mvp   = projection * view * translate * model; // Remember, matrix multiplication is the other way around
-      mvp = mat4();
       // The texture size in terms of a percentage of window width and height
       glm::vec2 texSize = vec2(_fontTexture->getSize().x / _winWidth, _fontTexture->getSize().y / _winHeight);
 
@@ -397,12 +408,12 @@ int render(double time)
       
       switch(_align)
       {
-         case FontTexture::TEXT_ALIGN_CENTER:
-            lowerLeft = texSizeHalf - 0.85f;
+         case TEXT_ALIGN_CENTER:
+            lowerLeft = texSizeHalf - vec2(1,1) + texSizeHalf;
             break;
             
-         case FontTexture::TEXT_ALIGN_LEFT:
-            lowerLeft = vec2(-0.85, -0.85);
+         case TEXT_ALIGN_LEFT:
+            lowerLeft = vec2(-1 + texSize.x, -1 + texSize.y);
             break;
             
          default:
@@ -414,8 +425,7 @@ int render(double time)
       mvp = glm::translate(glm::mat4(), vec3(lowerLeft,0)) *
            glm::scale(glm::mat4(), vec3(texSize.x, texSize.y, 1));
 
-      mvp = mat4();
-      
+
       // Use the shader program that was loaded, compiled and linked
       _program->bind();
       GL_ERR_CHECK();
