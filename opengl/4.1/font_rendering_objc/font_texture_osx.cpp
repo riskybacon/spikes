@@ -49,6 +49,7 @@ FontTextureOSX::FontTextureOSX(GLuint id, const std::string& font, const std::st
    setForegroundColor(fgColor);
    setAlign(align);
    setLineSpacing(1.0f);
+   createAttributedString();
    update();
 }
 
@@ -304,6 +305,99 @@ void FontTextureOSX::createAttributedString()
    }
 }
 
+void FontTextureOSX::createAttributedString(CFStringRef pString,
+                                            CTFontRef font,
+                                            CGColorRef pForegroundColor,
+                                            const CTTextAlignment nAlignment,
+                                            CFRange *pRange)
+{
+   if(_attrString != NULL)
+   {
+      CFRelease(_attrString);
+   }
+
+   _attrString = NULL;
+	
+	if( pString != NULL )
+	{
+		// Paragraph style setting structure
+		const GLuint nCntStyle = 2;
+		
+		// For single spacing between the lines
+		const CGFloat nLineHeightMultiple = 1.0f;
+		
+		// Paragraph settings with alignment and style
+		CTParagraphStyleSetting settings[nCntStyle] =
+		{
+			{
+				kCTParagraphStyleSpecifierAlignment,
+				sizeof(nAlignment),
+				&nAlignment
+			},
+			{
+				kCTParagraphStyleSpecifierLineHeightMultiple,
+				sizeof(CGFloat),
+				&nLineHeightMultiple
+			}
+		};
+		
+		// Create a paragraph style
+		CTParagraphStyleRef pStyle = CTParagraphStyleCreate(settings, nCntStyle);
+		
+		if( pStyle != NULL )
+		{
+         // Set attributed string properties
+         const GLuint nCntDict = 3;
+         
+         CFStringRef keys[nCntDict] =
+         {
+            kCTParagraphStyleAttributeName,
+            kCTFontAttributeName,
+            kCTForegroundColorAttributeName,
+         };
+         
+         CFTypeRef values[nCntDict] =
+         {
+            pStyle,
+            font,
+            pForegroundColor
+         };
+         
+         // Create a dictionary of attributes for our string
+         CFDictionaryRef pAttributes = CFDictionaryCreate(NULL,
+                                                          (const void **)&keys,
+                                                          (const void **)&values,
+                                                          nCntDict,
+                                                          &kCFTypeDictionaryKeyCallBacks,
+                                                          &kCFTypeDictionaryValueCallBacks);
+         
+         if( pAttributes != NULL )
+         {
+            // Creating a mutable attributed string
+            _attrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
+            
+            if( _attrString != NULL )
+            {
+               // Set a mutable attributed string with the input string
+               CFAttributedStringReplaceString(_attrString, CFRangeMake(0, 0), pString);
+               
+               // Compute the mutable attributed string range
+               *pRange = CFRangeMake(0, CFAttributedStringGetLength(_attrString));
+               
+               // Set the attributes
+               CFAttributedStringSetAttributes(_attrString, *pRange, pAttributes, NO);
+            } // if
+            
+            CFRelease(pAttributes);
+         } // if
+         
+			CFRelease(pStyle);
+		} // if
+	} // if
+   
+} // CFMutableAttributedStringCreate
+
+
 /*
  * Update the texture map
  */
@@ -311,6 +405,9 @@ void FontTextureOSX::update()
 {
    GLTexture2DStringFontRef(_id, _font, _text, _align, _fgColor, _texSize);
 
+   createAttributedString(_text, _font, _fgColor, _align, &_attrRange);
+   GLTexture2DAttrString(_id, _attrString, _attrRange, _texSize);
+   
 #if 0
    createAttributedString();
    
@@ -347,7 +444,7 @@ void FontTextureOSX::update()
 }
 
 // Create an attributed string from a CF string, font, justification, and font size
-static CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
+CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
                                                                     CTFontRef font,
                                                                     CGColorRef pForegroundColor,
                                                                     const CTTextAlignment nAlignment,
@@ -571,6 +668,26 @@ static CGContextRef CGContextCreateFromString(CFStringRef pString,
    return pContext;
 } // CGContextCreateFromString
 
+// Create a bitmap context from a core foundation string, font,
+// justification, and font size
+static CGContextRef CGContextCreateFromAttrString(CFMutableAttributedStringRef attrString, CFRange attrRange,
+                                              CGSize& rSize)
+{
+	CGContextRef pContext = NULL;
+	
+   // Get a generic linear RGB color space
+   CGColorSpaceRef pColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
+		
+	if( pColorspace != NULL )
+	{
+      // Create a context from our attributed string
+      pContext = CGContextCreateFromAttributedString(attrString, attrRange, pColorspace, rSize);
+		CFRelease(pColorspace);
+	} // if
+	
+   return pContext;
+} // CGContextCreateFromString
+
 
 #pragma mark -
 #pragma mark Private - Utilities - OpenGL - Textures
@@ -637,6 +754,34 @@ void GLTexture2DCreateFromStringFontRef(GLuint texID,
 } // GLTexture2DCreateFromString
 
 
+void GLTexture2DCreateFromAttrString(GLuint texID,
+                                     CFMutableAttributedStringRef attrString,
+                                     CFRange attrRange,
+                                     CGSize& size)
+{
+   CGContextRef pCtx = CGContextCreateFromAttrString(attrString,
+                                                     attrRange,
+                                                     size);
+   
+   if( pCtx != NULL )
+   {
+      GLTexture2DCreateFromContext(texID, pCtx);
+      
+      CGContextRelease(pCtx);
+   } // if
+   
+} // GLTexture2DCreateFromString
+
+
+void GLTexture2DAttrString(GLuint texID, CFMutableAttributedStringRef attrString, CFRange attrRange, glm::vec2& size)
+{
+   CGSize cgSize;
+   
+   GLTexture2DCreateFromAttrString(texID, attrString, attrRange, cgSize);
+   size.x = cgSize.width;
+   size.y = cgSize.height;
+}
+
 void GLTexture2DStringFontRef(GLuint texID,
                        CTFontRef font,
                        CFStringRef text,
@@ -645,8 +790,6 @@ void GLTexture2DStringFontRef(GLuint texID,
                        glm::vec2& size)
 {
    CGSize cgSize;
-   
-   //   GLTexture2DCreateFromStringFontRef(unsigned int, __CTFont const*, __CFString const*, unsigned char, CGColor*, CGSize&)
    
    GLTexture2DCreateFromStringFontRef(texID, font, text, alignment, fgColor, cgSize);
    size.x = cgSize.width;

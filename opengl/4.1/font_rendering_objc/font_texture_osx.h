@@ -137,6 +137,12 @@ private:
     */
    void createAttributedString();
    
+   void createAttributedString(CFStringRef pString,
+                               CTFontRef font,
+                                                       CGColorRef pForegroundColor,
+                                                       const CTTextAlignment nAlignment,
+                                                       CFRange *pRange);
+
    /**
     * @return a CTParagraphStyleRef structure. NULL if an error occurred during creation.
     */
@@ -197,6 +203,8 @@ void GLTexture2DStringFontRef(GLuint      texID,
                        glm::vec2& size
                        );
 
+void GLTexture2DAttrString(GLuint texID, CFMutableAttributedStringRef attrString, CFRange attrRange, glm::vec2& size);
+
 void GLTexture2DCreateFromStringFontRef(GLuint texID,
                                         CTFontRef font,
                                         CFStringRef text,
@@ -204,6 +212,11 @@ void GLTexture2DCreateFromStringFontRef(GLuint texID,
                                         CGColorRef fgColor,
                                         CGSize &rSize);
 
+CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
+                                                             CTFontRef font,
+                                                             CGColorRef pForegroundColor,
+                                                             const CTTextAlignment nAlignment,
+                                                             CFRange *pRange);
 
 #if 0
 // Generate a texture from a c-string, using a font, at a size,
