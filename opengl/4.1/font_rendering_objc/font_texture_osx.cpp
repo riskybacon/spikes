@@ -305,8 +305,7 @@ void FontTextureOSX::createAttributedString()
    }
 }
 
-void FontTextureOSX::createAttributedString(CGColorRef pForegroundColor,
-                                            const CTTextAlignment nAlignment,
+void FontTextureOSX::createAttributedString(const CTTextAlignment nAlignment,
                                             CFRange *pRange)
 {
    if(_attrString != NULL)
@@ -358,7 +357,7 @@ void FontTextureOSX::createAttributedString(CGColorRef pForegroundColor,
          {
             pStyle,
             _font,
-            pForegroundColor
+            _fgColor,
          };
          
          // Create a dictionary of attributes for our string
@@ -401,7 +400,7 @@ void FontTextureOSX::createAttributedString(CGColorRef pForegroundColor,
  */
 void FontTextureOSX::update()
 {
-   createAttributedString(_fgColor, _align, &_attrRange);
+   createAttributedString(_align, &_attrRange);
    GLTexture2DAttrString(_id, _attrString, _attrRange, _texSize);
    
 #if 0

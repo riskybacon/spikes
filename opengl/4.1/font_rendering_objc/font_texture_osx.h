@@ -137,9 +137,7 @@ private:
     */
    void createAttributedString();
    
-   void createAttributedString(
-                                                       CGColorRef pForegroundColor,
-                                                       const CTTextAlignment nAlignment,
+   void createAttributedString(const CTTextAlignment nAlignment,
                                                        CFRange *pRange);
 
    /**
