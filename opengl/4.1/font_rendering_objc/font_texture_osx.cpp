@@ -39,6 +39,8 @@ FontTextureOSX::FontTextureOSX(GLuint id, const std::string& font, const std::st
 , _text(NULL)
 , _ctx(NULL)
 {
+   GLTexture2DString(id, font, text, pointSize, align, fgColor, _texSize);
+
    _linearRGBColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
    assert(_linearRGBColorspace != NULL);
 
@@ -47,7 +49,9 @@ FontTextureOSX::FontTextureOSX(GLuint id, const std::string& font, const std::st
    setForegroundColor(fgColor);
    setAlign(align);
    setLineSpacing(1.0f);
+#if 0
    update();
+#endif
 }
 
 /*
@@ -307,7 +311,9 @@ void FontTextureOSX::createAttributedString()
  */
 void FontTextureOSX::update()
 {
-   
+   GLTexture2DStringFontRef(_id, _font, _text, _align, _fgColor, _texSize);
+
+#if 0
    createAttributedString();
    
    if(_attrString != NULL)
@@ -339,6 +345,7 @@ void FontTextureOSX::update()
          CGContextRelease(_ctx);
       }
    }
+#endif
 }
 
 #if 1
@@ -442,6 +449,95 @@ static CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef 
 	} // if
     
     return pAttrString;
+} // CFMutableAttributedStringCreate
+
+// Create an attributed string from a CF string, font, justification, and font size
+static CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
+                                                                    CTFontRef font,
+                                                                    CGColorRef pForegroundColor,
+                                                                    const CTTextAlignment nAlignment,
+                                                                    CFRange *pRange)
+{
+	CFMutableAttributedStringRef pAttrString = NULL;
+	
+	if( pString != NULL )
+	{
+		// Paragraph style setting structure
+		const GLuint nCntStyle = 2;
+		
+		// For single spacing between the lines
+		const CGFloat nLineHeightMultiple = 1.0f;
+		
+		// Paragraph settings with alignment and style
+		CTParagraphStyleSetting settings[nCntStyle] =
+		{
+			{
+				kCTParagraphStyleSpecifierAlignment,
+				sizeof(nAlignment),
+				&nAlignment
+			},
+			{
+				kCTParagraphStyleSpecifierLineHeightMultiple,
+				sizeof(CGFloat),
+				&nLineHeightMultiple
+			}
+		};
+		
+		// Create a paragraph style
+		CTParagraphStyleRef pStyle = CTParagraphStyleCreate(settings, nCntStyle);
+		
+		if( pStyle != NULL )
+		{
+         // Set attributed string properties
+         const GLuint nCntDict = 3;
+         
+         CFStringRef keys[nCntDict] =
+         {
+            kCTParagraphStyleAttributeName,
+            kCTFontAttributeName,
+            kCTForegroundColorAttributeName,
+         };
+         
+         CFTypeRef values[nCntDict] =
+         {
+            pStyle,
+            font,
+            pForegroundColor
+         };
+         
+         // Create a dictionary of attributes for our string
+         CFDictionaryRef pAttributes = CFDictionaryCreate(NULL,
+                                                          (const void **)&keys,
+                                                          (const void **)&values,
+                                                          nCntDict,
+                                                          &kCFTypeDictionaryKeyCallBacks,
+                                                          &kCFTypeDictionaryValueCallBacks);
+         
+         if( pAttributes != NULL )
+         {
+            // Creating a mutable attributed string
+            pAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
+            
+            if( pAttrString != NULL )
+            {
+               // Set a mutable attributed string with the input string
+               CFAttributedStringReplaceString(pAttrString, CFRangeMake(0, 0), pString);
+               
+               // Compute the mutable attributed string range
+               *pRange = CFRangeMake(0, CFAttributedStringGetLength(pAttrString));
+               
+               // Set the attributes
+               CFAttributedStringSetAttributes(pAttrString, *pRange, pAttributes, NO);
+            } // if
+            
+            CFRelease(pAttributes);
+         } // if
+         
+			CFRelease(pStyle);
+		} // if
+	} // if
+   
+   return pAttrString;
 } // CFMutableAttributedStringCreate
 
 #pragma mark -
@@ -590,6 +686,51 @@ static CGContextRef CGContextCreateFromString(CFStringRef pString,
     return pContext;
 } // CGContextCreateFromString
 
+// Create a bitmap context from a core foundation string, font,
+// justification, and font size
+static CGContextRef CGContextCreateFromString(CFStringRef pString,
+                                              CTFontRef font,
+                                              const CTTextAlignment nAlignment,
+                                              CGColorRef fgColor,
+                                              CGSize& rSize)
+{
+	CGContextRef pContext = NULL;
+	
+	if( pString != NULL )
+	{
+		// Get a generic linear RGB color space
+		CGColorSpaceRef pColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
+		
+		if( pColorspace != NULL )
+		{
+         // Creating a mutable attributed string
+         CFRange range;
+         
+         CFMutableAttributedStringRef pAttrString = CFMutableAttributedStringCreate(pString,
+                                                                                    font,
+                                                                                    fgColor,
+                                                                                    nAlignment,
+                                                                                    &range);
+         
+         if( pAttrString != NULL )
+         {
+            // Create a context from our attributed string
+            pContext = CGContextCreateFromAttributedString(pAttrString,
+                                                           range,
+                                                           pColorspace,
+                                                           rSize);
+            
+            CFRelease(pAttrString);
+         } // if
+         
+			CFRelease(pColorspace);
+		} // if
+	} // if
+	
+   return pContext;
+} // CGContextCreateFromString
+
+
 #pragma mark -
 #pragma mark Private - Utilities - OpenGL - Textures
 
@@ -661,6 +802,29 @@ static void GLTexture2DCreateFromString(GLuint texID,
     
 } // GLTexture2DCreateFromString
 
+void GLTexture2DCreateFromStringFontRef(GLuint texID,
+                                 CTFontRef font,
+                                 CFStringRef text,
+                                 const CTTextAlignment alignment,
+                                 CGColorRef fgColor,
+                                 CGSize& size)
+{
+   CGContextRef pCtx = CGContextCreateFromString(text,
+                                                 font,
+                                                 alignment,
+                                                 fgColor,
+                                                 size);
+   
+   if( pCtx != NULL )
+   {
+      GLTexture2DCreateFromContext(texID, pCtx);
+      
+      CGContextRelease(pCtx);
+   } // if
+   
+} // GLTexture2DCreateFromString
+
+
 void GLTexture2DString(GLuint      texID,
                        const std::string& font,
                        const std::string& text,
@@ -710,9 +874,27 @@ void GLTexture2DString(GLuint      texID,
          break;
    }
    
+   
    GLTexture2DCreateFromString(texID, pCFString, pFontCFString, nFontSize, ctalign, pColor, rSize);
    
    size.x = rSize.width;
    size.y = rSize.height;
 }
+
+void GLTexture2DStringFontRef(GLuint texID,
+                       CTFontRef font,
+                       CFStringRef text,
+                       const CTTextAlignment alignment,
+                       CGColorRef fgColor,
+                       glm::vec2& size)
+{
+   CGSize cgSize;
+   
+   //   GLTexture2DCreateFromStringFontRef(unsigned int, __CTFont const*, __CFString const*, unsigned char, CGColor*, CGSize&)
+   
+   GLTexture2DCreateFromStringFontRef(texID, font, text, alignment, fgColor, cgSize);
+   size.x = cgSize.width;
+   size.y = cgSize.height;
+}
+
 #endif

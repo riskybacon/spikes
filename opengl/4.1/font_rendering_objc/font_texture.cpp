@@ -35,9 +35,7 @@ FontTexture::FontTexture(const std::string& font, const std::string& text, float
 , _needsRefresh (true)
 {
    initGL();
-#if 0
    _impl = new FontTextureOSX(_id, font, text, pointSize, fgColor, align);
-#endif
    //   update();
 }
 
@@ -47,9 +45,7 @@ FontTexture::FontTexture(const std::string& font, const std::string& text, float
 FontTexture::~FontTexture()
 {
    freeGL();
-#if 0
    delete _impl;
-#endif
 }
 
 /**
@@ -84,8 +80,8 @@ void FontTexture::freeGL()
  */
 void FontTexture::update()
 {
-#if 1
-   GLTexture2DString(_id, _text, _font, _pointSize, _align, _fgColor, _texSize);
+#if 0
+   GLTexture2DStringFontRef(_id, _text, _font, _pointSize, _align, _fgColor, _texSize);
    // The texture is bound upon return from the function
    glGenerateMipmap(GL_TEXTURE_2D);
    _needsRefresh = false;
@@ -102,7 +98,7 @@ void FontTexture::update()
  */
 void FontTexture::setText(const std::string& text)
 {
-#if 1
+#if 0
    _text = text;
    _needsRefresh = true;
 #else
@@ -115,7 +111,7 @@ void FontTexture::setText(const std::string& text)
  */
 void FontTexture::setFont(const std::string& font)
 {
-#if 1
+#if 0
    _font = font;
    _needsRefresh = true;
 #else
@@ -128,7 +124,7 @@ void FontTexture::setFont(const std::string& font)
  */
 glm::vec2 FontTexture::getSize() const
 {
-#if 1
+#if 0
    return _texSize;
 #else
    return _impl->getSize();

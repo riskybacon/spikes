@@ -165,6 +165,7 @@ private:
    glm:: vec2       _texSize;      //< Size of texture in texels
    float           _lineSpacing;
    //{ OS X specific
+   
    CTTextAlignment              _align;           //< Alignment to use (right, center, justified, etc)
    CTFontRef                    _font;            //< The font face and point size
    CFStringRef                  _text;            //< Text to be displayed
@@ -187,6 +188,21 @@ void GLTexture2DString(GLuint texID,
                        const glm::vec4& color,
                        glm::vec2& size
                       );
+
+void GLTexture2DStringFontRef(GLuint      texID,
+                       CTFontRef font,
+                       CFStringRef text,
+                       const CTTextAlignment nAlignment,
+                       CGColorRef fgColor,
+                       glm::vec2& size
+                       );
+
+void GLTexture2DCreateFromStringFontRef(GLuint texID,
+                                        CTFontRef font,
+                                        CFStringRef text,
+                                        const CTTextAlignment alignment,
+                                        CGColorRef fgColor,
+                                        CGSize &rSize);
 
 
 #if 0
