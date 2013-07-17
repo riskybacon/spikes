@@ -305,8 +305,7 @@ void FontTextureOSX::createAttributedString()
    }
 }
 
-void FontTextureOSX::createAttributedString(const CTTextAlignment nAlignment,
-                                            CFRange *pRange)
+void FontTextureOSX::createAttributedString(CFRange *pRange)
 {
    if(_attrString != NULL)
    {
@@ -328,8 +327,8 @@ void FontTextureOSX::createAttributedString(const CTTextAlignment nAlignment,
 		{
 			{
 				kCTParagraphStyleSpecifierAlignment,
-				sizeof(nAlignment),
-				&nAlignment
+				sizeof(_align),
+				&_align
 			},
 			{
 				kCTParagraphStyleSpecifierLineHeightMultiple,
@@ -400,7 +399,7 @@ void FontTextureOSX::createAttributedString(const CTTextAlignment nAlignment,
  */
 void FontTextureOSX::update()
 {
-   createAttributedString(_align, &_attrRange);
+   createAttributedString(&_attrRange);
    GLTexture2DAttrString(_id, _attrString, _attrRange, _texSize);
    
 #if 0

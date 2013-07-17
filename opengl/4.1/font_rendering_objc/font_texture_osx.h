@@ -137,8 +137,7 @@ private:
     */
    void createAttributedString();
    
-   void createAttributedString(const CTTextAlignment nAlignment,
-                                                       CFRange *pRange);
+   void createAttributedString(CFRange *pRange);
 
    /**
     * @return a CTParagraphStyleRef structure. NULL if an error occurred during creation.
