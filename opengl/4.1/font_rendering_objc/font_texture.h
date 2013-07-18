@@ -140,7 +140,7 @@ private:
     * @return The CGContextRef that contains the bitmap data for the texture
     */
    //   CGContextRef createContext(CFMutableAttributedStringRef attributedString);
-   void createContext();
+   CGContextRef createContext();
 
    /**
     * Set the attributed string properties. This method should only be called
@@ -204,7 +204,9 @@ private:
    CGColorRef                   _fgColor;
    CGColorSpaceRef              _linearRGBColorspace;
    CFRange                      _attrRange;       //< Range of the string over which the attributes apply
+#if 0
    CGContextRef                 _ctx;
+#endif
    //}
 };
 

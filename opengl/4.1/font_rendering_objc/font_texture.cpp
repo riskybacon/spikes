@@ -33,10 +33,8 @@
  */
 FontTexture::FontTexture(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align)
 : _text(NULL)
-, _ctx(NULL)
 {
    initGL();
-   //   GLTexture2DString(id, font, text, pointSize, align, fgColor, _texSize);
 
    _linearRGBColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
    assert(_linearRGBColorspace != NULL);
@@ -167,13 +165,9 @@ void FontTexture::setFont(const std::string& fontNameSrc, float pointSize)
  *
  * @return The CGContextRef that contains the bitmap data for the texture
  */
-void FontTexture::createContext()
+CGContextRef FontTexture::createContext()
 {
-   if(_ctx != NULL)
-   {
-      _ctx = NULL;
-   }
-   
+   CGContextRef ctx = NULL;
 
    // Acquire a frame setter - this creates the set of lines needed to draw
    // the text string.
@@ -217,7 +211,7 @@ void FontTexture::createContext()
             size_t stride = sizeof(GLuint) * width;
             
             // Create bitmap context
-            _ctx = CGBitmapContextCreate(NULL,
+            ctx = CGBitmapContextCreate(NULL,
                                         width,
                                         height,
                                         8,
@@ -225,19 +219,19 @@ void FontTexture::createContext()
                                         _linearRGBColorspace,
                                         kCGImageAlphaPremultipliedLast);
             
-            if(_ctx != NULL)
+            if(ctx != NULL)
             {
                // Use this for vertical reflection
-               CGContextTranslateCTM(_ctx, 0.0, height);
-               CGContextScaleCTM(_ctx, 1.0, -1.0);
+               CGContextTranslateCTM(ctx, 0.0, height);
+               CGContextScaleCTM(ctx, 1.0, -1.0);
                
                // Previously, a path was created using the attributed string,
                // the path was added to the frame. Now, draw the frame
                // into the bitmap context
-               CTFrameDraw(frame, _ctx);
+               CTFrameDraw(frame, ctx);
                
                // Flush the context
-               CGContextFlush(_ctx);
+               CGContextFlush(ctx);
             }
             else
             {
@@ -254,6 +248,7 @@ void FontTexture::createContext()
       
       CFRelease(frameSetter);
    } // if
+   return ctx;
 }
 
 /**
@@ -346,16 +341,17 @@ void FontTexture::update()
    
    if(_attrString != NULL)
    {
-      createContext();
+      CGContextRef ctx;
+      ctx = createContext();
    
-      if(_ctx != NULL)
+      if(ctx != NULL)
       {
-         GLuint width  = GLuint(CGBitmapContextGetWidth(_ctx));
-         GLuint height = GLuint(CGBitmapContextGetHeight(_ctx));
+         GLuint width  = GLuint(CGBitmapContextGetWidth(ctx));
+         GLuint height = GLuint(CGBitmapContextGetHeight(ctx));
       
          _texSize = glm::vec2(width, height);
          
-         const GLvoid* data = CGBitmapContextGetData(_ctx);
+         const GLvoid* data = CGBitmapContextGetData(ctx);
 
          // Bind a texture with ID
          glBindTexture(GL_TEXTURE_2D, _id);
@@ -370,7 +366,7 @@ void FontTexture::update()
                       GL_RGBA,
                       GL_UNSIGNED_INT_8_8_8_8_REV,
                       data);
-         CGContextRelease(_ctx);
+         CGContextRelease(ctx);
       }
    }
 }
