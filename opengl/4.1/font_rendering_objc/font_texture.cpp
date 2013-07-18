@@ -34,9 +34,7 @@ FontTexture::FontTexture(const std::string& font, const std::string& text, float
 , _align        (align)
 , _needsRefresh (true)
 {
-   initGL();
-   _impl = new FontTextureOSX(_id, font, text, pointSize, fgColor, align);
-   //   update();
+   _impl = new FontTextureOSX(font, text, pointSize, fgColor, align);
 }
 
 /**
@@ -44,35 +42,12 @@ FontTexture::FontTexture(const std::string& font, const std::string& text, float
  */
 FontTexture::~FontTexture()
 {
-   freeGL();
    delete _impl;
 }
 
-/**
- * Initialize OpenGL resources
- */
-void FontTexture::initGL()
+GLuint FontTexture::getID() const
 {
-   glGenTextures(1, &_id);
-
-   glBindTexture(GL_TEXTURE_2D, _id);
-   //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-   //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   GL_ERR_CHECK();
-}
-
-/**
- * Free OpenGL resources
- */
-void FontTexture::freeGL()
-{
-   glDeleteTextures(1, &_id);
+   return _impl->getID();
 }
 
 /**
@@ -80,14 +55,7 @@ void FontTexture::freeGL()
  */
 void FontTexture::update()
 {
-#if 0
-   GLTexture2DStringFontRef(_id, _text, _font, _pointSize, _align, _fgColor, _texSize);
-   // The texture is bound upon return from the function
-   glGenerateMipmap(GL_TEXTURE_2D);
-   _needsRefresh = false;
-#else
    _impl->update();
-#endif
 }
 
 /**

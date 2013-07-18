@@ -72,11 +72,8 @@ public:
    /**
     * @return the OpenGL texture handle
     */
-   GLuint getID() const
-   {
-      return _id;
-   }
-   
+   GLuint getID() const;
+
    /**
     * @return size of texture map
     */
@@ -84,22 +81,11 @@ public:
    
 private:
    /**
-    * Initialize OpenGL resources
-    */
-   void initGL();
-   
-   /**
-    * Free OpenGL resources
-    */
-   void freeGL();
-
-   /**
     * Initialize implementation specific objects
     */
    void initImpl();
    
 private:
-   GLuint          _id;           //< Texture ID handle
    std::string     _font;         //< Name of the font
    std::string     _text;         //< Texture to render
    float           _pointSize;    //< Point size for the font

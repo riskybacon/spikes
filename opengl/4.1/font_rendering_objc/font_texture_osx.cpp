@@ -13,9 +13,6 @@
  * Constructor. This should be called after OpenGL has been initialized. The text
  * will be rendered to a bitmap, and an OpenGL texture map will be created and initialized.
  *
- * @param id
- *    OpenGL texture handle
- *
  * @param font
  *    Name of the font to use
  *
@@ -34,11 +31,11 @@
  * @param alignment
  *
  */
-FontTextureOSX::FontTextureOSX(GLuint id, const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align)
-: _id (id)
-, _text(NULL)
+FontTextureOSX::FontTextureOSX(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align)
+: _text(NULL)
 , _ctx(NULL)
 {
+   initGL();
    //   GLTexture2DString(id, font, text, pointSize, align, fgColor, _texSize);
 
    _linearRGBColorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
@@ -51,6 +48,38 @@ FontTextureOSX::FontTextureOSX(GLuint id, const std::string& font, const std::st
    setLineSpacing(1.0f);
    createAttributedString();
    update();
+}
+
+FontTextureOSX::~FontTextureOSX()
+{
+   freeGL();
+}
+
+/**
+ * Initialize OpenGL resources
+ */
+void FontTextureOSX::initGL()
+{
+   glGenTextures(1, &_id);
+   
+   glBindTexture(GL_TEXTURE_2D, _id);
+   //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+   //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   GL_ERR_CHECK();
+}
+
+/**
+ * Free OpenGL resources
+ */
+void FontTextureOSX::freeGL()
+{
+   glDeleteTextures(1, &_id);
 }
 
 /*
@@ -142,7 +171,6 @@ void FontTextureOSX::createContext()
 {
    if(_ctx != NULL)
    {
-      CGContextRelease(_ctx);
       _ctx = NULL;
    }
    
@@ -231,80 +259,6 @@ void FontTextureOSX::createContext()
 /**
  * Create an attributed string
  */
-#if 0
-void FontTextureOSX::createAttributedString()
-{
-   _attrString = NULL;
-
-   if(_text != NULL)
-   {
-      const CFIndex numParagraphSettings = 2;
-      
-      CTParagraphStyleSetting paragraphSettings[numParagraphSettings] =
-      {
-			{
-				kCTParagraphStyleSpecifierAlignment,
-				sizeof(_align),
-				&_align
-			},
-			{
-				kCTParagraphStyleSpecifierLineHeightMultiple,
-				sizeof(CGFloat),
-				&_lineSpacing,
-			}
-      };
-      
-      CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphSettings, numParagraphSettings);
-   
-      if(paragraphStyle != NULL && _font != NULL)
-      {
-         const CFIndex numAttrSettings = 3;
-         
-         CFStringRef keys[numAttrSettings] =
-         {
-            kCTParagraphStyleAttributeName,
-            kCTFontAttributeName,
-            kCTForegroundColorAttributeName,
-         };
-         
-         CFTypeRef values[numAttrSettings] =
-         {
-            paragraphStyle,
-            _font,
-            _fgColor,
-         };
-         
-         // Create a dictionary of attributes for our string
-         CFDictionaryRef attr = CFDictionaryCreate(NULL,
-                                                   (const void **)&keys,
-                                                   (const void **)&values,
-                                                   numAttrSettings,
-                                                   &kCFTypeDictionaryKeyCallBacks,
-                                                   &kCFTypeDictionaryValueCallBacks);
-         
-
-         if(attr != NULL)
-         {
-            // Creating a mutable attributed string
-            _attrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
-            
-            if(_attrString != NULL)
-            {
-               // Set a mutable attributed string with the input string
-               CFAttributedStringReplaceString(_attrString, CFRangeMake(0, 0), _text);
-               
-               // Compute the mutable attributed string range
-               _attrRange = CFRangeMake(0, CFAttributedStringGetLength(_attrString));
-               
-               // Set the attributes
-               CFAttributedStringSetAttributes(_attrString, _attrRange, attr, NO);
-            }
-         }
-      }
-   }
-}
-#endif
-
 void FontTextureOSX::createAttributedString()
 {
    if(_attrString != NULL)
@@ -336,17 +290,16 @@ void FontTextureOSX::createAttributedString()
 
 		if(paragraphStyle != NULL)
 		{
-         // Set attributed string properties
-         const GLuint nCntDict = 3;
+         const CFIndex numAttrSettings = 3;
          
-         CFStringRef keys[nCntDict] =
+         CFStringRef keys[numAttrSettings] =
          {
             kCTParagraphStyleAttributeName,
             kCTFontAttributeName,
             kCTForegroundColorAttributeName,
          };
          
-         CFTypeRef values[nCntDict] =
+         CFTypeRef values[numAttrSettings] =
          {
             paragraphStyle,
             _font,
@@ -354,19 +307,19 @@ void FontTextureOSX::createAttributedString()
          };
          
          // Create a dictionary of attributes for our string
-         CFDictionaryRef pAttributes = CFDictionaryCreate(NULL,
-                                                          (const void **)&keys,
-                                                          (const void **)&values,
-                                                          nCntDict,
-                                                          &kCFTypeDictionaryKeyCallBacks,
-                                                          &kCFTypeDictionaryValueCallBacks);
-         
-         if( pAttributes != NULL )
+         CFDictionaryRef attr = CFDictionaryCreate(NULL,
+                                                   (const void **)&keys,
+                                                   (const void **)&values,
+                                                   numAttrSettings,
+                                                   &kCFTypeDictionaryKeyCallBacks,
+                                                   &kCFTypeDictionaryValueCallBacks);
+
+         if(attr != NULL)
          {
             // Creating a mutable attributed string
             _attrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
             
-            if( _attrString != NULL )
+            if(_attrString != NULL)
             {
                // Set a mutable attributed string with the input string
                CFAttributedStringReplaceString(_attrString, CFRangeMake(0, 0), _text);
@@ -375,17 +328,13 @@ void FontTextureOSX::createAttributedString()
                _attrRange = CFRangeMake(0, CFAttributedStringGetLength(_attrString));
                
                // Set the attributes
-               CFAttributedStringSetAttributes(_attrString, _attrRange, pAttributes, NO);
-            } // if
-            
-            CFRelease(pAttributes);
-         } // if
-         
+               CFAttributedStringSetAttributes(_attrString, _attrRange, attr, NO);
+            }
+         }
 			CFRelease(paragraphStyle);
-		} // if
-	} // if
-   
-} // CFMutableAttributedStringCreate
+		}
+	}
+}
 
 
 /*
@@ -393,10 +342,6 @@ void FontTextureOSX::createAttributedString()
  */
 void FontTextureOSX::update()
 {
-   createAttributedString();
-   GLTexture2DAttrString(_id, _attrString, _attrRange, _texSize);
-   
-#if 0
    createAttributedString();
    
    if(_attrString != NULL)
@@ -428,9 +373,9 @@ void FontTextureOSX::update()
          CGContextRelease(_ctx);
       }
    }
-#endif
 }
 
+#if 0
 // Create an attributed string from a CF string, font, justification, and font size
 CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
                                                                     CTFontRef font,
@@ -783,3 +728,4 @@ void GLTexture2DStringFontRef(GLuint texID,
    size.x = cgSize.width;
    size.y = cgSize.height;
 }
+#endif

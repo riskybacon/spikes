@@ -43,7 +43,21 @@ public:
     * @param alignment
     *
     */
-   FontTextureOSX(GLuint id, const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align);
+   FontTextureOSX(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align);
+
+   /**
+    * Destructor
+    */
+   ~FontTextureOSX();
+   
+   /**
+    * @return the OpenGL texture handle
+    */
+   GLuint getID() const
+   {
+      return _id;
+   }
+   
 
    /**
     * Set alignment
@@ -105,6 +119,16 @@ public:
    void update();
    
 private:
+   /**
+    * Initialize OpenGL resources
+    */
+   void initGL();
+   
+   /**
+    * Free OpenGL resources
+    */
+   void freeGL();
+
    //{ OS X Specific functions
 
    /**
@@ -162,7 +186,7 @@ private:
 
 private:
    GLuint          _id;           //< Texture ID handle
-   glm:: vec2       _texSize;      //< Size of texture in texels
+   glm::vec2       _texSize;      //< Size of texture in texels
    CGFloat           _lineSpacing;
    //{ OS X specific
    
@@ -179,7 +203,7 @@ private:
    //}
 };
 
-
+#if 0
 void GLTexture2DString(GLuint texID,
                        const std::string& font,
                        const std::string& text,
@@ -211,7 +235,7 @@ CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString
                                                              CGColorRef pForegroundColor,
                                                              const CTTextAlignment nAlignment,
                                                              CFRange *pRange);
-
+#endif
 #if 0
 // Generate a texture from a c-string, using a font, at a size,
 // with an alignment and a color
