@@ -136,8 +136,6 @@ private:
     * without repeated calls to the aforementioned methods.
     */
    void createAttributedString();
-   
-   void createAttributedString(CFRange *pRange);
 
    /**
     * @return a CTParagraphStyleRef structure. NULL if an error occurred during creation.
@@ -165,7 +163,7 @@ private:
 private:
    GLuint          _id;           //< Texture ID handle
    glm:: vec2       _texSize;      //< Size of texture in texels
-   float           _lineSpacing;
+   CGFloat           _lineSpacing;
    //{ OS X specific
    
    CTTextAlignment              _align;           //< Alignment to use (right, center, justified, etc)
