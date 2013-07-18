@@ -32,15 +32,12 @@ configure_file (
 set(SOURCE_FILES
   main.cpp
   font_texture.cpp
-  font_texture_osx.cpp
   #coretext_opengl.mm
   ${OPENGL_COMMON_DIR}/shader.cpp
 )
 
 set(HEADER_FILES
   font_texture.h
-  font_texture_osx.h
-  #coretext_opengl.h
   ${OPENGL_COMMON_DIR}/opengl.h
   ${OPENGL_COMMON_DIR}/shader.h
 )

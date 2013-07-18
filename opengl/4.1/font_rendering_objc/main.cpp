@@ -128,7 +128,7 @@ void loadTexture()
    vec4 fgColor(1,1,0,1);
    vec4 bgColor(0,0,0,0);
    _align = TEXT_ALIGN_CENTER;
-   _fontTexture = new FontTexture(font, text, pointSize, fgColor, bgColor, _align);
+   _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align);
 }
 
 /**
