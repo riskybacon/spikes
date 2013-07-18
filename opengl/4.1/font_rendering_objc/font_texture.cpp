@@ -44,7 +44,6 @@ FontTexture::FontTexture(const std::string& font, const std::string& text, float
    setForegroundColor(fgColor);
    setAlign(align);
    setLineSpacing(1.0f);
-   createAttributedString();
    update();
 }
 
@@ -165,13 +164,13 @@ void FontTexture::setFont(const std::string& fontNameSrc, float pointSize)
  *
  * @return The CGContextRef that contains the bitmap data for the texture
  */
-CGContextRef FontTexture::createContext()
+CGContextRef FontTexture::createContext(CFMutableAttributedStringRef& attrString)
 {
    CGContextRef ctx = NULL;
 
    // Acquire a frame setter - this creates the set of lines needed to draw
    // the text string.
-   CTFramesetterRef frameSetter = CTFramesetterCreateWithAttributedString(_attrString);
+   CTFramesetterRef frameSetter = CTFramesetterCreateWithAttributedString(attrString);
    
    if(frameSetter != NULL)
    {
@@ -254,14 +253,9 @@ CGContextRef FontTexture::createContext()
 /**
  * Create an attributed string
  */
-void FontTexture::createAttributedString()
+void FontTexture::createAttributedString(CFMutableAttributedStringRef& attrString)
 {
-   if(_attrString != NULL)
-   {
-      CFRelease(_attrString);
-   }
-
-   _attrString = NULL;
+   attrString = NULL;
 	
 	if( _text != NULL )
 	{
@@ -312,18 +306,18 @@ void FontTexture::createAttributedString()
          if(attr != NULL)
          {
             // Creating a mutable attributed string
-            _attrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
+            attrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
             
-            if(_attrString != NULL)
+            if(attrString != NULL)
             {
                // Set a mutable attributed string with the input string
-               CFAttributedStringReplaceString(_attrString, CFRangeMake(0, 0), _text);
+               CFAttributedStringReplaceString(attrString, CFRangeMake(0, 0), _text);
                
                // Compute the mutable attributed string range
-               _attrRange = CFRangeMake(0, CFAttributedStringGetLength(_attrString));
+               _attrRange = CFRangeMake(0, CFAttributedStringGetLength(attrString));
                
                // Set the attributes
-               CFAttributedStringSetAttributes(_attrString, _attrRange, attr, NO);
+               CFAttributedStringSetAttributes(attrString, _attrRange, attr, NO);
             }
          }
 			CFRelease(paragraphStyle);
@@ -337,12 +331,13 @@ void FontTexture::createAttributedString()
  */
 void FontTexture::update()
 {
-   createAttributedString();
+   CFMutableAttributedStringRef attrString;
+   createAttributedString(attrString);
    
-   if(_attrString != NULL)
+   if(attrString != NULL)
    {
       CGContextRef ctx;
-      ctx = createContext();
+      ctx = createContext(attrString);
    
       if(ctx != NULL)
       {

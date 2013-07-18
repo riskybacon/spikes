@@ -140,7 +140,7 @@ private:
     * @return The CGContextRef that contains the bitmap data for the texture
     */
    //   CGContextRef createContext(CFMutableAttributedStringRef attributedString);
-   CGContextRef createContext();
+   CGContextRef createContext(CFMutableAttributedStringRef& attrString);
 
    /**
     * Set the attributed string properties. This method should only be called
@@ -164,7 +164,7 @@ private:
     * prior to calling this method. Once those methods have been called, this method can be called
     * without repeated calls to the aforementioned methods.
     */
-   void createAttributedString();
+   void createAttributedString(CFMutableAttributedStringRef& attrString);
 
    /**
     * @return a CTParagraphStyleRef structure. NULL if an error occurred during creation.
@@ -200,7 +200,9 @@ private:
    CFStringRef                  _text;            //< Text to be displayed
    CTParagraphStyleRef          _paragraphStyle;  //< Paragraph style (spacing, etc)
    CFDictionaryRef              _attributes;      //< Attributed string properties
+#if 0
    CFMutableAttributedStringRef _attrString;      //< String with attributes.
+#endif
    CGColorRef                   _fgColor;
    CGColorSpaceRef              _linearRGBColorspace;
    CFRange                      _attrRange;       //< Range of the string over which the attributes apply
