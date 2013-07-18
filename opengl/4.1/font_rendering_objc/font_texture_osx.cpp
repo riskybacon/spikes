@@ -334,7 +334,7 @@ void FontTextureOSX::createAttributedString()
 
       CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphSettings, numParagraphSettings);
 
-		if( paragraphStyle != NULL )
+		if(paragraphStyle != NULL)
 		{
          // Set attributed string properties
          const GLuint nCntDict = 3;
