@@ -124,9 +124,8 @@ void loadTexture()
 {
    std::string font = "Menlo";
    std::string text = "Time:";
-   float pointSize = 17.0f;
+   float pointSize = 250.0f;
    vec4 fgColor(1,1,0,1);
-   vec4 bgColor(0,0,0,0);
    _align = TEXT_ALIGN_CENTER;
    _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align);
 }
@@ -392,37 +391,21 @@ int render(double time)
       
       glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
       
-
       
       // Model matrix 
       glm::mat4 model = glm::mat4_cast(_objRot);
       
       // Create  model, view, projection matrix
-      glm::mat4 mvp   = projection * view * translate * model; // Remember, matrix multiplication is the other way around
+      glm::mat4 mvp   = projection * view * translate * model;
+
       // The texture size in terms of a percentage of window width and height
       glm::vec2 texSize = vec2(_fontTexture->getSize().x / _winWidth, _fontTexture->getSize().y / _winHeight);
 
-      // Half of the texture size - needed if text is centered
-      glm::vec2 texSizeHalf = texSize * 0.5f;
-      glm::vec2 lowerLeft;
+      // Move the texture down to the lower left, but then move it back up based on the
+      // size of the texture map
+      glm::vec2 textTrans = texSize - vec2(1,1);
       
-      switch(_align)
-      {
-         case TEXT_ALIGN_CENTER:
-            lowerLeft = texSizeHalf - vec2(1,1) + texSizeHalf;
-            break;
-            
-         case TEXT_ALIGN_LEFT:
-            lowerLeft = vec2(-1 + texSize.x, -1 + texSize.y);
-            break;
-            
-         default:
-            lowerLeft = vec2(0,0);
-            break;
-      }
-      
-      
-      mvp = glm::translate(glm::mat4(), vec3(lowerLeft,0)) *
+      mvp = glm::translate(glm::mat4(), vec3(textTrans,0)) *
            glm::scale(glm::mat4(), vec3(texSize.x, texSize.y, 1));
 
 

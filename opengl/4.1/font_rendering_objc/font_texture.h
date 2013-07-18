@@ -5,11 +5,17 @@
 #include <opengl.h>
 #include <string>
 #include <glm/glm.hpp>
-#include "font_texture.h"
 
+#ifdef __APPLE__
+// Apple specific includes
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
 #include <objc/objc.h>
+#endif
+
+#ifdef __WINDOWS__
+// Windows specific includes
+#endif
 
 enum TextAlign
 {
@@ -20,7 +26,7 @@ enum TextAlign
 };
 
 /**
- * OS X specific implementation for the Font Texture class
+ * Draw text onto a texture map
  */
 class FontTexture
 {
@@ -134,149 +140,43 @@ private:
     */
    void freeGL();
 
+#ifdef __APPLE__
    //{ OS X Specific functions
+   /**
+    * Creates a bitmap context that contains the rendered string. Result stored in
+    * private variable _ctx
+    */
+   void createContext();
 
    /**
-    * @return The CGContextRef that contains the bitmap data for the texture
-    */
-   //   CGContextRef createContext(CFMutableAttributedStringRef attributedString);
-   CGContextRef createContext(CFMutableAttributedStringRef& attrString);
-
-   /**
-    * Set the attributed string properties. This method should only be called
-    * after setFont(), setParagraphStyle() and setForegroundColor() have been called.
-    * The method should also be called after any subsequent calls to those methods.
-    */
-   void setAttributedStringProperties();
-
-   /**
-    * Create an attributed string. Call setFont(), setLineSpacing() and setAttributedStringProperties()
-    * prior to calling this method. Once those methods have been called, this method can be called
-    * without repeated calls to the aforementioned methods.
-    *
-    * @param text
-    *    The text to render
-    */
-   void createAttributedString(const std::string& text);
-   
-   /**
-    * Create an attributed string using existing text. Call setFont(), setLineSpacing() and setAttributedStringProperties()
+    * Create an attributed string using existing text. Call setFont(), setLineSpacing() and setText()
     * prior to calling this method. Once those methods have been called, this method can be called
     * without repeated calls to the aforementioned methods.
     */
-   void createAttributedString(CFMutableAttributedStringRef& attrString);
-
-   /**
-    * @return a CTParagraphStyleRef structure. NULL if an error occurred during creation.
-    */
-   CTParagraphStyleRef createParagraphStyle() const;
-
-   /**
-    * Create attributes for use in an attributed string
-    *
-    * @param paragraphStyle
-    *    The paragraph style to use for this string
-    *
-    * @param font
-    *    The font to use for this string
-    *
-    * @param fgColor
-    *    The foreground color to use for this string
-    *
-    * @return attributes for use in a attributed string
-    */
-   CFDictionaryRef createAttributes(CTParagraphStyleRef paragraphStyle, CTFontRef font, CGColorRef fgColor) const;
-
-   //CFMutableAttributedStringRef createAttributedString();
+   void createAttributedString();
+   //}
+#endif
 
 private:
-   GLuint          _id;           //< Texture ID handle
-   glm::vec2       _texSize;      //< Size of texture in texels
-   CGFloat           _lineSpacing;
+   GLuint            _id;           //< Texture ID handle
+   glm::vec2         _texSize;      //< Size of texture in texels
+
+#ifdef __APPLE__
    //{ OS X specific
-   
+   CGFloat                      _lineSpacing;
    CTTextAlignment              _align;           //< Alignment to use (right, center, justified, etc)
    CTFontRef                    _font;            //< The font face and point size
    CFStringRef                  _text;            //< Text to be displayed
-   CTParagraphStyleRef          _paragraphStyle;  //< Paragraph style (spacing, etc)
-   CFDictionaryRef              _attributes;      //< Attributed string properties
-#if 0
    CFMutableAttributedStringRef _attrString;      //< String with attributes.
-#endif
    CGColorRef                   _fgColor;
    CGColorSpaceRef              _linearRGBColorspace;
    CFRange                      _attrRange;       //< Range of the string over which the attributes apply
-#if 0
    CGContextRef                 _ctx;
-#endif
    //}
+#endif
+   
+#ifdef __WINDOWS__
+   HFONT _font;
+#endif
 };
-
-#if 0
-void GLTexture2DString(GLuint texID,
-                       const std::string& font,
-                       const std::string& text,
-                       const float nFontSize,
-                       TextAlign nAlignment,
-                       const glm::vec4& color,
-                       glm::vec2& size
-                      );
-
-void GLTexture2DStringFontRef(GLuint      texID,
-                       CTFontRef font,
-                       CFStringRef text,
-                       const CTTextAlignment nAlignment,
-                       CGColorRef fgColor,
-                       glm::vec2& size
-                       );
-
-void GLTexture2DAttrString(GLuint texID, CFMutableAttributedStringRef attrString, CFRange attrRange, glm::vec2& size);
-
-void GLTexture2DCreateFromStringFontRef(GLuint texID,
-                                        CTFontRef font,
-                                        CFStringRef text,
-                                        const CTTextAlignment alignment,
-                                        CGColorRef fgColor,
-                                        CGSize &rSize);
-
-CFMutableAttributedStringRef CFMutableAttributedStringCreate(CFStringRef pString,
-                                                             CTFontRef font,
-                                                             CGColorRef pForegroundColor,
-                                                             const CTTextAlignment nAlignment,
-                                                             CFRange *pRange);
-#endif
-#if 0
-// Generate a texture from a c-string, using a font, at a size,
-// with an alignment and a color
-GLuint GLTexture2DCreateFromString(const GLchar * const pString,
-								   const GLchar * const pFontName,
-								   const CGFloat nFontSize,
-								   const CTTextAlignment nAlignment,
-								   const CGFloat * const pColor,
-								   NSSize &rSize);
-
-// Generate a texture from a stl string, using a font, at a size,
-// with an alignment and a color
-GLuint GLTexture2DCreateFromString(const GLstring &rString,
-								   const GLstring &rFontName,
-								   const CGFloat nFontSize,
-								   const CTTextAlignment nAlignment,
-								   const CGFloat * const pColor,
-								   NSSize &rSize);
-
-// Generate a texture from a core foundation string, using a font,
-// at a size, with an alignment and a color
-GLuint GLTexture2DCreateFromString(CFStringRef pString,
-								   CFStringRef pFontName,
-								   const CGFloat nFontSize,
-								   const CTTextAlignment nAlignment,
-								   const CGFloat * const pColor,
-								   NSSize &rSize);
-
-// Generate a texture from a core foundation attributed string
-GLuint GLTexture2DCreateFromString(CFAttributedStringRef pAttrString,
-								   const CFRange &rRange,
-								   NSSize &rSize);
-#endif
-
 #endif
