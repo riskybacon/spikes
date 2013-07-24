@@ -178,6 +178,7 @@ private:
    float                  _lineSpacing;
    std::string            _fontName;
    std::string            _text;
+   glm::vec4              _fgColor;
    
    std::string            _filename;     //< filename that contains the font
    int                    _pointSize;    //< Point size for this font

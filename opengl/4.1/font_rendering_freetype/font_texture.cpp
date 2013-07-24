@@ -156,6 +156,7 @@ void FontTexture::setAlign(TextAlign align)
  */
 void FontTexture::setForegroundColor(const glm::vec4& fgColor)
 {
+   _fgColor = fgColor;
 }
 
 /*
@@ -214,7 +215,12 @@ void FontTexture::drawBitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y)
             std::cout << "continuing" << std::endl;
             continue;
          }
-         _data[j * _texWidth + i] |= bitmap->buffer[q * bitmap->width + p];
+         float val = (float)bitmap->buffer[q * bitmap->width + p];
+         
+         _data[j * _texWidth * 4 + i * 4 + 0] |= (unsigned char) (val * _fgColor.r);
+         _data[j * _texWidth * 4 + i * 4 + 1] |= (unsigned char) (val * _fgColor.g);
+         _data[j * _texWidth * 4 + i * 4 + 2] |= (unsigned char) (val * _fgColor.b);
+         _data[j * _texWidth * 4 + i * 4 + 3] |= (unsigned char) (val * _fgColor.a);
       }
    }
 }
@@ -366,9 +372,9 @@ void FontTexture::createBitmap(const std::string& text)
    }
    
    // Create the texture map
-   _data = new unsigned char[_texWidth * _texHeight];
+   _data = new unsigned char[_texWidth * _texHeight * 4];
    // Initialize texture map to zero
-   memset(_data, 0, _texWidth * _texHeight);
+   memset(_data, 0, _texWidth * _texHeight * 4);
    
    slot = _face->glyph;
    
@@ -422,7 +428,7 @@ void FontTexture::update()
 {
    createBitmap(_text);
    glBindTexture(GL_TEXTURE_2D, _id);
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _texWidth, _texHeight, 0, GL_RED, GL_UNSIGNED_BYTE, _data);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _texWidth, _texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, _data);
 
    _texSize = glm::vec2((float)_texWidth, (float)_texHeight);
 }
