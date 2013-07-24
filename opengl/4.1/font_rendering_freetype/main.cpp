@@ -9,9 +9,6 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <CoreFoundation/CoreFoundation.h>
-
-CFStringRef ref;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -19,6 +16,8 @@ CFStringRef ref;
 #include <glm/gtc/quaternion.hpp>
 
 #include "font_texture.h"
+#include "config.h"
+
 using namespace glm;
 using std::vector;
 
@@ -122,9 +121,10 @@ void initGLEW(void)
  */
 void loadTexture()
 {
-   std::string font = "Menlo";
+   std::string font = std::string(FONT_DIR) + "/AnonymousPro-1.002.001/Anonymous Pro.ttf";
+   std::cout << font << std::endl;
    std::string text = "Time:";
-   float pointSize = 250.0f;
+   float pointSize = 25.0f;
    vec4 fgColor(1,1,0,1);
    _align = TEXT_ALIGN_CENTER;
    _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align);

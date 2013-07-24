@@ -1,0 +1,13 @@
+// Values defined in CMakeLists.txt
+#ifndef _config_h
+#define _config_h
+
+#define GL_MAJOR @GL_MAJOR@
+#define GL_MINOR @GL_MINOR@
+#define SOURCE_DIR "@CMAKE_SOURCE_DIR@"
+#define PROJECT_BINARY_DIR "@PROJECT_BINARY_DIR@"
+#define SHADER_SOURCE_DIR "@SHADER_SOURCE_DIR@"
+#define FONT_DIR "@FONT_DIR@"
+
+#endif
+

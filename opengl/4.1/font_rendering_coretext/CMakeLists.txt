@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(PROJ_NAME font_rendering_objc)
+set(PROJ_NAME font_rendering_coretext)
 
 project(${PROJ_NAME})
 
