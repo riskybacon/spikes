@@ -127,7 +127,7 @@ void loadTexture()
    std::string font = std::string(FONT_DIR) + "/AnonymousPro-1.002.001/Anonymous Pro.ttf";
    std::cout << font << std::endl;
    std::string text = "Time:";
-   float pointSize = 18.0f;
+   float pointSize = 72.0f;
    vec4 fgColor(1,1,0,1);
    _align = TEXT_ALIGN_CENTER;
    _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align, _dpi);

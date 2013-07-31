@@ -1,0 +1,4 @@
+An example that uses the FontTexture object to display
+the frames per second 
+
+This uses the shadow_mapping example to show the frames per second

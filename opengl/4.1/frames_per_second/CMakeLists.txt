@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(PROJ_NAME font_rendering_freetype)
+set(PROJ_NAME frames_per_second)
 
 project(${PROJ_NAME})
 
@@ -11,11 +11,11 @@ project(${PROJ_NAME})
 # INCLUDE_PATH	Path to the include files
 include(${CMAKE_SOURCE_DIR}/PlatformSpecifics.cmake)
 
-set(OPENGL_COMMON_DIR
-  ${CMAKE_SOURCE_DIR}/../common
+set(SHADER_SOURCE_DIR
+  ${CMAKE_SOURCE_DIR}/../shader
 )
 
-set(INCLUDE_PATH ${INCLUDE_PATH} ${OPENGL_COMMON_DIR} ${PROJECT_BINARY_DIR})
+set(INCLUDE_PATH ${INCLUDE_PATH} ${SHADER_SOURCE_DIR} ${PROJECT_BINARY_DIR})
 
 # Set the include directories
 include_directories(${INCLUDE_PATH})
@@ -23,7 +23,6 @@ include_directories(${INCLUDE_PATH})
 # OpenGL core context version
 set (GL_MAJOR 3)
 set (GL_MINOR 2)
-set (FONT_DIR ${CMAKE_SOURCE_DIR}/../fonts)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/config.h.in"
@@ -32,20 +31,22 @@ configure_file (
 
 set(SOURCE_FILES
   main.cpp
-  font_texture.cpp
-  ${OPENGL_COMMON_DIR}/shader.cpp
+  ${SHADER_SOURCE_DIR}/font_texture.cpp
+  ${SHADER_SOURCE_DIR}/shader.cpp
 )
 
 set(HEADER_FILES
-  font_texture.h
-  ${OPENGL_COMMON_DIR}/opengl.h
-  ${OPENGL_COMMON_DIR}/shader.h
+  ${SHADER_SOURCE_DIR}/font_texture.h
+  ${SHADER_SOURCE_DIR}/shader.h
 )
 
 set(SHADER_FILES
-  texture.vsh
-  texture.fsh
+  flat.vsh
+  flat.fsh
+  shadow.vsh
+  shadow.fsh
 )
+
 
 # Add a target executable
 add_executable(${PROJ_NAME}
