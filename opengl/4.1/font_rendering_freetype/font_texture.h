@@ -1,6 +1,5 @@
-
-#ifndef _FONT_TEXTURE_OSX_H
-#define _FONT_TEXTURE_OSX_H
+#ifndef _FONT_TEXTURE_H
+#define _FONT_TEXTURE_H
 
 #include <opengl.h>
 #include <string>
@@ -49,7 +48,7 @@ public:
     * @param alignment
     *
     */
-   FontTexture(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align);
+   FontTexture(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align, const glm::vec2& dpi);
 
    /**
     * Destructor
@@ -92,6 +91,14 @@ public:
     */
    void setFont(const std::string& fontNameSrc, float pointSize);
    
+   /**
+    * Set the DPI of the target
+    */
+   void setDPI(const glm::vec2& dpi)
+   {
+      _dpi = dpi;
+   }
+
    /**
     * Set the line spacing
     *
@@ -179,9 +186,9 @@ private:
    std::string            _fontName;
    std::string            _text;
    glm::vec4              _fgColor;
-   
+   glm::vec2              _dpi;
    std::string            _filename;     //< filename that contains the font
-   int                    _pointSize;    //< Point size for this font
+   float                  _pointSize;    //< Point size for this font
    FT_Library             _library;      //< Font library object
    FT_Face                _face;         //< Font face object
    std::vector<FT_Glyph>  _glyphs;       //< Glyphs that make up a string

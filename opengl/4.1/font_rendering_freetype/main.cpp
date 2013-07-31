@@ -15,13 +15,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+
 #include "font_texture.h"
 #include "config.h"
 
 using namespace glm;
 using std::vector;
-
-#define _DEBUG
 
 #ifdef __APPLE__
 #  define GLFW_INCLUDE_GLCOREARB
@@ -59,6 +61,7 @@ vec2         _prevCurPos;      //< Previous cursor pos
 float        _sensitivity;     //< Sensitivity to mouse motion
 FontTexture* _fontTexture;
 TextAlign    _align;
+glm::vec2    _dpi;
 
 // Log file
 std::ofstream _log;	//< Log file
@@ -124,10 +127,10 @@ void loadTexture()
    std::string font = std::string(FONT_DIR) + "/AnonymousPro-1.002.001/Anonymous Pro.ttf";
    std::cout << font << std::endl;
    std::string text = "Time:";
-   float pointSize = 25.0f;
+   float pointSize = 18.0f;
    vec4 fgColor(1,1,0,1);
    _align = TEXT_ALIGN_CENTER;
-   _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align);
+   _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align, _dpi);
 }
 
 /**
@@ -354,8 +357,7 @@ int render(double time)
    try
    {
       std::stringstream ss;
-      int precision = time;
-
+      int precision = (int) time;
       
       std::stringstream wholeDigits;
       wholeDigits << (int) time;
@@ -419,7 +421,6 @@ int render(double time)
       
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, _fontTexture->getID());
-      
       GL_ERR_CHECK();
       
       // Draw the triangles
@@ -446,13 +447,29 @@ void close(GLFWwindow* window)
 }
 
 /**
+ * Get monitor characteristics
+ */
+void getMonitorMetrics()
+{
+   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+   const GLFWvidmode* vidmode = glfwGetVideoMode(monitor);
+   int width;
+   int height;
+
+   glfwGetMonitorPhysicalSize(monitor, &width, &height);
+
+   // Get the dots per inch. The width,height variables are in mm, so convert to inches
+   _dpi = vec2(vidmode->width * 25.4 / width , vidmode->height * 25.4 / height);
+}
+
+/**
  * Program entry point
  */
 int main(int argc, char* argv[])
 {
    int width = 1024; // Initial window width
    int height = 1024; // Initial window height
-   _sensitivity = M_PI / 360.0f;
+   _sensitivity = float(M_PI) / 360.0f;
    
    // Open up the log file
    std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
@@ -465,7 +482,9 @@ int main(int argc, char* argv[])
    {
       return EXIT_FAILURE;
    }
-   
+
+   getMonitorMetrics();
+
    // Request an OpenGL core profile context, without backwards compatibility
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
@@ -475,7 +494,7 @@ int main(int argc, char* argv[])
    glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE);
    
    // Create a windowed mode window and its OpenGL context
-   window = glfwCreateWindow(width, height, "Text Rendering with CoreText", NULL, NULL);
+   window = glfwCreateWindow(width, height, "Text Rendering with Freetype", NULL, NULL);
    if (!window)
    {
       fprintf(stderr, "Failed to open GLFW window\n");

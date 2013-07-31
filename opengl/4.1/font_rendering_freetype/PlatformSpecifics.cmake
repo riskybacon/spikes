@@ -76,7 +76,11 @@ find_package(OpenGL)
 find_path(GLFW_INCLUDE_DIR GLFW/glfw3.h ${HEADER_SEARCH_PATH})
 find_library(GLFW_LIBRARIES glfw3 ${LIBRARY_SEARCH_PATH})
 
-# Find freetype
+
+if(WIN32)
+  set( ENV{FREETYPE_DIR} "C:/Program Files (x86)/freetype" )
+endif(WIN32)
+
 find_package(Freetype)
 
 # Include directories for this project
@@ -85,6 +89,7 @@ set(INCLUDE_PATH
   ${GLFW_INCLUDE_DIR}
   ${FREETYPE_INCLUDE_DIRS}
 )
+
 
 # Libraries needed on all platforms for this project
 set(LIBRARIES
@@ -129,7 +134,7 @@ else(APPLE)
     ${HEADER_SEARCH_PATH}
   )
 
-  set(INCLUDE_PATH ${INCUDE_PATH}
+  set(INCLUDE_PATH ${INCLUDE_PATH}
     ${GLEW_INCLUDE_DIR} 
   )
 

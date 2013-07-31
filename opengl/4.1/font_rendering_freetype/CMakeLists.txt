@@ -11,6 +11,8 @@ project(${PROJ_NAME})
 # INCLUDE_PATH	Path to the include files
 include(${CMAKE_SOURCE_DIR}/PlatformSpecifics.cmake)
 
+message(WARNING "INCLUDE_PATH: ${INCLUDE_PATH}")
+
 set(OPENGL_COMMON_DIR
   ${CMAKE_SOURCE_DIR}/../common
 )

@@ -28,9 +28,10 @@
  * @param alignment
  *
  */
-FontTexture::FontTexture(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align)
+FontTexture::FontTexture(const std::string& font, const std::string& text, float pointSize, const glm::vec4& fgColor, TextAlign align, const glm::vec2& dpi)
 : _fontName(font)
 , _text(text)
+, _dpi(dpi)
 , _pointSize(pointSize)
 , _face(NULL)
 , _data(NULL)
@@ -95,7 +96,6 @@ void FontTexture::initGL()
    
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   GL_ERR_CHECK();
 }
 
 /*
@@ -182,8 +182,13 @@ void FontTexture::setFont(const std::string& fontName, float pointSize)
    FT_ASSERT(FT_New_Face(_library, _fontName.c_str(), 0, &_face));
    
    // Set the character size at 100dpi
-   FT_ASSERT(FT_Set_Char_Size(_face, _pointSize * 64, 0, 100, 0));
-   
+   FT_F26Dot6 charWidth = (FT_F26Dot6) _pointSize * 64;
+   FT_F26Dot6 charHeight = 0;
+
+ 
+   FT_ASSERT(FT_Set_Char_Size(_face, charWidth, charHeight, (FT_UInt)_dpi.x, (FT_UInt)_dpi.y));
+
+ 
    // Check to see if this font has kerning. If so, use it.
    _useKerning = FT_HAS_KERNING(_face);
 }
