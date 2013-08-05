@@ -380,6 +380,7 @@ int render(double time)
       // Clear the color and depth buffers
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
+#if 0
       // Projection matrix
       glm::mat4 projection = glm::perspective(45.0f,                                // 45 degree field of view
                                               float(_winWidth) / float(_winHeight), // Ratio
@@ -399,6 +400,7 @@ int render(double time)
       
       // Create  model, view, projection matrix
       glm::mat4 mvp   = projection * view * translate * model;
+#endif
 
       // The texture size in terms of a percentage of window width and height
       glm::vec2 texSize = vec2(_fontTexture->getSize().x / _winWidth, _fontTexture->getSize().y / _winHeight);
@@ -407,7 +409,7 @@ int render(double time)
       // size of the texture map
       glm::vec2 textTrans = texSize - vec2(1,1);
       
-      mvp = glm::translate(glm::mat4(), vec3(textTrans,0)) *
+      glm::mat4 mvp = glm::translate(glm::mat4(), vec3(textTrans,0)) *
            glm::scale(glm::mat4(), vec3(texSize.x, texSize.y, 1));
 
 

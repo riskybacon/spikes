@@ -3,11 +3,12 @@
 //
 // Author: Jeff Bowles <jbowles@riskybacon.com>
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <sstream>
+#include <iomanip>
+#include <utility>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -20,6 +21,7 @@
 using namespace glm;
 using std::vector;
 using std::string;
+using std::make_pair;
 
 // Comment this out to turn GL_ERR_CHECK into a no-op
 //#define _DEBUG
@@ -36,8 +38,10 @@ using std::string;
 #endif
 
 #include <shader.h>
+#include <font_texture.h>
 #include <GLFW/glfw3.h>
 #include "config.h"
+#include "rrd.h"
 
 // Global variables have an underscore prefix.
 
@@ -46,6 +50,7 @@ enum VAO_OBJECTS
 {
    QUAD_FLAT = 0,
    QUAD_SHADED,
+   QUAD_TEXTURED,
    TORUS_SHADED,
    TORUS_POINTS,
    TORUS_LINES,
@@ -76,10 +81,12 @@ enum OBJ_TO_ROTATE
 
 OBJ_TO_ROTATE _objToRotate;
 
-std::vector<GLuint> _vao; //< Vertex array object handles
+std::vector<GLuint> _vao;          //< Vertex array object handles
+std::vector<GLsizei> _vaoElements; //< Number of elements to draw in a VAO
 
 GL::Program* _shadowProgram;       //< Shader program that performs shadow mapping
 GL::Program* _flatProgram;         //< Shader program that performs no shading - all fragment get the same color
+GL::Program* _texProgram;          //< Shader program that performs texture mapping - no shading
 
 glm::mat4    _projection;          //< Camera projection matrix
 
@@ -92,17 +99,10 @@ std::string  _shadowFragFile;      //< Shadow mapping fragment shader
 std::string  _flatVertFile;        //< Flat vertex shader
 std::string  _flatFragFile;        //< Flat fragment shader
 
+std::string  _texVertFile;         //< Texture mapping vertex shader
+std::string  _texFragFile;         //< Texture mapping fragment shader
+
 bool         _tracking;            //< True if mouse location is being tracked
-
-// Data for quad
-vector<vec4> _posQuad;             //< Position data
-vector<vec4> _normalsQuad;         //< Normal data
-vector<vec2> _tcQuad;              //< Texture coordinate data
-
-// Number of points in torus
-int          _numTorusPoints;
-int          _numTorusTriIdx;
-int          _numTorusLinesIdx;
 
 // Window size
 int          _winWidth;            //< Width of the window
@@ -123,6 +123,16 @@ GLuint       _fboTextures[2];      //< FBO related textures
 GLuint       _renderbuffer;        //< Render buffer handle
 int          _fboWidth;            //< Width of the FBO textures
 int          _fboHeight;           //< Height of the FBO textures
+vec2         _texmapScale;         //< 1.0f / width and height of texture map
+
+// Frames per second tracking
+float        _fps;                 //< Frames per second
+float        _numFrames;           //< Number of frames since last update
+double       _lastFPSUpdate;       //< Time of last update in seconds
+TextAlign    _align;               //< Text alignment
+FontTexture* _fontTexture;         //< Font texture that has the FPS
+
+glm::vec2    _dpi;                 //< Dots per inch for the screen.
 
 // Log file
 std::ofstream _log;	//< Log file
@@ -130,7 +140,7 @@ std::ofstream _log;	//< Log file
 enum FBOTextures
 {
    DEPTH = 0,
-   RGBA  = 1
+   NUM_FBO_TEXTURES
 };
 
 /**
@@ -154,6 +164,7 @@ void terminate(int exitCode)
 {
    glDeleteVertexArrays(NUM_VAO_OBJECTS, &_vao[0]);
    glDeleteBuffers(NUM_BUFFER_OBJECTS, &_buffers[0]);
+   glDeleteTextures(NUM_FBO_TEXTURES, &_fboTextures[0]);
    glfwTerminate();
    
    exit(exitCode);
@@ -222,10 +233,13 @@ void createFBO(void)
    {
       _fboWidth = 256;
       _fboHeight = 256;
-      glGenTextures(2, _fboTextures);
+      
+      _texmapScale = vec2(1.0f / _fboWidth, 1.0f / _fboHeight);
+      
+      glGenTextures(NUM_FBO_TEXTURES, _fboTextures);
       GL_ERR_CHECK();
       
-      for(int i = 0; i < 2; ++i)
+      for(int i = 0; i < NUM_FBO_TEXTURES; ++i)
       {
          if(_fboTextures[i] <= 0)
          {
@@ -234,25 +248,16 @@ void createFBO(void)
       }
       
       //------------------------------------------------------------------------------------------
-      // Set up the RGBA texture for the rendered image
-      //------------------------------------------------------------------------------------------
-      glBindTexture(GL_TEXTURE_2D, _fboTextures[RGBA]);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _fboWidth, _fboHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-      GL_ERR_CHECK();
-      
-      //------------------------------------------------------------------------------------------
       // Set up the texture to hold depth data
       //------------------------------------------------------------------------------------------
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
       glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _fboWidth, _fboHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
       GL_ERR_CHECK();
       
       //------------------------------------------------------------------------------------------
@@ -265,11 +270,13 @@ void createFBO(void)
       //------------------------------------------------------------------------------------------
       // Attach textures and renderbuffer to FBO
       //------------------------------------------------------------------------------------------
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _fboTextures[RGBA], 0);
       // Attach depth texture to the FBO
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _fboTextures[DEPTH], 0);
       GL_ERR_CHECK();
-      
+
+      glDrawBuffer(GL_NONE);
+      glReadBuffer(GL_NONE);
+
       fboStatus();
       GL_ERR_CHECK();
       
@@ -414,10 +421,6 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
       }
    }
    
-   _numTorusPoints = pos.size();
-   _numTorusTriIdx = triIdx.size();
-   _numTorusLinesIdx = linesIdx.size();
-
    //
    // Set up torus buffers for position, normals, texture coordinates, and element array indices
    // for wireframe and triangles
@@ -437,6 +440,7 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_LINES_IDX]);
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, linesIdx.size() * sizeof(GLuint), &linesIdx[0], GL_STATIC_DRAW);
 
+   
    //
    // Point cloud torus
    //
@@ -444,7 +448,8 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
    glBindBuffer(GL_ARRAY_BUFFER, _buffers[TORUS_POS]);
    glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
-
+   _vaoElements[TORUS_POINTS] = pos.size();
+   
    //
    // Wireframe torus
    //
@@ -455,6 +460,7 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
    glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
    
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_LINES_IDX]);
+   _vaoElements[TORUS_LINES] = linesIdx.size();
    
 
    //
@@ -475,7 +481,8 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
    glEnableVertexAttribArray(_shadowProgram->getAttribLocation("tc"));
    
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_TRI_IDX]);
-
+   _vaoElements[TORUS_SHADED] = triIdx.size();
+   
    //
    // Flat shaded torus
    //
@@ -486,6 +493,7 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
    glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
    
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _buffers[TORUS_TRI_IDX]);
+   _vaoElements[TORUS_FLAT] = triIdx.size();
 }
 
 /**
@@ -493,60 +501,98 @@ void createTorus(int numc, int numt, double radiusInner = 2, double radiusOuter 
  */
 void createQuad()
 {
+   GLint attribLoc;
+
    // Create a quad
-   _posQuad.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
-   _posQuad.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
-   _posQuad.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
-   _posQuad.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
+   std::vector<glm::vec4> pos;
+   std::vector<glm::vec4> normals;
+   std::vector<glm::vec2> tc;
    
-   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-   _normalsQuad.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   pos.push_back(glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
+   pos.push_back(glm::vec4( 1.0f, -1.0f, 0.0f, 1.0f));
+   pos.push_back(glm::vec4(-1.0f,  1.0f, 0.0f, 1.0f));
+   pos.push_back(glm::vec4( 1.0f,  1.0f, 0.0f, 1.0f));
    
-   _tcQuad.push_back(glm::vec2(0.0f, 0.0f));
-   _tcQuad.push_back(glm::vec2(1.0f, 0.0f));
-   _tcQuad.push_back(glm::vec2(0.0f, 1.0f));
-   _tcQuad.push_back(glm::vec2(1.0f, 1.0f));
+   normals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   normals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   normals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   normals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+   
+   tc.push_back(glm::vec2(0.0f, 0.0f));
+   tc.push_back(glm::vec2(1.0f, 0.0f));
+   tc.push_back(glm::vec2(0.0f, 1.0f));
+   tc.push_back(glm::vec2(1.0f, 1.0f));
 
    // Load buffer data for positions, normals and texture coordinates
    glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-   glBufferData(GL_ARRAY_BUFFER, _posQuad.size()     * sizeof(glm::vec4), &_posQuad[0],     GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, pos.size()     * sizeof(glm::vec4), &pos[0],     GL_STATIC_DRAW);
    GL_ERR_CHECK();
    
    glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
-   glBufferData(GL_ARRAY_BUFFER, _normalsQuad.size() * sizeof(glm::vec4), &_normalsQuad[0], GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec4), &normals[0], GL_STATIC_DRAW);
    GL_ERR_CHECK();
    
    glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
-   glBufferData(GL_ARRAY_BUFFER, _tcQuad.size()      * sizeof(glm::vec2), &_tcQuad[0],      GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, tc.size()      * sizeof(glm::vec2), &tc[0],      GL_STATIC_DRAW);
    GL_ERR_CHECK();
 
    //
-   // Set up VAO for flat shaded quads, no texture coords, no normals
+   // Set up VAOs
    //
-   glBindVertexArray(_vao[QUAD_FLAT]);
+   std::vector<std::pair<VAO_OBJECTS, GL::Program*> > vaoList;
+   vaoList.push_back(make_pair(QUAD_SHADED,   _shadowProgram));
+   vaoList.push_back(make_pair(QUAD_TEXTURED, _texProgram));
+   vaoList.push_back(make_pair(QUAD_FLAT,     _flatProgram));
    
-   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-   glVertexAttribPointer(_flatProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(_flatProgram->getAttribLocation("vertex"));
+   for(auto vao : vaoList)
+   {
+      //
+      // Set up VAO for shaded quads, with texture coords and normals
+      //
+      glBindVertexArray(_vao[vao.first]);
    
-   //
-   // Set up VAO for shaded quads, with texture coords and normals
-   //
-   glBindVertexArray(_vao[QUAD_SHADED]);
+      attribLoc = vao.second->getAttribLocation("vertex");
+      if(attribLoc >= 0)
+      {
+         glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
+         glVertexAttribPointer(attribLoc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+         glEnableVertexAttribArray(attribLoc);
+      }
    
-   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_POS]);
-   glVertexAttribPointer(_shadowProgram->getAttribLocation("vertex"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("vertex"));
+      attribLoc = vao.second->getAttribLocation("normal");
+      if(attribLoc >= 0)
+      {
+         glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
+         glVertexAttribPointer(attribLoc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+         glEnableVertexAttribArray(attribLoc);
+      }
    
-   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_NORMAL]);
-   glVertexAttribPointer(_shadowProgram->getAttribLocation("normal"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("normal"));
-   
-   glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
-   glVertexAttribPointer(_shadowProgram->getAttribLocation("tc"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(_shadowProgram->getAttribLocation("tc"));
+      attribLoc = vao.second->getAttribLocation("tc");
+
+      if(attribLoc >= 0)
+      {
+         glBindBuffer(GL_ARRAY_BUFFER, _buffers[QUAD_TC]);
+         glVertexAttribPointer(attribLoc, 2, GL_FLOAT, GL_FALSE, 0, 0);
+         glEnableVertexAttribArray(attribLoc);
+      }
+      _vaoElements[vao.first] = pos.size();
+   }
+}
+
+/**
+ * Load font texture map
+ */
+void loadFontTexture()
+{
+   std::string font;
+   font = std::string(FONT_DIR) + "/AnonymousPro-1.002.001/Anonymous Pro.ttf";
+   //   font = std::string(FONT_DIR) + "/Minecraftia.ttf";
+   font = std::string(FONT_DIR) + "/Lato-Regular.ttf";
+   std::string text = "fps: calculating...";
+   float pointSize = 18.0f;
+   vec4 fgColor(1,1,1,1);
+   _align = TEXT_ALIGN_CENTER;
+   _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align, _dpi);
 }
 
 /**
@@ -590,6 +636,7 @@ void init(void)
    {
       initGLEW();
       createFBO();
+      loadFontTexture();
       
       _occluderRot = quat(vec3(0, 0, 0));
       _receiverRot = quat(vec3(M_PI / 2, 0, 0));
@@ -601,11 +648,16 @@ void init(void)
       _flatVertFile     = std::string(SOURCE_DIR) + "/flat.vsh";
       _flatFragFile     = std::string(SOURCE_DIR) + "/flat.fsh";
       
+      _texVertFile      = std::string(SOURCE_DIR) + "/texture.vsh";
+      _texFragFile      = std::string(SOURCE_DIR) + "/texture.fsh";
+      
       _shadowProgram = new GL::Program(_shadowVertexFile, _shadowFragFile);
       _flatProgram   = new GL::Program(_flatVertFile,     _flatFragFile);
+      _texProgram    = new GL::Program(_texVertFile, _texFragFile);
       
       // Generate handles for vertex array objects
       _vao.resize(NUM_VAO_OBJECTS, 0);
+      _vaoElements.resize(NUM_VAO_OBJECTS, 0);
       glGenVertexArrays(NUM_VAO_OBJECTS, &_vao[0]);
       
       // Generate handles for buffers
@@ -757,6 +809,85 @@ void close(GLFWwindow* window)
 }
 
 /**
+ * Update the frames per second counter
+ *
+ * @param time
+ *    time elapsed in seconds
+ */
+void updateFPS(double time)
+{
+   _numFrames++;
+   
+   // Update frames per second every 5 seconds
+   if(_lastFPSUpdate + 5 < time)
+   {
+      _fps = float(_numFrames) / (time - _lastFPSUpdate);
+      _numFrames = 0;
+      _lastFPSUpdate = time;
+   
+      std::stringstream ss;
+      int precision = (int) _fps;
+      
+      std::stringstream wholeDigits;
+      wholeDigits << (int) _fps;
+      
+      precision = wholeDigits.str().length() + 1;
+      
+      ss << "fps: " << std::setprecision(precision) << " " << _fps;
+      
+      int len = ss.str().length();
+      
+      if(ss.str()[len - 2] != '.')
+      {
+         ss << ".0";
+      }
+      
+      _fontTexture->setText(ss.str());
+      _fontTexture->update();
+   }
+
+}
+
+/**
+ * Draw frames per second
+ */
+void drawSceneInfo(double time)
+{
+   updateFPS(time);
+   
+   // The texture size in terms of a percentage of window width and height
+   glm::vec2 texSize = vec2(_fontTexture->getSize().x / _winWidth, _fontTexture->getSize().y / _winHeight);
+   
+   // Move the texture down to the lower left, but then move it back up based on the
+   // size of the texture map
+   glm::vec2 textTrans = texSize - vec2(0.99,0.99);
+   
+   glm::mat4 mvp = glm::translate(glm::mat4(), vec3(textTrans,0)) *
+   glm::scale(glm::mat4(), vec3(texSize.x, texSize.y, 1));
+   
+   // Use the shader program that was loaded, compiled and linked
+   GL::Program* program = _texProgram;
+   
+   program->bind();
+   GL_ERR_CHECK();
+   
+   // Set the MVP uniform
+   program->setUniform("mvp", mvp);
+   
+   glActiveTexture(GL_TEXTURE0);
+   glBindTexture(GL_TEXTURE_2D, _fontTexture->getID());
+   GL_ERR_CHECK();
+   
+   // Draw the triangles
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+   glBindVertexArray(_vao[QUAD_TEXTURED]);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); //_vaoElements[QUAD_SHADED]);
+   glDisable(GL_BLEND);
+   GL_ERR_CHECK();
+
+}
+/**
  * Main loop
  * @param time    time elapsed in seconds since the start of the program
  */
@@ -765,7 +896,6 @@ int render(double time)
    try
    {
       glClearDepth(1.0f);
-      
       mat4 translate;
       mat4 scale;
       mat4 mvp;
@@ -794,7 +924,7 @@ int render(double time)
       glm::mat4 lightProj = glm::perspective(45.0f,                        // 45 degree field of view
                                              float(_winWidth) / float(_winHeight), // Ratio
                                              0.1f,                         // Near clip
-                                             1000.0f);                     // Far clip
+                                             50.0f);                     // Far clip
       
       //----------------------------------------
       // Draw the occluding surface, flat shaded
@@ -817,7 +947,7 @@ int render(double time)
       
       // Draw the occluding surface
       glBindVertexArray(_vao[TORUS_FLAT]);
-      glDrawElements(GL_TRIANGLES, _numTorusTriIdx, GL_UNSIGNED_INT, NULL);
+      glDrawElements(GL_TRIANGLES, _vaoElements[TORUS_FLAT], GL_UNSIGNED_INT, NULL);
       GL_ERR_CHECK();
       
       // Set up modle, view, projection matrix for the receiving surface
@@ -836,9 +966,9 @@ int render(double time)
       // Draw occluding surface. Use the same vertex array object as the previous surface - they're both
       // the same shape, just different position, rotation and scale
       glBindVertexArray(_vao[QUAD_FLAT]);
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, _vaoElements[QUAD_FLAT]);
       GL_ERR_CHECK();
-      
+
       //----------------------------------------------------------------------------------------------------
       // Draw pass from camera's point of view
       //----------------------------------------------------------------------------------------------------
@@ -858,30 +988,30 @@ int render(double time)
       
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-      
+
       // Bind the shader program that will draw the shadows and do some simple shading
       _shadowProgram->bind();
       _shadowProgram->setUniform("mvp",           mvp);
-      _shadowProgram->setUniform("worldLightPos", lightPos);
-      _shadowProgram->setUniform("view",          view);
-      _shadowProgram->setUniform("model",         modelOccluder);
       _shadowProgram->setUniform("depthMap",      0);
       _shadowProgram->setUniform("toShadowTex",   toShadowTex0);
+            
       glBindVertexArray(_vao[TORUS_SHADED]);
-      glDrawElements(GL_TRIANGLES, _numTorusTriIdx, GL_UNSIGNED_INT, NULL);
+      glDrawElements(GL_TRIANGLES, _vaoElements[TORUS_SHADED], GL_UNSIGNED_INT, NULL);
+
       GL_ERR_CHECK();
       
       mvp        = _projection * view * modelReceiver;
 
       _shadowProgram->bind();
       _shadowProgram->setUniform("mvp",         mvp);
-      _shadowProgram->setUniform("model",       modelReceiver);
       _shadowProgram->setUniform("toShadowTex", toShadowTex1);
       
       // Draw the receiving surface
       glBindVertexArray(_vao[QUAD_SHADED]);
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, _posQuad.size());
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, _vaoElements[QUAD_SHADED]);
       GL_ERR_CHECK();
+
+      drawSceneInfo(time);
    }
    catch (std::runtime_error exception)
    {
@@ -890,6 +1020,22 @@ int render(double time)
    }
    
    return GL_TRUE;
+}
+
+/**
+ * Get monitor characteristics
+ */
+void getMonitorMetrics()
+{
+   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+   const GLFWvidmode* vidmode = glfwGetVideoMode(monitor);
+   int width;
+   int height;
+   
+   glfwGetMonitorPhysicalSize(monitor, &width, &height);
+   
+   // Get the dots per inch. The width,height variables are in mm, so convert to inches
+   _dpi = vec2(vidmode->width * 25.4 / width , vidmode->height * 25.4 / height);
 }
 
 /**
@@ -902,7 +1048,8 @@ int main(int argc, char* argv[])
    _sensitivity = float(M_PI) / 360.0f;
    _objToRotate = ROTATE_OCCLUDER;
    _eye = vec4(0.0f, 0.0f, 2.0f, 1.0f);
-   
+   _fps = 0;
+   _lastFPSUpdate = 0;
    // Open up the log file
    std::string logFile = std::string(PROJECT_BINARY_DIR) + "/log.txt";
    _log.open(logFile.c_str());
@@ -914,6 +1061,9 @@ int main(int argc, char* argv[])
    {
       return EXIT_FAILURE;
    }
+   glfwSwapInterval(0);
+   
+   getMonitorMetrics();
    
    // Request an OpenGL core profile context, without backwards compatibility
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
@@ -945,7 +1095,6 @@ int main(int argc, char* argv[])
    glfwSetWindowSizeCallback(window,  resize);
    glfwSetWindowCloseCallback(window, close);
    glfwSetCursorPosCallback(window,   cursorPos);
-   
    // Make the window's context current
    glfwMakeContextCurrent(window);
    

@@ -178,8 +178,16 @@ void FontTexture::setFont(const std::string& fontName, float pointSize)
       FT_Done_Face(_face);
    }
    
-   // Create face object
-   FT_ASSERT(FT_New_Face(_library, _fontName.c_str(), 0, &_face));
+   try
+   {
+      // Create face object
+      FT_ASSERT(FT_New_Face(_library, _fontName.c_str(), 0, &_face));
+   }
+   catch(std::runtime_error err)
+   {
+      std::cerr << "Could not open file " << _fontName << ": " << err.what();
+      exit(1);
+   }
    
    // Set the character size at 100dpi
    FT_F26Dot6 charWidth = (FT_F26Dot6) _pointSize * 64;
@@ -221,11 +229,14 @@ void FontTexture::drawBitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y)
             continue;
          }
          float val = (float)bitmap->buffer[q * bitmap->width + p];
-         
-         _data[j * _texWidth * 4 + i * 4 + 0] |= (unsigned char) (val * _fgColor.r);
-         _data[j * _texWidth * 4 + i * 4 + 1] |= (unsigned char) (val * _fgColor.g);
-         _data[j * _texWidth * 4 + i * 4 + 2] |= (unsigned char) (val * _fgColor.b);
-         _data[j * _texWidth * 4 + i * 4 + 3] |= (unsigned char) (val * _fgColor.a);
+
+         if(val > 0)
+         {
+            _data[j * _texWidth * 4 + i * 4 + 0] |= (unsigned char) _fgColor.r * 255;
+            _data[j * _texWidth * 4 + i * 4 + 1] |= (unsigned char) _fgColor.g * 255;
+            _data[j * _texWidth * 4 + i * 4 + 2] |= (unsigned char) _fgColor.b * 255;
+            _data[j * _texWidth * 4 + i * 4 + 3] |= (unsigned char) (val * _fgColor.a);
+         }
       }
    }
 }

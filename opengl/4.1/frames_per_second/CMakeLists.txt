@@ -25,6 +25,8 @@ include_directories(${INCLUDE_PATH})
 set (GL_MAJOR 3)
 set (GL_MINOR 2)
 
+set (FONT_DIR ${CMAKE_SOURCE_DIR}/../fonts)
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/config.h.in"
   "${PROJECT_BINARY_DIR}/config.h"
@@ -46,6 +48,8 @@ set(SHADER_FILES
   flat.fsh
   shadow.vsh
   shadow.fsh
+  texture.vsh
+  texture.fsh
 )
 
 
