@@ -41,7 +41,6 @@ using std::make_pair;
 #include <font_texture.h>
 #include <GLFW/glfw3.h>
 #include "config.h"
-#include "rrd.h"
 
 // Global variables have an underscore prefix.
 
@@ -231,8 +230,8 @@ void createFBO(void)
    GL_ERR_CHECK();
    try
    {
-      _fboWidth = 256;
-      _fboHeight = 256;
+      _fboWidth = 512;
+      _fboHeight = 512;
       
       _texmapScale = vec2(1.0f / _fboWidth, 1.0f / _fboHeight);
       
@@ -254,8 +253,8 @@ void createFBO(void)
       glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _fboWidth, _fboHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
       GL_ERR_CHECK();
@@ -590,7 +589,7 @@ void loadFontTexture()
    font = std::string(FONT_DIR) + "/Lato-Regular.ttf";
    std::string text = "fps: calculating...";
    float pointSize = 18.0f;
-   vec4 fgColor(1,1,1,1);
+   vec4 fgColor(1,1,0,1);
    _align = TEXT_ALIGN_CENTER;
    _fontTexture = new FontTexture(font, text, pointSize, fgColor, _align, _dpi);
 }
@@ -921,10 +920,10 @@ int render(double time)
       
       // Set up the light's view and projection matrices
       glm::mat4 lightView = glm::lookAt(vec3(lightPos.x, lightPos.y, lightPos.z), vec3(0, 0, 0), vec3(0, 0, 1));
-      glm::mat4 lightProj = glm::perspective(45.0f,                        // 45 degree field of view
+      glm::mat4 lightProj = glm::perspective(90.0f,                        // 45 degree field of view
                                              float(_winWidth) / float(_winHeight), // Ratio
                                              0.1f,                         // Near clip
-                                             50.0f);                     // Far clip
+                                             1000.0f);                     // Far clip
       
       //----------------------------------------
       // Draw the occluding surface, flat shaded
@@ -988,13 +987,15 @@ int render(double time)
       
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, _fboTextures[DEPTH]);
-
+      glGenerateMipmap(GL_TEXTURE_2D);
+      
       // Bind the shader program that will draw the shadows and do some simple shading
       _shadowProgram->bind();
       _shadowProgram->setUniform("mvp",           mvp);
       _shadowProgram->setUniform("depthMap",      0);
       _shadowProgram->setUniform("toShadowTex",   toShadowTex0);
-            
+      _shadowProgram->setUniform("texmapScale",   _texmapScale);
+      
       glBindVertexArray(_vao[TORUS_SHADED]);
       glDrawElements(GL_TRIANGLES, _vaoElements[TORUS_SHADED], GL_UNSIGNED_INT, NULL);
 
