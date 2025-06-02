@@ -1,5 +1,3 @@
-Riskybacon spikes
-
 Spikes are meant to be small, proof-of-concept programs.
 The programs are not meant to be full featured libraries
 or demonstrations. Their only use is for understanding
@@ -12,11 +10,3 @@ concept that I have coded up previously, but either
 cannot find it or it is so tightly coupled to the rest
 of my code that it is more difficult to pull out that
 code than it is to start over.
-
-The hope is that this repository will alleviate this
-problem to some degree.
-
-Time will tell if it is successful.
-
---
-Jeff Bowles
